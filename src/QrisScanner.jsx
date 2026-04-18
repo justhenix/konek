@@ -64,7 +64,7 @@ export default function QrisScanner({ onClose, onResult }) {
               processPayment(decodedText);
               stopCamera(); 
             },
-            (errorMessage) => {}
+            () => {} // remove error message unused
           );
           setPermission('granted'); 
         } catch (err) {
@@ -74,6 +74,7 @@ export default function QrisScanner({ onClose, onResult }) {
       };
       initScanner();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permission]);
 
   useEffect(() => {
