@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
 import { animate, createScope, stagger, utils } from 'animejs'; 
 import './App.css';
 
@@ -12,8 +12,9 @@ import logoSolana from './assets/LogoSolana.png';
 import logoPhantom from './assets/LogoPhantom.png';
 import logoMidtrans from './assets/LogoMidtrans.png';
 
-//---- Pindah ke scanner ---
+// --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
+import PaymentPage from './PaymentPage'; // Pastikan file PaymentPage.jsx udah ada di folder src
 
 const teamMembers = [
   {
@@ -52,37 +53,62 @@ function App() {
   const root = useRef(null);
   const scope = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState('dark');
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
+  // --- STATE UNTUK FLOW APLIKASI (LOGIN -> SCAN -> PAY) ---
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedData, setScannedData] = useState(null);
+
   // ==========================================
   // AREA BACKEND DEV: STATE USER PROFILE 
   // ==========================================
-  // Ini state buat nampilin profil user di pojok kanan atas navbar.
-  // 
-  // bebas deh wok woekoekwoekwo buat mark tok 
-  // BLH DIHAPUS
-  // 1. isLoggedIn : Set default ke 'false'. Nanti ubah ke 'true' HANYA JIKA Phantom Wallet user berhasil connect.
-  // 2. name       : Ganti isinya pakai Public Key / Address Wallet user. (Saran: di-slice aja biar pendek, misal "5xTe...3qZ").
-  // 3. avatarUrl  : Biarin link dicebear-nya, TAPI kata 'Aqiel' di ujung link ganti pakai variabel Address Wallet user.
-  //                 (Fungsinya biar tiap user otomatis dapet avatar lucu yang beda-beda tanpa kita perlu bikin database foto!)
-  //
-  // CONTOH CARA NGE-SET PAS WALLET CONNECT:
-  // setUserProfile({ 
-  //    isLoggedIn: true, 
-  //    name: walletAddress.slice(0, 4) + '...' + walletAddress.slice(-4), 
-  //    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${walletAddress}` 
-  // });
+  // Status default dibikin FALSE biar ngetes UI Modal Login.
   const [userProfile, setUserProfile] = useState({
-    isLoggedIn: true, // <-- Ingat, buat production ubah initial state ini jadi false ya!
-    name: "Aqiel", 
-    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Aqiel` 
+    isLoggedIn: false, 
+    name: "Guest", 
+    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest` 
   });
+
   // ==========================================
+  // 🚨 AREA BACKEND DEV: FUNGSI KONEK WALLET 🚨
+  // ==========================================
+  // Ini fungsi saat user ngeklik tombol "Connect Phantom" di Pop-up.
+  const handleConnectWallet = async () => {
+    console.log("Mencoba konek ke Phantom Wallet...");
+    
+    // TODO BUAT BACKEND:
+    // 1. Panggil `window.solana.connect()` di sini.
+    // 2. Ambil Public Key (Address Wallet).
+    // 3. Update state setUserProfile pakai data address tersebut.
+    // 4. Tutup modal: setIsLoginModalOpen(false)
+    // 5. Buka scanner otomatis (opsional): setIsScannerOpen(true)
+
+    // --- SIMULASI FRONT-END (Hapus ini nanti) ---
+    alert("Backend belum masang API Phantom Wallet di sini!");
+    /* Contoh cara nge-set kalau sukses:
+    setUserProfile({
+      isLoggedIn: true,
+      name: "5xTe...3qZ",
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=5xTe...3qZ`
+    });
+    setIsLoginModalOpen(false);
+    */
+  };
+  // ==========================================
+
+  // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
+  const handleOpenApp = () => {
+    if (userProfile.isLoggedIn) {
+      setIsScannerOpen(true); // Kalau udah login, buka kamera
+    } else {
+      setIsLoginModalOpen(true); // Kalau belum login, minta konek dompet
+    }
+  };
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -194,7 +220,7 @@ function App() {
           <h2 className="text-xl font-extrabold tracking-widest uppercase text-black dark:text-white transition-colors duration-500">Konek<span className="text-[#04fa3a]">Pay</span></h2>
         </div>
 
-        {/* MENU TENGAH DESKTOP (Translated) */}
+        {/* MENU TENGAH DESKTOP */}
         <ul className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2 transition-colors duration-500">
           <li className="hover:text-[#04fa3a] cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>HOME</li>
           <li className="hover:text-[#04fa3a] cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>ABOUT</li>
@@ -208,8 +234,8 @@ function App() {
         </ul>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {/* USER PROFILE */}
-          {userProfile.isLoggedIn && (
+          {/* USER PROFILE / LOGIN BUTTON */}
+          {userProfile.isLoggedIn ? (
             <div className="flex items-center gap-2 md:gap-3 mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
               <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
                 Hi, {userProfile.name}!
@@ -218,6 +244,13 @@ function App() {
                 <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
               </div>
             </div>
+          ) : (
+            <button 
+              onClick={() => setIsLoginModalOpen(true)}
+              className="mr-2 text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white px-4 py-2 rounded-full transition-colors"
+            >
+              Connect Wallet
+            </button>
           )}
 
           <button onClick={toggleTheme} className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-300 hover:text-[#04fa3a] dark:hover:text-[#04fa3a] transition-all duration-300 focus:outline-none">
@@ -238,7 +271,7 @@ function App() {
         </div>
       </nav>
 
-      {/* DROPDOWN MENU MOBILE (Translated) */}
+      {/* DROPDOWN MENU MOBILE */}
       <div className={`md:hidden fixed top-24 left-6 right-6 z-40 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl transition-all duration-500 flex flex-col items-center ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-8 invisible'}`}>
         <ul className="flex flex-col gap-6 text-center font-bold tracking-widest text-zinc-800 dark:text-white items-center w-full">
           <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>HOME</li>
@@ -253,7 +286,7 @@ function App() {
         </ul>
       </div>
 
-      {/* HERO SECTION (UPDATED COPY + CTA BUTTON) */}
+      {/* HERO SECTION */}
       <main className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 md:mt-24 gap-10 md:gap-0 z-10 min-h-[60vh]">
         <div className="flex-1 text-center md:text-left">
           <div className="hero-text opacity-0 inline-block px-4 py-1.5 bg-[#04fa3a]/10 border border-[#04fa3a]/20 rounded-full text-[#04fa3a] text-[10px] font-bold tracking-[0.3em] mb-6 uppercase">
@@ -273,7 +306,10 @@ function App() {
           <div className="hero-text opacity-0 flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-4 mb-4">
             
             {/* CTA BUTTON: LAUNCH APP */}
-            <button className="bg-[#04fa3a] text-black font-black tracking-widest uppercase px-8 py-3 rounded-full shadow-[0_0_20px_rgba(4,250,58,0.4)] hover:shadow-[0_0_30px_rgba(4,250,58,0.6)] hover:scale-105 transition-all duration-300">
+            <button 
+              onClick={handleOpenApp}
+              className="bg-[#04fa3a] text-black font-black tracking-widest uppercase px-8 py-3 rounded-full shadow-[0_0_20px_rgba(4,250,58,0.4)] hover:shadow-[0_0_30px_rgba(4,250,58,0.6)] hover:scale-105 transition-all duration-300"
+            >
               Launch App
             </button>
 
@@ -322,20 +358,15 @@ function App() {
           <p className="text-center text-[10px] uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500 font-bold mb-10 relative z-10 transition-colors duration-500">
             Didukung Oleh Jaringan Global & Lokal
           </p>
-          {/* Efek grayscale dan opacity dihapus biar logonya berwarna terus */}
           <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 relative z-10">
-            {/* Solana & Phantom ukurannya dinaikin dikit */}
             <img src={logoSolana} alt="Solana Logo" className="h-10 md:h-14 object-contain" />
-            
             <img src={logoPhantom} alt="Phantom Wallet Logo" className="h-10 md:h-14 object-contain" />
-            
-            {/* Midtrans ukurannya di-BOOST biar tulisannya kebaca jelas */}
             <img src={logoMidtrans} alt="Midtrans Logo" className="h-16 md:h-24 object-contain" />
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS SECTION (UPDATED COPY) */}
+      {/* HOW IT WORKS SECTION */}
       <section id="workflow-section" className="scroll-mt-32 mt-20 md:mt-32 z-10 w-full max-w-6xl mx-auto px-4">
         <div className="text-center mb-16 scroll-animate opacity-0">
           <h2 className="text-3xl md:text-5xl font-black tracking-widest mb-4 text-zinc-900 dark:text-white transition-colors">HOW IT <span className="text-[#04fa3a]">WORKS</span></h2>
@@ -349,11 +380,9 @@ function App() {
             { step: "03", title: "SIGN & PAY", desc: "Sign the transaction. Merchant receives IDR instantly via Midtrans." }
           ].map((item, i) => (
             <div key={i} className="scroll-animate opacity-0 bg-white/50 dark:bg-zinc-800/30 border border-zinc-200 dark:border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-[#04fa3a] transition-all duration-500 shadow-xl dark:shadow-none">
-              
               <div className="text-7xl font-black text-[#04fa3a]/10 dark:text-[#04fa3a]/5 absolute -top-2 -right-2 group-hover:text-[#04fa3a]/20 transition-colors pointer-events-none">
                 {item.step}
               </div>
-
               <div className="relative z-10">
                 <div className="w-14 h-14 bg-[#04fa3a] dark:bg-[#04fa3a]/20 rounded-2xl flex items-center justify-center text-black dark:text-[#04fa3a] font-black mb-6 shadow-[0_0_20px_rgba(4,250,58,0.3)] dark:shadow-none transition-colors">
                   {item.step}
@@ -412,10 +441,7 @@ function App() {
         </div>
       </section>
 
-      {/* FOOTER SECTION (UPDATED LOGO & COPY) */}
       <footer className="py-12 flex flex-col items-center justify-center gap-4 text-center text-zinc-400 dark:text-zinc-600 text-[10px] tracking-[0.2em] font-bold uppercase border-t border-zinc-200 dark:border-white/5 pb-32 transition-colors duration-500">
-        
-        {/* LOGO KONEK MINI DI FOOTER */}
         <div className="flex items-center gap-2 mb-2 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <svg viewBox="0 0 100 100" className="w-6 h-6">
              <path stroke="#04fa3a" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
@@ -423,13 +449,12 @@ function App() {
           </svg>
           <span className="text-sm font-extrabold tracking-widest text-black dark:text-white">Konek<span className="text-[#04fa3a]">Pay</span></span>
         </div>
-
         <p>Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia</p>
       </footer>
 
       {/* FLOATING ACTION BUTTON (QRIS PAY) */}
       <button 
-        onClick={() => setIsScannerOpen(true)}
+        onClick={handleOpenApp}
         className="fixed bottom-8 right-8 md:bottom-12 md:right-12 z-50 bg-[#04fa3a] text-black px-6 py-4 md:px-8 md:py-5 rounded-full font-black text-lg md:text-xl shadow-[0_10px_30px_rgba(4,250,58,0.4)] dark:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-110 hover:shadow-[0_15px_40px_rgba(4,250,58,0.6)] dark:hover:shadow-[0_0_50px_rgba(4,250,58,0.8)] transition-all flex items-center gap-3 group"
       >
         <svg className="w-6 h-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,8 +463,63 @@ function App() {
         QRIS PAY
       </button>
 
-      {/* TAMPILKAN SCANNER JIKA TOMBOL DIKLIK */}
-      {isScannerOpen && <QrisScanner onClose={() => setIsScannerOpen(false)} />}
+
+      {/* ========================================================= */}
+      {/* KUMPULAN POP-UP / MODAL (LOGIN, SCANNER, PAYMENT) */}
+      {/* ========================================================= */}
+
+      {/* 1. POP-UP LOGIN (Tampil kalau belum konek dompet) */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in transition-all">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] max-w-sm w-full p-8 text-center shadow-2xl relative transition-colors">
+            
+            <button onClick={() => setIsLoginModalOpen(false)} className="absolute top-6 right-6 text-zinc-400 hover:text-red-500 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div className="w-24 h-24 bg-purple-500/10 dark:bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(147,51,234,0.3)]">
+              <img src={logoPhantom} alt="Phantom" className="w-12 h-12 object-contain" />
+            </div>
+            
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tight">Connect Wallet</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
+              Hubungkan Phantom Wallet kamu untuk mulai membayar pakai Solana.
+            </p>
+            
+            <button 
+              onClick={handleConnectWallet}
+              className="w-full bg-[#AB9FF2] text-zinc-900 font-black tracking-widest uppercase py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex justify-center items-center gap-3"
+            >
+              Connect Phantom
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2. POP-UP SCANNER (Tampil kalau udah login dan pencet QRIS PAY) */}
+      {isScannerOpen && (
+        <QrisScanner 
+          onClose={() => setIsScannerOpen(false)} 
+          onResult={(data) => {
+            setScannedData(data); // Simpan hasil scan
+            setIsScannerOpen(false); // Tutup scanner otomatis
+          }} 
+        />
+      )}
+
+      {/* 3. POP-UP PAYMENT (Tampil kalau scanner berhasil nangkep QR) */}
+      {scannedData && (
+        <PaymentPage 
+          qrisData={scannedData}
+          solPrice={solPrice}
+          onCancel={() => setScannedData(null)}
+          onConfirm={async () => {
+            // Ini akan dipanggil oleh PaymentPage saat tombol Confirm diklik
+            console.log("Mengeksekusi Transaksi di Blockchain...");
+            // TODO: Nanti backend panggil window.solana.signTransaction di sini
+          }}
+        />
+      )}
 
     </div>
   );
