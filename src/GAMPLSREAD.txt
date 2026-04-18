@@ -1,0 +1,36 @@
+Biar integrasi kita cepet dan nggak pusing, aku udah misahin komponennya jadi 3 file utama. Semuanya udah aku kasih komentar "AREA BACKEND DEV" di kodingannya biar gampang dicari pakai Ctrl+F.
+
+Berikut flow dan tugas Backend di masing-masing file:
+
+1. File: App.jsx (Main State & Wallet Auth)
+Ini file "Sutradara" yang ngatur semua routing dan koneksi awal.
+
+Tugas Backend: Bikin fungsi buat Connect ke Phantom Wallet.
+
+Yang perlu diubah: Cari state userProfile. Kalau dompet udah konek, ubah isLoggedIn jadi true, terus isi name pakai Address Wallet (di-slice aja, misal "5xTe...3qZ").
+
+Catatan: Harga SOL ke IDR sementara aku tembak ke API CoinGecko. Kalau nanti mau pakai Pyth Network (sesuai tema hackathon), tinggal ganti aja logic fetch-nya di useEffect.
+
+2. File: QrisScanner.jsx (QR Catcher)
+Ini komponen murni buat nyalain kamera dan nangkep teks dari kode QR.
+
+Tugas Backend: Nggak banyak! File ini udah aku setup pakai library html5-qrcode. Pas QR ke-scan, dia otomatis ngirim string mentah (format EMVCo) balik ke App.jsx lewat props onResult.
+
+Catatan: Kamu tinggal bikin fungsi di App.jsx buat nerima string ini, validasi apakah beneran QRIS, terus lempar data mentah ini ke API kita (atau Midtrans) buat dapet Nama Merchant & Nominal Rupiahnya.
+
+3. File: PaymentPage.jsx (The Executioner)
+Nah, ini tempat uang beneran muter. Layar ini bakal otomatis kebuka kalau QrisScanner sukses ngirim data.
+
+Tugas Backend:
+
+Terima Data: Terima props hasil parsing API (Nama Merchant & Nominal IDR) dan tampilin ke UI.
+
+Konversi: Hitung IDR ke SOL berdasarkan rate Pyth. (Aku udah bikinin dummy math-nya di UI, tinggal ganti pakai variabel aslimu).
+
+Eksekusi Transaksi: Pas tombol "Pay Now" (di dalam props onConfirm) di-klik, panggil fungsi @solana/web3.js buat bikin Transaction.
+
+Tanda Tangan: Prompt window.solana.signTransaction ke user.
+
+Finalisasi: Kalau TX Solana sukses, kirim webhook/callback ke Midtrans biar saldo Rupiah masuk ke kasir merchant.
+
+Udah aku rapiin semua state transisinya (Loading, Success, Fail, dll). Semangat ngeracik Smart Contract dan API-nya! Kalau butuh nambahin state UI atau ada yang kurang pas, kabarin aja langsung aku benerin.
