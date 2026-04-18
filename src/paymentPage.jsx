@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 
+// eslint-disable-next-line no-unused-vars
 export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel }) {
   // State untuk ngatur efek loading pas lagi proses transaksi di Blockchain
   const [isProcessing, setIsProcessing] = useState(false);

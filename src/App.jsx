@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, Fragment } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { animate, createScope, stagger, utils } from 'animejs'; 
 import './App.css';
 
@@ -59,6 +60,8 @@ function App() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
+  const { select, wallets, publicKey, connect } = useWallet();
+
   // --- STATE UNTUK FLOW APLIKASI (LOGIN -> SCAN -> PAY) ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -67,43 +70,51 @@ function App() {
   // ==========================================
   // AREA BACKEND DEV: STATE USER PROFILE 
   // ==========================================
-  // Status default dibikin FALSE biar ngetes UI Modal Login.
   const [userProfile, setUserProfile] = useState({
     isLoggedIn: false, 
     name: "Guest", 
     avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest` 
   });
 
+  useEffect(() => {
+    if (publicKey) {
+      console.log(publicKey.toBase58());
+      setUserProfile({
+        isLoggedIn: true,
+        name: `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`,
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${publicKey.toBase58()}`
+      });
+      setIsLoginModalOpen(false);
+    } else {
+      setUserProfile({
+        isLoggedIn: false, 
+        name: "Guest", 
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest` 
+      });
+    }
+  }, [publicKey]);
+
   // ==========================================
   // 🚨 AREA BACKEND DEV: FUNGSI KONEK WALLET 🚨
   // ==========================================
-  // Ini fungsi saat user ngeklik tombol "Connect Phantom" di Pop-up.
   const handleConnectWallet = async () => {
-    console.log("Mencoba konek ke Phantom Wallet...");
-    
-    // TODO BUAT BACKEND:
-    // 1. Panggil `window.solana.connect()` di sini.
-    // 2. Ambil Public Key (Address Wallet).
-    // 3. Update state setUserProfile pakai data address tersebut.
-    // 4. Tutup modal: setIsLoginModalOpen(false)
-    // 5. Buka scanner otomatis (opsional): setIsScannerOpen(true)
-
-    // --- SIMULASI FRONT-END (Hapus ini nanti) ---
-    alert("Backend belum masang API Phantom Wallet di sini!");
-    /* Contoh cara nge-set kalau sukses:
-    setUserProfile({
-      isLoggedIn: true,
-      name: "5xTe...3qZ",
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=5xTe...3qZ`
-    });
-    setIsLoginModalOpen(false);
-    */
+    try {
+      const phantomWallet = wallets.find((w) => w.adapter.name === 'Phantom');
+      if (phantomWallet) {
+        select(phantomWallet.adapter.name);
+        await connect();
+      } else {
+        alert("Phantom Wallet is not installed.");
+      }
+    } catch (error) {
+      console.error("Failed to connect to wallet:", error);
+    }
   };
   // ==========================================
 
   // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
   const handleOpenApp = () => {
-    if (userProfile.isLoggedIn) {
+    if (userProfile.isLoggedIn && publicKey) {
       setIsScannerOpen(true); // Kalau udah login, buka kamera
     } else {
       setIsLoginModalOpen(true); // Kalau belum login, minta konek dompet
