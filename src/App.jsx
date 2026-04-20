@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Fragment } from 'react';
+import { useEffect, useRef, useState, useMemo, Fragment } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { animate, createScope, stagger, utils } from 'animejs'; 
 import './App.css';
@@ -74,33 +74,25 @@ function App() {
   const [scannedData, setScannedData] = useState(null);
 
   // ==========================================
-  // AREA BACKEND DEV: STATE USER PROFILE 
+  // USER PROFILE (derived from publicKey — no effect needed)
   // ==========================================
-  const [userProfile, setUserProfile] = useState({
-    isLoggedIn: false, 
-    name: "Guest", 
-    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest` 
-  });
-
-  useEffect(() => {
+  const userProfile = useMemo(() => {
     if (publicKey) {
       const pKeyStr = publicKey.toBase58();
       if (import.meta.env.DEV) {
         console.log(pKeyStr);
       }
-      setUserProfile({
+      return {
         isLoggedIn: true,
         name: `${pKeyStr.slice(0, 4)}...${pKeyStr.slice(-4)}`,
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${hashString(pKeyStr)}`
-      });
-      setIsLoginModalOpen(false);
-    } else {
-      setUserProfile({
-        isLoggedIn: false, 
-        name: "Guest", 
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest` 
-      });
+      };
     }
+    return {
+      isLoggedIn: false,
+      name: "Guest",
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest`
+    };
   }, [publicKey]);
 
   // ==========================================
@@ -113,6 +105,7 @@ function App() {
         if (phantomWallet.readyState === 'Installed' || phantomWallet.readyState === 'Loadable') {
           select(phantomWallet.adapter.name);
           await connect();
+          setIsLoginModalOpen(false);
         } else {
           alert("Phantom Wallet is not ready or installed. Please install it to continue.");
           window.open("https://phantom.app/", "_blank");
@@ -537,11 +530,11 @@ function App() {
       {scannedData && (
         <PaymentPage 
           qrisData={scannedData}
-          solPrice={solPrice}
           onCancel={() => setScannedData(null)}
-          onConfirm={async () => {
+          onConfirm={async (quote) => {
             // Ini akan dipanggil oleh PaymentPage saat tombol Confirm diklik
-            console.log("Mengeksekusi Transaksi di Blockchain...");
+            // quote obj berisi: { quoteId, solAmount, exchangeRate, fiatAmount, expiresAt }
+            console.log("Mengeksekusi Transaksi di Blockchain...", quote);
             // TODO: Nanti backend panggil window.solana.signTransaction di sini
           }}
         />

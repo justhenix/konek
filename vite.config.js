@@ -8,4 +8,14 @@ export default defineConfig({
     react(),
     tailwindcss(), // 2. Tambahkan di sini
   ],
+  server: {
+    proxy: {
+      // For local dev: run `vercel dev` separately, or deploy to Vercel
+      // In production on Vercel, this proxy is unused — routing is automatic
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 })
