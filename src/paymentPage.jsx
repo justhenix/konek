@@ -1,7 +1,6 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 
-// eslint-disable-next-line no-unused-vars
-export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel }) {
+export default function PaymentPage({ _qrisData, solPrice, onConfirm, onCancel }) {
   // State untuk ngatur efek loading pas lagi proses transaksi di Blockchain
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -19,8 +18,17 @@ export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel })
   const merchantName = "WARUNG SOLANA JAYA"; // Ganti pakai nama asli merchant
   const amountIDR = 50000; // Ganti pakai tagihan asli dari QRIS
   
-  // Kalkulasi Otomatis (Ini biarin aja, udah otomatis ngitung ke SOL)
-  const totalSOL = solPrice ? (amountIDR / solPrice).toFixed(6) : 0;
+  const [totalSOL, setTotalSOL] = useState(0);
+
+  // Kalkulasi Otomatis (Simulasi backend)
+  useEffect(() => {
+    // SECURITY: Kalkulasi HARUS di backend buat hindarin tamper state React
+    const fetchSecurePrice = async () => {
+      const simulatedBackendRate = solPrice || 1;
+      setTotalSOL((amountIDR / simulatedBackendRate).toFixed(6));
+    };
+    fetchSecurePrice();
+  }, [solPrice, amountIDR]);
   // ============================================================
 
 
@@ -53,12 +61,12 @@ export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel })
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 transition-all animate-fade-in">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-[#04fa3a]/30 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
+      <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 transition-all animate-fade-in">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
           
           {/* HEADER */}
           <div className="p-8 text-center border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900 transition-colors">
-            <div className="text-[#04fa3a] text-[10px] font-black tracking-[0.4em] uppercase mb-2">Payment Review</div>
+            <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">Payment Review</div>
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter transition-colors">Confirm Payment</h3>
           </div>
           
@@ -75,7 +83,7 @@ export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel })
               <div className="flex justify-between items-center">
                 <span className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-widest transition-colors">Total Pay</span>
                 <div className="text-right">
-                  <div className="text-2xl font-black text-[#04fa3a]">~ {totalSOL} SOL</div>
+                  <div className="text-2xl font-black text-brand">~ {totalSOL} SOL</div>
                   <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Rp {amountIDR.toLocaleString('id-ID')}</div>
                 </div>
               </div>
@@ -95,7 +103,7 @@ export default function PaymentPage({ qrisData, solPrice, onConfirm, onCancel })
             <button 
               onClick={handleConfirm} 
               disabled={isProcessing}
-              className="py-4 rounded-2xl bg-[#04fa3a] text-black font-black uppercase text-xs shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-70 disabled:hover:scale-100 transition-all flex justify-center items-center gap-2"
+              className="py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-70 disabled:hover:scale-100 transition-all flex justify-center items-center gap-2"
             >
               {isProcessing ? (
                 <>
