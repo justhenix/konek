@@ -1,9 +1,11 @@
 import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { parseEmvcoQris } from './utils/parseEmvcoQris';
 
 // Tambahan properti "onResult" untuk ngirim data ke App.jsx
 export default function QrisScanner({ onClose, onResult }) {
   const [permission, setPermission] = useState('prompt'); 
+  const [scanResult, setScanResult] = useState(null);
   const scannerRef = useRef(null);
   const scannerId = "reader"; 
 
@@ -23,30 +25,26 @@ export default function QrisScanner({ onClose, onResult }) {
     onClose();
   };
 
-  // ============================================================
-  // 🚨 AREA BACKEND DEV: LOGIKA TANGKAP QRIS 🚨
-  // ============================================================
-  // Ini fungsi saat kamera sukses baca QR.
-  // decodedText adalah string mentah dari QRIS (biasanya format EMVCo).
-  
   const processPayment = useCallback((decodedText) => {
-    console.log("QR Captured (Memulai Proses Backend):", decodedText);
-    
-    // SECURITY: Validasi DINI format QRIS murni
-    const isValidQris = decodedText.startsWith("000201") && decodedText.includes("6304");
-    if (!isValidQris) {
-      alert("Invalid QR Code (Not QRIS)");
-      return;
+    const parsedData = parseEmvcoQris(decodedText);
+    setScanResult({ rawData: decodedText, parsedData });
+
+    if (!parsedData.isValid) {
+      return false;
     }
-    
-    // Tapi kalau aman, lempar datanya ke App.jsx biar dia buka Halaman Pembayaran.
+
     if (onResult) {
-      onResult(decodedText); 
+      onResult({
+        rawData: decodedText,
+        parsedData,
+      }); 
     }
+
+    return true;
   }, [onResult]);
-  // ============================================================
 
   const triggerScanner = () => {
+    setScanResult(null);
     setPermission('starting');
   };
 
@@ -62,9 +60,10 @@ export default function QrisScanner({ onClose, onResult }) {
             { facingMode: "environment" },
             config,
             (decodedText) => {
-              // Panggil fungsi proses di atas saat QR ketangkap
-              processPayment(decodedText);
-              stopCamera(); 
+              const accepted = processPayment(decodedText);
+              if (accepted) {
+                stopCamera();
+              }
             },
             () => {} // remove error message unused
           );
@@ -144,6 +143,17 @@ export default function QrisScanner({ onClose, onResult }) {
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand rounded-br-xl"></div>
                 <div className="absolute left-0 right-0 h-0.5 bg-brand shadow-[0_0_15px_brand] z-10" style={{ animation: 'scan-laser 2.5s ease-in-out infinite' }}></div>
               </div>
+            </div>
+          )}
+
+          {scanResult && !scanResult.parsedData.isValid && (
+            <div className="px-6 py-4 bg-red-500/10 border-t border-red-500/20">
+              <div className="text-red-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
+                QRIS data not ready
+              </div>
+              <p className="text-red-300 text-xs leading-relaxed">
+                {scanResult.parsedData.errors.join(' ')}
+              </p>
             </div>
           )}
 

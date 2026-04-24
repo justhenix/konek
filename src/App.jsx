@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, Fragment } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback, Fragment } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { animate, createScope, stagger, utils } from 'animejs'; 
 import './App.css';
@@ -72,6 +72,7 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
+  const [parsedPaymentData, setParsedPaymentData] = useState(null);
 
   // ==========================================
   // USER PROFILE (derived from publicKey — no effect needed)
@@ -128,6 +129,26 @@ function App() {
       setIsLoginModalOpen(true); // Kalau belum login, minta konek dompet
     }
   };
+
+  const handleScannerResult = useCallback(({ rawData, parsedData }) => {
+    setScannedData(rawData);
+    setParsedPaymentData(parsedData);
+    setIsScannerOpen(false);
+  }, []);
+
+  const handleParsedPaymentData = useCallback((parsedData) => {
+    setParsedPaymentData(parsedData);
+  }, []);
+
+  const handlePaymentCancel = useCallback(() => {
+    setScannedData(null);
+    setParsedPaymentData(null);
+  }, []);
+
+  const handlePaymentConfirm = useCallback((parsedData) => {
+    setParsedPaymentData(parsedData);
+    console.log("Parsed QRIS payment data ready:", parsedData);
+  }, []);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -519,24 +540,19 @@ function App() {
       {isScannerOpen && (
         <QrisScanner 
           onClose={() => setIsScannerOpen(false)} 
-          onResult={(data) => {
-            setScannedData(data); // Simpan hasil scan
-            setIsScannerOpen(false); // Tutup scanner otomatis
-          }} 
+          onResult={handleScannerResult} 
         />
       )}
 
       {/* 3. POP-UP PAYMENT (Tampil kalau scanner berhasil nangkep QR) */}
       {scannedData && (
         <PaymentPage 
+          key={scannedData}
           qrisData={scannedData}
-          onCancel={() => setScannedData(null)}
-          onConfirm={async (quote) => {
-            // Ini akan dipanggil oleh PaymentPage saat tombol Confirm diklik
-            // quote obj berisi: { quoteId, solAmount, exchangeRate, fiatAmount, expiresAt }
-            console.log("Mengeksekusi Transaksi di Blockchain...", quote);
-            // TODO: Nanti backend panggil window.solana.signTransaction di sini
-          }}
+          initialParsedData={parsedPaymentData}
+          onParsedData={handleParsedPaymentData}
+          onCancel={handlePaymentCancel}
+          onConfirm={handlePaymentConfirm}
         />
       )}
 
