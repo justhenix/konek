@@ -8,6 +8,45 @@ import {
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 
+const parseQrisMerchantName = (qrisData) => {
+  const fallback = 'Unknown Merchant';
+
+  try {
+    if (typeof qrisData !== 'string' || qrisData.length < 4) {
+      return fallback;
+    }
+
+    let cursor = 0;
+
+    while (cursor < qrisData.length) {
+      const tag = qrisData.slice(cursor, cursor + 2);
+      const lengthText = qrisData.slice(cursor + 2, cursor + 4);
+
+      if (tag.length !== 2 || lengthText.length !== 2 || !/^\d{2}$/.test(lengthText)) {
+        return fallback;
+      }
+
+      const valueLength = Number(lengthText);
+      const valueStart = cursor + 4;
+      const valueEnd = valueStart + valueLength;
+
+      if (valueEnd > qrisData.length) {
+        return fallback;
+      }
+
+      if (tag === '59') {
+        return qrisData.slice(valueStart, valueEnd) || fallback;
+      }
+
+      cursor = valueEnd;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+};
+
 export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
   // State untuk ngatur efek loading pas lagi proses transaksi di Blockchain
   const [isProcessing, setIsProcessing] = useState(false);
@@ -18,7 +57,7 @@ export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
   // All price computation is done server-side via POST /api/v1/payment/quote.
   // Server extracts fiatAmount from QRIS Tag 54. Client sends ONLY the payload.
 
-  const merchantName = "WARUNG SOLANA JAYA"; // TODO: Parse from QRIS EMVCo TLV (Tag 59)
+  const merchantName = parseQrisMerchantName(qrisData);
 
   const [quote, setQuote] = useState(null);
   const [quoteError, setQuoteError] = useState(null);
@@ -78,7 +117,7 @@ export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
     
     try {
       // ============================================================
-      // 🚨 AREA BACKEND DEV: EKSEKUSI SMART CONTRACT 🚨
+      //  AREA BACKEND DEV: EKSEKUSI SMART CONTRACT SOLANA -henix
       // ============================================================
       if (!quote) {
         throw new Error('Quote is not available.');
