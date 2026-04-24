@@ -1,5 +1,23 @@
 const REQUIRED_QRIS_PREFIX = '000201';
 
+export const calculateCrc16 = (payload) => {
+  let crc = 0xFFFF;
+  const bytes = new TextEncoder().encode(payload);
+
+  for (const byte of bytes) {
+    crc ^= byte << 8;
+
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc & 0x8000)
+        ? ((crc << 1) ^ 0x1021)
+        : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+};
+
 const TAGS = {
   transactionAmount: '54',
   merchantName: '59',
@@ -97,6 +115,14 @@ export const parseEmvcoQris = (rawValue) => {
       errors.push('QR payload is missing CRC tag 63.');
     } else if (crcSegment.length !== 4) {
       errors.push('QR payload CRC tag 63 must be 4 characters.');
+    } else {
+      const payloadForCrc = rawData.slice(0, -crcSegment.value.length);
+      const calculatedCrc = calculateCrc16(payloadForCrc);
+      const expectedCrc = crcSegment.value.toUpperCase();
+
+      if (calculatedCrc !== expectedCrc) {
+        errors.push(`QR payload failed CRC validation (calculated: ${calculatedCrc}, expected: ${crcSegment.value}).`);
+      }
     }
 
     if (!amountText) {
