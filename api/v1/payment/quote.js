@@ -5,7 +5,10 @@ import crypto from 'crypto';
 // CONFIG
 // ─────────────────────────────────────────────────────
 const QUOTE_TTL_MS = 2 * 60 * 1000; // 2 minutes
-const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=idr';
+const PYTH_HERMES_LATEST_PRICE_URL = 'https://hermes.pyth.network/v2/updates/price/latest';
+const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d';
+const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
+const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 
 // Configure Decimal.js for high precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -17,8 +20,92 @@ const RATE_CACHE_MS = 15_000; // 15s
 let cachedRate = null;
 let cachedAt = 0;
 
+function normalizePythId(id) {
+  return String(id ?? '').replace(/^0x/i, '').toLowerCase();
+}
+
+function buildPythLatestPriceUrl(priceIds) {
+  const idsQuery = priceIds.map((id) => `ids[]=${encodeURIComponent(id)}`).join('&');
+  return `${PYTH_HERMES_LATEST_PRICE_URL}?${idsQuery}&parsed=true&ignore_invalid_price_ids=true`;
+}
+
+async function fetchJsonWithTimeout(url, sourceName, timeoutMs = 10_000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (res.status === 429) {
+      const retryAfter = res.headers.get('retry-after');
+      const error = new Error(
+        `${sourceName} rate limited (HTTP 429${retryAfter ? `, retry after ${retryAfter}s` : ''})`
+      );
+      error.code = sourceName === 'Pyth Hermes' ? 'PYTH_RATE_LIMITED' : 'FX_RATE_LIMITED';
+      throw error;
+    }
+
+    if (!res.ok) {
+      throw new Error(`${sourceName} failed (HTTP ${res.status})`);
+    }
+
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function decimalFromPythPrice(price, label) {
+  const rawPrice = price?.price;
+  const expo = Number(price?.expo);
+
+  if (typeof rawPrice !== 'string' || !Number.isInteger(expo)) {
+    throw new Error(`Invalid Pyth price payload for ${label}`);
+  }
+
+  const value = new Decimal(rawPrice).times(new Decimal(10).pow(expo));
+
+  if (!value.isFinite() || value.lte(0)) {
+    throw new Error(`Invalid Pyth price for ${label}`);
+  }
+
+  return value;
+}
+
+function getPythParsedPrice(data, feedId, label) {
+  const normalizedFeedId = normalizePythId(feedId);
+  const feed = data?.parsed?.find((item) => normalizePythId(item.id) === normalizedFeedId);
+
+  if (!feed?.price) {
+    throw new Error(`Pyth feed ${label} is unavailable`);
+  }
+
+  return decimalFromPythPrice(feed.price, label);
+}
+
+async function fetchUsdIdrFallbackRate() {
+  const data = await fetchJsonWithTimeout(USD_IDR_FALLBACK_URL, 'USD/IDR fallback FX API');
+  const rate = data?.rates?.IDR;
+
+  if (typeof rate !== 'number' || rate <= 0 || !Number.isFinite(rate)) {
+    throw new Error('Invalid USD/IDR fallback FX rate');
+  }
+
+  return new Decimal(rate);
+}
+
 /**
- * Fetch live SOL/IDR exchange rate from CoinGecko.
+ * Fetch live SOL/IDR exchange rate from Pyth Network Hermes.
+ *
+ * Pyth Network logic:
+ * - Fetch SOL/USD from Hermes with the hackathon-required Pyth feed.
+ * - Fetch USD/IDR from Hermes with Pyth's FX feed.
+ * - Derive SOL/IDR as SOL/USD * USD/IDR.
+ * - If the USD/IDR Pyth feed is unavailable, fall back to an external FX API.
+ *
  * Returns Decimal instance. Throws on network/parse failure.
  */
 async function fetchSolIdrRate() {
@@ -28,33 +115,31 @@ async function fetchSolIdrRate() {
     return cachedRate;
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const pythData = await fetchJsonWithTimeout(
+    buildPythLatestPriceUrl([PYTH_SOL_USD_FEED_ID, PYTH_USD_IDR_FEED_ID]),
+    'Pyth Hermes'
+  );
+
+  const solUsdRate = getPythParsedPrice(pythData, PYTH_SOL_USD_FEED_ID, 'SOL/USD');
+  let usdIdrRate;
 
   try {
-    const res = await fetch(COINGECKO_URL, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!res.ok) {
-      throw new Error(`CoinGecko HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    const idrPrice = data?.solana?.idr;
-
-    if (typeof idrPrice !== 'number' || idrPrice <= 0 || !Number.isFinite(idrPrice)) {
-      throw new Error('Invalid price data from oracle');
-    }
-
-    cachedRate = new Decimal(idrPrice);
-    cachedAt = now;
-
-    return cachedRate;
-  } finally {
-    clearTimeout(timeout);
+    usdIdrRate = getPythParsedPrice(pythData, PYTH_USD_IDR_FEED_ID, 'USD/IDR');
+  } catch (pythUsdIdrError) {
+    console.warn('[PYTH_USD_IDR_UNAVAILABLE]', pythUsdIdrError.message);
+    usdIdrRate = await fetchUsdIdrFallbackRate();
   }
+
+  const solIdrRate = solUsdRate.times(usdIdrRate);
+
+  if (!solIdrRate.isFinite() || solIdrRate.lte(0)) {
+    throw new Error('Invalid derived SOL/IDR rate');
+  }
+
+  cachedRate = solIdrRate;
+  cachedAt = now;
+
+  return cachedRate;
 }
 
 // ─────────────────────────────────────────────────────
@@ -178,10 +263,13 @@ export default async function handler(req, res) {
     try {
       exchangeRateDecimal = await fetchSolIdrRate();
     } catch (oracleErr) {
-      console.error('[ORACLE_FAILURE]', oracleErr.message);
+      const isPythRateLimited = oracleErr.code === 'PYTH_RATE_LIMITED';
+      console.error(isPythRateLimited ? '[ORACLE_RATE_LIMIT]' : '[ORACLE_FAILURE]', oracleErr.message);
       return res.status(503).json({
         error: 'ORACLE_UNAVAILABLE',
-        message: 'Price feed is temporarily unavailable. Retry shortly.',
+        message: isPythRateLimited
+          ? 'Pyth Hermes price feed is rate limited. Retry shortly.'
+          : 'Pyth price feed is temporarily unavailable. Retry shortly.',
       });
     }
 

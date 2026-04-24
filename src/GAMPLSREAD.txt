@@ -9,7 +9,7 @@ Tugas Backend: Bikin fungsi buat Connect ke Phantom Wallet.
 
 Yang perlu diubah: Cari state userProfile. Kalau dompet udah konek, ubah isLoggedIn jadi true, terus isi name pakai Address Wallet (di-slice aja, misal "5xTe...3qZ").
 
-Catatan: Harga SOL ke IDR sementara aku tembak ke API CoinGecko. Kalau nanti mau pakai Pyth Network (sesuai tema hackathon), tinggal ganti aja logic fetch-nya di useEffect.
+Catatan: Harga SOL ke IDR sekarang diambil dari Pyth Network Hermes. App.jsx fetch SOL/USD dan USD/IDR dari Pyth, lalu menghitung rate SOL/IDR.
 
 2. File: QrisScanner.jsx (QR Catcher)
 Ini komponen murni buat nyalain kamera dan nangkep teks dari kode QR.

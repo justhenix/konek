@@ -72,7 +72,7 @@ export default function PaymentPage({
             <div className="space-y-4">
               <div className="flex justify-between items-start gap-4">
                 <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest transition-colors">Merchant</span>
-                <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] break-words transition-colors" title={merchantName}>
+                <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] wrap-break-word transition-colors" title={merchantName}>
                   {merchantName}
                 </span>
               </div>

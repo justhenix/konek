@@ -17,6 +17,110 @@ import logoMidtrans from './assets/LogoMidtrans.png';
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage'; // Pastikan file PaymentPage.jsx udah ada di folder src
 
+// ─────────────────────────────────────────────────────
+// PYTH NETWORK PRICE CONFIG
+// ─────────────────────────────────────────────────────
+const PYTH_HERMES_LATEST_PRICE_URL = 'https://hermes.pyth.network/v2/updates/price/latest';
+const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d';
+const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
+const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
+
+const normalizePythId = (id) => String(id ?? '').replace(/^0x/i, '').toLowerCase();
+
+const buildPythLatestPriceUrl = (priceIds) => {
+  const idsQuery = priceIds.map((id) => `ids[]=${encodeURIComponent(id)}`).join('&');
+  return `${PYTH_HERMES_LATEST_PRICE_URL}?${idsQuery}&parsed=true&ignore_invalid_price_ids=true`;
+};
+
+const fetchJsonWithTimeout = async (url, sourceName, timeoutMs = 10000) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('retry-after');
+      const error = new Error(
+        `${sourceName} rate limited (HTTP 429${retryAfter ? `, retry after ${retryAfter}s` : ''})`
+      );
+      error.code = sourceName === 'Pyth Hermes' ? 'PYTH_RATE_LIMITED' : 'FX_RATE_LIMITED';
+      throw error;
+    }
+
+    if (!response.ok) {
+      throw new Error(`${sourceName} failed (HTTP ${response.status})`);
+    }
+
+    return response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const parsePythPrice = (price, label) => {
+  const rawPrice = Number(price?.price);
+  const expo = Number(price?.expo);
+  const value = rawPrice * (10 ** expo);
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`Invalid Pyth price for ${label}`);
+  }
+
+  return value;
+};
+
+const getPythParsedPrice = (data, feedId, label) => {
+  const normalizedFeedId = normalizePythId(feedId);
+  const feed = data?.parsed?.find((item) => normalizePythId(item.id) === normalizedFeedId);
+
+  if (!feed?.price) {
+    throw new Error(`Pyth feed ${label} is unavailable`);
+  }
+
+  return parsePythPrice(feed.price, label);
+};
+
+const fetchUsdIdrFallbackRate = async () => {
+  const data = await fetchJsonWithTimeout(USD_IDR_FALLBACK_URL, 'USD/IDR fallback FX API');
+  const rate = Number(data?.rates?.IDR);
+
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error('Invalid USD/IDR fallback FX rate');
+  }
+
+  return rate;
+};
+
+const fetchSolIdrRateFromPyth = async () => {
+  // Pyth Network logic: fetch SOL/USD and USD/IDR from Hermes, then derive SOL/IDR.
+  const pythData = await fetchJsonWithTimeout(
+    buildPythLatestPriceUrl([PYTH_SOL_USD_FEED_ID, PYTH_USD_IDR_FEED_ID]),
+    'Pyth Hermes'
+  );
+
+  const solUsdRate = getPythParsedPrice(pythData, PYTH_SOL_USD_FEED_ID, 'SOL/USD');
+  let usdIdrRate;
+
+  try {
+    usdIdrRate = getPythParsedPrice(pythData, PYTH_USD_IDR_FEED_ID, 'USD/IDR');
+  } catch (pythUsdIdrError) {
+    console.warn('[PYTH_USD_IDR_UNAVAILABLE]', pythUsdIdrError.message);
+    usdIdrRate = await fetchUsdIdrFallbackRate();
+  }
+
+  const solIdrRate = solUsdRate * usdIdrRate;
+
+  if (!Number.isFinite(solIdrRate) || solIdrRate <= 0) {
+    throw new Error('Invalid derived SOL/IDR rate');
+  }
+
+  return solIdrRate;
+};
+
 const hashString = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
@@ -195,13 +299,19 @@ function App() {
 
   useEffect(() => {
     let observer;
+    let isMounted = true;
+
     const fetchSolPrice = async () => {
       try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=idr');
-        const data = await response.json();
-        setSolPrice(data.solana.idr);
+        const pythSolIdrRate = await fetchSolIdrRateFromPyth();
+        if (isMounted) {
+          setSolPrice(pythSolIdrRate);
+        }
       } catch (error) {
-        console.error("Gagal mengambil harga SOL:", error);
+        const message = error?.code === 'PYTH_RATE_LIMITED'
+          ? 'Pyth Hermes rate limit while fetching SOL/IDR:'
+          : 'Gagal mengambil harga SOL dari Pyth:';
+        console.error(message, error);
       }
     };
 
@@ -232,6 +342,7 @@ function App() {
     });
 
     return () => {
+      isMounted = false;
       scope.current.revert();
       if (observer) observer.disconnect();
       clearInterval(priceInterval);
