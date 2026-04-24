@@ -1,4 +1,51 @@
 import { Fragment, useState, useEffect } from 'react';
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  clusterApiUrl,
+  LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
+
+const parseQrisMerchantName = (qrisData) => {
+  const fallback = 'Unknown Merchant';
+
+  try {
+    if (typeof qrisData !== 'string' || qrisData.length < 4) {
+      return fallback;
+    }
+
+    let cursor = 0;
+
+    while (cursor < qrisData.length) {
+      const tag = qrisData.slice(cursor, cursor + 2);
+      const lengthText = qrisData.slice(cursor + 2, cursor + 4);
+
+      if (tag.length !== 2 || lengthText.length !== 2 || !/^\d{2}$/.test(lengthText)) {
+        return fallback;
+      }
+
+      const valueLength = Number(lengthText);
+      const valueStart = cursor + 4;
+      const valueEnd = valueStart + valueLength;
+
+      if (valueEnd > qrisData.length) {
+        return fallback;
+      }
+
+      if (tag === '59') {
+        return qrisData.slice(valueStart, valueEnd) || fallback;
+      }
+
+      cursor = valueEnd;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+};
 
 export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
   // State untuk ngatur efek loading pas lagi proses transaksi di Blockchain
@@ -10,7 +57,7 @@ export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
   // All price computation is done server-side via POST /api/v1/payment/quote.
   // Server extracts fiatAmount from QRIS Tag 54. Client sends ONLY the payload.
 
-  const merchantName = "WARUNG SOLANA JAYA"; // TODO: Parse from QRIS EMVCo TLV (Tag 59)
+  const merchantName = parseQrisMerchantName(qrisData);
 
   const [quote, setQuote] = useState(null);
   const [quoteError, setQuoteError] = useState(null);
@@ -70,22 +117,70 @@ export default function PaymentPage({ qrisData, onConfirm, onCancel }) {
     
     try {
       // ============================================================
-      // 🚨 AREA BACKEND DEV: EKSEKUSI SMART CONTRACT 🚨 //TODO
+      //  AREA BACKEND DEV: EKSEKUSI SMART CONTRACT SOLANA -henix
       // ============================================================
-      // TUGASMU DI SINI:
-      // 1. Panggil fungsi buat interaksi sama Phantom Wallet (e.g., window.solana).
-      // 2. Bikin Transaction Solana buat ngirim 'quote.solAmount' ke wallet tujuan.
-      // 3. Minta user sign transaction (Sign & Send).
-      
-      // Catatan: Karena fungsi aslinya ada di App.jsx lewat props 'onConfirm',
-      // kamu bisa jalanin fungsi onConfirm() di sini, dan handle logic-nya di App.jsx.
-      
-      await onConfirm(quote); 
+      if (!quote) {
+        throw new Error('Quote is not available.');
+      }
+
+      const provider = window?.solana;
+
+      if (!provider?.isPhantom) {
+        throw new Error('Phantom Wallet is not installed.');
+      }
+
+      if (!provider.publicKey) {
+        await provider.connect();
+      }
+
+      const payerPublicKey = provider.publicKey;
+      const targetWalletAddress =
+        quote.targetWalletAddress ||
+        quote.merchantWalletAddress ||
+        quote.destinationWalletAddress ||
+        import.meta.env.VITE_MERCHANT_WALLET_ADDRESS;
+
+      if (!targetWalletAddress) {
+        throw new Error('Merchant wallet address is not configured.');
+      }
+
+      const recipientPublicKey = new PublicKey(targetWalletAddress);
+      const lamports = Math.round(Number(quote.solAmount) * LAMPORTS_PER_SOL);
+
+      if (!Number.isSafeInteger(lamports) || lamports <= 0) {
+        throw new Error('Invalid SOL amount.');
+      }
+
+      const connection = new Connection(clusterApiUrl('devnet'));
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: payerPublicKey,
+          toPubkey: recipientPublicKey,
+          lamports,
+        })
+      );
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = payerPublicKey;
+
+      const { signature } = await provider.signAndSendTransaction(transaction);
+
+      await connection.confirmTransaction(
+        {
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        },
+        'confirmed'
+      );
+
+      await onConfirm({ ...quote, signature });
       // ============================================================
 
     } catch (error) {
       console.error("User reject transaksi atau ada error:", error);
-      // Bisa tambahin toast/alert gagal di sini
+      setQuoteError(error.message || 'Transaction failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
