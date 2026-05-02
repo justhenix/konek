@@ -577,7 +577,7 @@ function App() {
           <div className="relative bg-white/60 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-14 backdrop-blur-md shadow-2xl dark:shadow-none overflow-hidden transition-colors duration-500">
             
             {/* Garis Aksen Estetik di Atas */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-brand to-transparent opacity-70"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-linear-to-r from-transparent via-brand to-transparent opacity-70"></div>
 
             <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-center">
               
@@ -622,7 +622,7 @@ function App() {
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
 
           {/* KIRI: Gambar Placeholder (Logo Konek) & Overlay */}
-          <div className="w-full lg:w-5/12 relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-zinc-200 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/5 flex flex-col justify-between min-h-[450px] lg:min-h-[600px] scroll-animate opacity-0 shadow-2xl dark:shadow-none">
+          <div className="w-full lg:w-5/12 relative rounded-4xl md:rounded-[3rem] overflow-hidden bg-zinc-200 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/5 flex flex-col justify-between min-h-112.5 lg:min-h-62.5 scroll-animate opacity-0 shadow-2xl dark:shadow-none">
             
             {/* Badge Kiri Atas */}
             <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
@@ -634,7 +634,7 @@ function App() {
 
             {/* Logo Konek Tengah (Placeholder) */}
             <div className="absolute inset-0 flex items-center justify-center p-12 opacity-20 dark:opacity-10 pointer-events-none">
-              <svg viewBox="0 0 100 100" className="w-full h-full max-w-[250px] drop-shadow-2xl">
+              <svg viewBox="0 0 100 100" className="w-full h-full max-w-62.5 drop-shadow-2xl">
                 <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
                 <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
               </svg>
@@ -643,7 +643,7 @@ function App() {
             <div className="flex-1"></div>
 
             {/* Teks Bawah (Overlay) */}
-            <div className="relative z-20 p-8 md:p-10 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent w-full">
+            <div className="relative z-20 p-8 md:p-10 bg-linear-to-t from-zinc-900 via-zinc-900/80 to-transparent w-full">
               <p className="text-brand font-bold text-[10px] tracking-[0.3em] uppercase mb-3 drop-shadow-md">Impact Layer</p>
               <h3 className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow-lg">
                 Membawa perlindungan ekosistem desentralisasi ke setiap rupiah transaksi nyata Anda.
