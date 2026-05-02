@@ -12,6 +12,7 @@ import fotoSiti from './assets/HENIX.png';
 import logoSolana from './assets/LogoSolana.png';
 import logoPhantom from './assets/LogoPhantom.png';
 import logoMidtrans from './assets/LogoMidtrans.png';
+import logoSuperteam from './assets/LogoSuperteam.png';
 
 // --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
@@ -161,6 +162,8 @@ const teamMembers = [
 ];
 
 function App() {
+  // --- STATE UNTUK ANIMASI NAVBAR ---
+  const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
   const scope = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -252,6 +255,15 @@ function App() {
   const handlePaymentConfirm = useCallback((parsedData) => {
     setParsedPaymentData(parsedData);
     console.log("Parsed QRIS payment data ready:", parsedData);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Kalau scroll ke bawah lebih dari 50px, navbar bakal mengecil
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -358,69 +370,86 @@ function App() {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-20px) rotate(3deg); }
           }
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee {
+            animation: marquee 15s linear infinite;
+          }
         `}
       </style>
 
       {/* NAVBAR STICKY */}
-      <nav className="sticky top-6 flex justify-between items-center bg-white/70 dark:bg-zinc-800/60 backdrop-blur-xl px-6 py-4 md:px-10 rounded-2xl md:rounded-full border border-zinc-200 dark:border-white/10 shadow-xl dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 nav-item opacity-0 transition-colors duration-500">
-        <div className="flex items-center gap-3">
-          <svg viewBox="0 0 100 100" className="w-8 h-8">
-             <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-             <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-          </svg>
-          <h2 className="text-xl font-extrabold tracking-widest uppercase text-black dark:text-white transition-colors duration-500">Konek<span className="text-brand">Pay</span></h2>
-        </div>
+      <div className={`sticky z-50 flex justify-center w-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isScrolled ? 'top-6' : 'top-0 md:top-4'}`}>
+        <nav className={`nav-item opacity-0 flex justify-between items-center w-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] 
+          ${isScrolled 
+            ? 'max-w-4xl bg-white/70 dark:bg-zinc-800/70 backdrop-blur-xl border border-zinc-200 dark:border-white/10 shadow-xl dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-2xl md:rounded-full px-6 py-4 md:px-10' 
+            : 'max-w-full bg-transparent border-transparent shadow-none rounded-none px-2 py-6 md:px-4'
+          }
+        `}>
+          
+          {/* LOGO KIRI */}
+          <div className="flex items-center gap-3 relative z-10">
+            <svg viewBox="0 0 100 100" className="w-8 h-8">
+               <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
+               <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
+            </svg>
+            <h2 className="text-xl font-extrabold tracking-widest uppercase text-black dark:text-white transition-colors duration-500">Konek<span className="text-brand">Pay</span></h2>
+          </div>
 
-        {/* MENU TENGAH DESKTOP */}
-        <ul className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2 transition-colors duration-500">
-          <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>HOME</li>
-          <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>ABOUT</li>
-          <li 
-            className="bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-5 py-2 rounded-full cursor-pointer transition-all duration-300 shadow-[0_0_15px_rgba(4,250,58,0.2)] hover:shadow-[0_0_25px_rgba(4,250,58,0.5)]" 
-            onClick={() => document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' })}
-          >
-            HOW IT WORKS
-          </li>
-          <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' })}>TEAM</li>
-        </ul>
-
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* USER PROFILE / LOGIN BUTTON */}
-          {userProfile.isLoggedIn ? (
-            <div className="flex items-center gap-2 md:gap-3 mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
-              <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
-                Hi, {userProfile.name}!
-              </span>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40 shadow-[0_0_10px_rgba(4,250,58,0.2)] hover:border-brand transition-all cursor-pointer">
-                <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
-              </div>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setIsLoginModalOpen(true)}
-              className="mr-2 text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white px-4 py-2 rounded-full transition-colors"
+          {/* MENU TENGAH DESKTOP */}
+          <ul className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2 transition-colors duration-500">
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>HOME</li>
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>ABOUT</li>
+            <li 
+              className="bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-5 py-2 rounded-full cursor-pointer transition-all duration-300 shadow-[0_0_15px_rgba(4,250,58,0.2)] hover:shadow-[0_0_25px_rgba(4,250,58,0.5)]" 
+              onClick={() => document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' })}
             >
-              Connect Wallet
-            </button>
-          )}
+              HOW IT WORKS
+            </li>
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' })}>TEAM</li>
+          </ul>
 
-          <button onClick={toggleTheme} className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand transition-all duration-300 focus:outline-none">
-            {theme === 'dark' ? (
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          {/* TOMBOL KANAN */}
+          <div className="flex items-center gap-2 md:gap-4 relative z-10">
+            {/* USER PROFILE / LOGIN BUTTON */}
+            {userProfile.isLoggedIn ? (
+              <div className="flex items-center gap-2 md:gap-3 mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
+                <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
+                  Hi, {userProfile.name}!
+                </span>
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40 shadow-[0_0_10px_rgba(4,250,58,0.2)] hover:border-brand transition-all cursor-pointer">
+                  <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                </div>
+              </div>
             ) : (
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+              <button 
+                onClick={() => setIsLoginModalOpen(true)}
+                className="mr-2 text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white px-4 py-2 rounded-full transition-colors"
+              >
+                Connect Wallet
+              </button>
             )}
-          </button>
 
-          <button className="md:hidden p-2 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand focus:outline-none transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <div className="relative w-6 h-5">
-              <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-0'}`} />
-              <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'}`} />
-              <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'top-full -translate-y-full'}`} />
-            </div>
-          </button>
-        </div>
-      </nav>
+            <button onClick={toggleTheme} className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand transition-all duration-300 focus:outline-none">
+              {theme === 'dark' ? (
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              ) : (
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+              )}
+            </button>
+
+            <button className="md:hidden p-2 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand focus:outline-none transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              <div className="relative w-6 h-5">
+                <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-0'}`} />
+                <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'}`} />
+                <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'top-full -translate-y-full'}`} />
+              </div>
+            </button>
+          </div>
+        </nav>
+      </div>
 
       {/* DROPDOWN MENU MOBILE */}
       <div className={`md:hidden fixed top-24 left-6 right-6 z-40 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl transition-all duration-500 flex flex-col items-center ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-8 invisible'}`}>
@@ -495,54 +524,186 @@ function App() {
         </div>
       </main>
 
-      {/* ABOUT KONEK SECTION */}
-      <section id="about-section" className="scroll-mt-32 md:scroll-mt-40 mt-32 md:mt-48 pb-10 z-10 w-full max-w-6xl mx-auto flex flex-col items-center">
-        <div className="text-center mb-12 scroll-animate opacity-0">
-          <h2 className="text-3xl md:text-5xl font-black tracking-widest mb-6 text-zinc-900 dark:text-white transition-colors duration-500">ABOUT <span className="text-brand">KONEK</span></h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto text-lg leading-relaxed transition-colors duration-500">
-            KONEK adalah jembatan pembayaran masa depan yang menghubungkan ekosistem Web3 dengan ekonomi dunia nyata. Membayar apapun kini semudah memindai QRIS menggunakan dompet kripto Anda.
-          </p>
-        </div>
-
-        <div className="w-full bg-white/60 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-14 backdrop-blur-sm relative overflow-hidden my-12 scroll-animate opacity-0 transition-colors duration-500 shadow-xl dark:shadow-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-75 h-75 bg-brand/20 dark:bg-brand/10 blur-[100px] rounded-full pointer-events-none"></div>
-          <p className="text-center text-[10px] uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500 font-bold mb-10 relative z-10 transition-colors duration-500">
+      {/* PARTNER BANNER */}
+      <section className="relative z-10 w-full mt-12 md:mt-24 mb-24 scroll-animate opacity-0">
+        <div className="w-full relative overflow-hidden flex flex-col items-center">
+          
+          <p className="text-center text-[10px] md:text-xs uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-400 font-bold mb-12 md:mb-16 relative z-10 transition-colors duration-500">
             Didukung Oleh Jaringan Global & Lokal
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 relative z-10">
-            <img src={logoSolana} alt="Solana Logo" className="h-10 md:h-14 object-contain" />
-            <img src={logoPhantom} alt="Phantom Wallet Logo" className="h-10 md:h-14 object-contain" />
-            <img src={logoMidtrans} alt="Midtrans Logo" className="h-16 md:h-24 object-contain" />
+          
+          {/* 1. Tambahin class "group" dan "py-4" di container bungkusnya yang diem */}
+          <div 
+            className="relative z-10 w-full overflow-hidden group py-4" 
+            style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}
+          >
+            {/* 2. Ganti hover jadi "group-hover" biar berhentinya stabil tanpa getar */}
+            <div className="flex items-center gap-20 md:gap-32 w-max animate-marquee group-hover:[animation-play-state:paused] cursor-default">
+              
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-20 md:gap-32">
+                  
+                  {/* 3. Ganti "transition-all" jadi "transition" biasa di semua item */}
+                  <img src={logoSolana} alt="Solana" className="h-6 md:h-8 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
+                  
+                  <img src={logoPhantom} alt="Phantom" className="h-6 md:h-8 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
+                  
+                  <img src={logoMidtrans} alt="Midtrans" className="h-8 md:h-10 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
+                  
+                  {/* Tambahin "select-none" biar teksnya ga ke-block biru pas ga sengaja ke-klik */}
+                  <div className="flex items-center gap-2.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300 cursor-pointer select-none">
+                    <img src={logoSuperteam} alt="Superteam Icon" className="h-7 w-7 md:h-9 md:w-9 object-contain drop-shadow-md" />
+                    <span className="font-extrabold text-xl md:text-2xl tracking-tight text-zinc-900 dark:text-white">
+                      Superteam
+                    </span>
+                  </div>
+
+                </div>
+              ))}
+              
+            </div>
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS SECTION */}
-      <section id="workflow-section" className="scroll-mt-32 mt-20 md:mt-32 z-10 w-full max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16 scroll-animate opacity-0">
-          <h2 className="text-3xl md:text-5xl font-black tracking-widest mb-4 text-zinc-900 dark:text-white transition-colors">HOW IT <span className="text-brand">WORKS</span></h2>
-          <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-widest text-xs uppercase transition-colors">3 Simple Steps for Web3 Transactions</p>
-        </div>
+      {/* ABOUT KONEK SECTION  */}
+      <section id="about-section" className="scroll-mt-32 md:scroll-mt-40 pt-10 pb-20 z-10 w-full max-w-5xl mx-auto px-4">
+        <div className="relative group scroll-animate opacity-0">
+          
+          {/* Efek Glow di Belakang Card */}
+          <div className="absolute inset-0 bg-brand/10 dark:bg-brand/5 blur-[80px] rounded-[3rem] transition-all duration-700 group-hover:bg-brand/20 dark:group-hover:bg-brand/10 pointer-events-none"></div>
+          
+          {/* Card Utama */}
+          <div className="relative bg-white/60 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-14 backdrop-blur-md shadow-2xl dark:shadow-none overflow-hidden transition-colors duration-500">
+            
+            {/* Garis Aksen Estetik di Atas */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-brand to-transparent opacity-70"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { step: "01", title: "CONNECT WALLET", desc: "Connect Phantom Wallet." },
-            { step: "02", title: "SCAN QRIS", desc: "Scan any standard QRIS code." },
-            { step: "03", title: "SIGN & PAY", desc: "Sign the transaction. Merchant receives IDR instantly via Midtrans." }
-          ].map((item, i) => (
-            <div key={i} className="scroll-animate opacity-0 bg-white/50 dark:bg-zinc-800/30 border border-zinc-200 dark:border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-brand transition-all duration-500 shadow-xl dark:shadow-none">
-              <div className="text-7xl font-black text-brand/10 dark:text-brand/5 absolute -top-2 -right-2 group-hover:text-brand/20 transition-colors pointer-events-none">
-                {item.step}
-              </div>
-              <div className="relative z-10">
-                <div className="w-14 h-14 bg-brand dark:bg-brand/20 rounded-2xl flex items-center justify-center text-black dark:text-brand font-black mb-6 shadow-[0_0_20px_rgba(4,250,58,0.3)] dark:shadow-none transition-colors">
-                  {item.step}
+            <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-center">
+              
+              {/* Bagian Kiri: Badge & Judul */}
+              <div className="w-full md:w-5/12 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-900/80 rounded-full border border-zinc-200 dark:border-white/5 mb-6 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 dark:text-zinc-400 uppercase">The Vision</span>
                 </div>
-                <h3 className="text-xl font-black mb-4 tracking-tighter text-zinc-900 dark:text-white transition-colors">{item.title}</h3>
-                <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-sm transition-colors">{item.desc}</p>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 dark:text-white leading-[1.1] transition-colors duration-500">
+                  ABOUT <br className="hidden md:block"/>
+                  <span className="text-brand">KONEK</span>
+                </h2>
+              </div>
+
+              {/* Bagian Kanan: Teks Penjelasan */}
+              <div className="w-full md:w-7/12">
+                <p className="text-zinc-600 dark:text-zinc-300 text-lg md:text-xl leading-relaxed font-medium mb-6 transition-colors duration-500">
+                  KONEK adalah jembatan pembayaran masa depan yang menghubungkan ekosistem Web3 dengan ekonomi dunia nyata. 
+                </p>
+                
+                {/* Kotak Highlight QRIS  */}
+                <div className="relative pl-6 pr-5 py-5 md:pl-8 md:pr-6 md:py-6 bg-white/80 dark:bg-zinc-900/60 rounded-2xl border border-zinc-200 dark:border-white/5 shadow-inner transition-colors duration-500 overflow-hidden">
+                  
+                  {/* Garis Aksen Kiri */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 md:w-2 bg-brand"></div>
+                  
+                  <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-400 leading-relaxed transition-colors duration-500">
+                    Membayar apapun kini semudah memindai <strong className="text-zinc-900 dark:text-white">QRIS</strong> menggunakan dompet kripto Anda. Instan, aman, dan tanpa friksi pertukaran fiat.
+                  </p>
+                  
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS SECTION (NEW DESIGN) */}
+      <section id="workflow-section" className="scroll-mt-40 md:scroll-mt-48 mt-20 md:mt-32 z-10 w-full max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
+
+          {/* KIRI: Gambar Placeholder (Logo Konek) & Overlay */}
+          <div className="w-full lg:w-5/12 relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-zinc-200 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/5 flex flex-col justify-between min-h-[450px] lg:min-h-[600px] scroll-animate opacity-0 shadow-2xl dark:shadow-none">
+            
+            {/* Badge Kiri Atas */}
+            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
+              <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase text-white shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                WORKFLOW
               </div>
             </div>
-          ))}
+
+            {/* Logo Konek Tengah (Placeholder) */}
+            <div className="absolute inset-0 flex items-center justify-center p-12 opacity-20 dark:opacity-10 pointer-events-none">
+              <svg viewBox="0 0 100 100" className="w-full h-full max-w-[250px] drop-shadow-2xl">
+                <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
+                <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
+              </svg>
+            </div>
+
+            <div className="flex-1"></div>
+
+            {/* Teks Bawah (Overlay) */}
+            <div className="relative z-20 p-8 md:p-10 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent w-full">
+              <p className="text-brand font-bold text-[10px] tracking-[0.3em] uppercase mb-3 drop-shadow-md">Impact Layer</p>
+              <h3 className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow-lg">
+                Membawa perlindungan ekosistem desentralisasi ke setiap rupiah transaksi nyata Anda.
+              </h3>
+            </div>
+          </div>
+
+          {/* KANAN: Teks Basa-Basi & List Step */}
+          <div className="w-full lg:w-7/12 flex flex-col justify-center scroll-animate opacity-0 py-4">
+            
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6 text-zinc-900 dark:text-white leading-[1.1]">
+              Membangun Standar Baru <br className="hidden md:block" />
+              Pembayaran <span className="text-brand">Web3</span>.
+            </h2>
+
+            <div className="text-zinc-600 dark:text-zinc-400 text-base md:text-lg leading-relaxed space-y-6 mb-12">
+              <p>
+                Konek Protocol menyediakan infrastruktur terverifikasi untuk menjembatani ekosistem jaringan Solana dengan ekonomi sirkular lokal. Dengan mengubah pemindaian kode respons cepat (QR) menjadi catatan digital yang kekal, kami memungkinkan audit yang transparan dan aman.
+              </p>
+              <p>
+                Tujuan objektif kami di Frontier Hackathon ini definitif: melacak, memverifikasi, dan memvalidasi setiap transaksi dengan data on-chain secara instan, menghilangkan kerumitan konversi fiat tradisional.
+              </p>
+            </div>
+
+            {/* Vertical Steps (Tanpa Kotak) */}
+            <div className="space-y-8 md:space-y-12 border-t border-zinc-200 dark:border-white/10 pt-10">
+              {[
+                { 
+                  step: "01", 
+                  title: "Inherent Traceability", 
+                  desc: "Setiap transaksi bermula dari dompet non-kustodial Anda. Kami mengganti sistem login dan klaim yang tidak terverifikasi dengan autentikasi sumber data yang kuat menggunakan Phantom." 
+                },
+                { 
+                  step: "02", 
+                  title: "Rigorous Verification", 
+                  desc: "Kamera pemindai Konek memastikan integritas data melalui analisis otomatis dan pembacaan string QRIS standar untuk secara aktif memitigasi kesalahan transfer dana." 
+                },
+                { 
+                  step: "03", 
+                  title: "Unified Architecture", 
+                  desc: "Satu klik untuk validasi akhir. Smart contract menyediakan sumber kebenaran tunggal yang kekal, menyelaraskan pengguna dan merchant lokal dari input awal hingga penerimaan dana real-time." 
+                }
+              ].map((item, i) => (
+                <div key={i} className="flex gap-6 md:gap-8 group">
+                  <div className="text-brand font-black text-xl md:text-2xl pt-0.5 transition-transform group-hover:-translate-y-1">
+                    {item.step}
+                  </div>
+                  <div>
+                    <h4 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mb-2 tracking-wide transition-colors group-hover:text-brand">
+                      {item.title}
+                    </h4>
+                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-sm md:text-base">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+          </div>
         </div>
       </section>
 
