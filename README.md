@@ -25,7 +25,7 @@ in fiat (IDR) to the merchant's bank account.
 
 | Layer | Tools |
 |---|---|
-| Frontend | Next.js (App Router), React, TailwindCSS |
+| Frontend | Vite, React, TailwindCSS |
 | Web3 | `@solana/web3.js`, `@solana/wallet-adapter` |
 | Database | Supabase (PostgreSQL) |
 | Fiat Gateway | Midtrans Sandbox API |
@@ -49,10 +49,10 @@ npm install
 
 ### 3. Set up environment variables
 
-Create a `.env.local` file in the root directory.
+Copy `.env.example` to `.env.local` in the project root and fill in real values.
 Request the keys from the Lead Architect (`@justhenix`).
 
-> **DO NOT commit this file.**
+> **DO NOT commit `.env.local`.** It is already in `.gitignore`.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -63,13 +63,54 @@ MIDTRANS_SERVER_KEY=
 NEXT_PUBLIC_TREASURY_WALLET=
 ```
 
+| Variable | Source | Scope |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → URL | Public (browser OK) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → `anon` `public` key | Public (browser OK) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` key | **Backend only** ⚠️ |
+| `SOLANA_RPC_URL` | Your Solana RPC provider (Helius, QuickNode, etc.) | Backend only |
+| `MIDTRANS_SERVER_KEY` | Midtrans Dashboard → Server Key | Backend only |
+| `NEXT_PUBLIC_TREASURY_WALLET` | Your Solana wallet public key | Public (browser OK) |
+
+> **Security:** `SUPABASE_SERVICE_ROLE_KEY` bypasses Row Level Security and must
+> **never** be imported in `src/` (browser-bundled code). It is only used inside
+> `api/lib/` by Vercel serverless functions.
+
+> **Restart:** After editing `.env.local`, restart the dev server (`npm run dev`
+> or `vercel dev`) for changes to take effect.
+
 ### 4. Run the development server
 
 ```bash
 npm run dev
 ```
 
+For full-stack local dev with serverless functions:
+
+```bash
+npx vercel dev
+```
+
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Backend Architecture
+
+Serverless functions live in `api/` and run on Vercel:
+
+```
+api/
+├── lib/
+│   ├── supabaseAdmin.js   ← Server-only Supabase client (service_role)
+│   └── transactions.js    ← Reusable DB helpers (CRUD on transactions table)
+└── v1/
+    └── payment/
+        └── quote.js       ← POST /api/v1/payment/quote
+```
+
+> `api/lib/` is **not** deployed as routes — only `api/v1/**` are callable endpoints.
+> The lib modules are imported by handlers.
 
 ---
 
