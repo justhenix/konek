@@ -1,8 +1,7 @@
 import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
-
-const DEMO_QRIS_PAYLOAD = '00020101021226430019ID.CO.KONEKPAY.DEMO0116SANDBOX-QRIS-0015204000053033605405250005802ID5922KONEKPAY DEMO MERCHANT6007JAKARTA63047F45';
+import { getDemoQrisPayload } from './utils/demoQris';
 
 // Tambahan properti "onResult" untuk ngirim data ke App.jsx
 export default function QrisScanner({ onClose, onResult, t }) {
@@ -58,9 +57,10 @@ export default function QrisScanner({ onClose, onResult, t }) {
   };
 
   const handleUseDemoQris = async () => {
-    setManualPayload(DEMO_QRIS_PAYLOAD);
+    const demoPayload = getDemoQrisPayload();
+    setManualPayload(demoPayload);
     await stopCamera();
-    processPayment(DEMO_QRIS_PAYLOAD);
+    processPayment(demoPayload);
   };
 
   useEffect(() => {
