@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, useMemo, useCallback, Fragment } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Keypair } from '@solana/web3.js';
 import { animate, createScope, stagger, utils } from 'animejs'; 
+import bs58 from 'bs58';
+import nacl from 'tweetnacl';
 import './App.css';
 
 // --- IMPORT FOTO TIM KREATOR ---
@@ -25,6 +28,13 @@ const PYTH_HERMES_LATEST_PRICE_URL = 'https://hermes.pyth.network/v2/updates/pri
 const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d';
 const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
 const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
+const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
+const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
+const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
+const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
+const PHANTOM_SESSION_STORAGE_KEY = 'phantom_session';
+const PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY = 'phantom_wallet_encryption_public_key';
+const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
 
 const normalizePythId = (id) => String(id ?? '').replace(/^0x/i, '').toLowerCase();
 
@@ -172,6 +182,9 @@ function App() {
   const [theme, setTheme] = useState('dark');
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [mobileWalletPublicKey, setMobileWalletPublicKey] = useState(() => (
+    localStorage.getItem(PHANTOM_PUBLIC_KEY_STORAGE_KEY)
+  ));
 
   const { select, wallets, publicKey, connect } = useWallet();
 
@@ -185,8 +198,8 @@ function App() {
   // USER PROFILE (derived from publicKey — no effect needed)
   // ==========================================
   const userProfile = useMemo(() => {
-    if (publicKey) {
-      const pKeyStr = publicKey.toBase58();
+    const pKeyStr = publicKey?.toBase58() || mobileWalletPublicKey;
+    if (pKeyStr) {
       if (import.meta.env.DEV) {
         console.log(pKeyStr);
       }
@@ -201,13 +214,40 @@ function App() {
       name: "Guest",
       avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest`
     };
-  }, [publicKey]);
+  }, [publicKey, mobileWalletPublicKey]);
 
   // ==========================================
   // 🚨 AREA BACKEND DEV: FUNGSI KONEK WALLET 🚨
   // ==========================================
   const handleConnectWallet = async () => {
     try {
+      const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
+
+      if (isMobile) {
+        const dappKeypair = Keypair.generate();
+        const dappEncryptionKeypair = nacl.box.keyPair.fromSecretKey(
+          dappKeypair.secretKey.slice(0, nacl.box.secretKeyLength)
+        );
+        const dappEncryptionPublicKey = bs58.encode(dappEncryptionKeypair.publicKey);
+        const redirectUrl = new URL(window.location.href);
+
+        redirectUrl.search = '';
+        redirectUrl.hash = '';
+        localStorage.setItem(
+          PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY,
+          JSON.stringify(Array.from(dappKeypair.secretKey))
+        );
+        localStorage.setItem(PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY, dappEncryptionPublicKey);
+
+        const phantomConnectUrl = new URL(PHANTOM_CONNECT_URL);
+        phantomConnectUrl.searchParams.set('dapp_encryption_public_key', dappEncryptionPublicKey);
+        phantomConnectUrl.searchParams.set('app_url', window.location.origin);
+        phantomConnectUrl.searchParams.set('redirect_link', redirectUrl.toString());
+
+        window.location.href = phantomConnectUrl.toString();
+        return;
+      }
+
       const phantomWallet = wallets.find((w) => w.adapter.name === 'Phantom');
       if (phantomWallet) {
         if (phantomWallet.readyState === 'Installed' || phantomWallet.readyState === 'Loadable') {
@@ -226,11 +266,73 @@ function App() {
       console.error("Failed to connect to wallet:", error);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const phantomEncryptionPublicKey = params.get('phantom_encryption_public_key');
+    const nonce = params.get('nonce');
+    const data = params.get('data');
+    const errorCode = params.get('errorCode');
+    const errorMessage = params.get('errorMessage');
+
+    if (errorCode) {
+      console.error(`Phantom mobile connect rejected (${errorCode}): ${errorMessage || 'Unknown error'}`);
+      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+      return;
+    }
+
+    if (!phantomEncryptionPublicKey || !nonce || !data) {
+      return;
+    }
+
+    try {
+      const storedSecretKey = localStorage.getItem(PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY);
+      if (!storedSecretKey) {
+        throw new Error('Missing Phantom dapp secret key from localStorage.');
+      }
+
+      const dappSecretKey = Uint8Array.from(JSON.parse(storedSecretKey));
+      const dappEncryptionSecretKey = dappSecretKey.slice(0, nacl.box.secretKeyLength);
+      const sharedSecret = nacl.box.before(
+        bs58.decode(phantomEncryptionPublicKey),
+        dappEncryptionSecretKey
+      );
+      const decryptedData = nacl.box.open.after(
+        bs58.decode(data),
+        bs58.decode(nonce),
+        sharedSecret
+      );
+
+      if (!decryptedData) {
+        throw new Error('Unable to decrypt Phantom mobile connect payload.');
+      }
+
+      const payload = JSON.parse(new TextDecoder().decode(decryptedData));
+      if (!payload.public_key) {
+        throw new Error('Phantom mobile connect payload did not include public_key.');
+      }
+
+      localStorage.setItem(PHANTOM_PUBLIC_KEY_STORAGE_KEY, payload.public_key);
+      localStorage.setItem(PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY, phantomEncryptionPublicKey);
+      if (payload.session) {
+        localStorage.setItem(PHANTOM_SESSION_STORAGE_KEY, payload.session);
+      }
+
+      queueMicrotask(() => {
+        setMobileWalletPublicKey(payload.public_key);
+        setIsLoginModalOpen(false);
+      });
+    } catch (error) {
+      console.error('Failed to decrypt Phantom mobile connect response:', error);
+    } finally {
+      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+    }
+  }, []);
   // ==========================================
 
   // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
   const handleOpenApp = () => {
-    if (userProfile.isLoggedIn && publicKey) {
+    if (userProfile.isLoggedIn) {
       setIsScannerOpen(true); // Kalau udah login, buka kamera
     } else {
       setIsLoginModalOpen(true); // Kalau belum login, minta konek dompet
