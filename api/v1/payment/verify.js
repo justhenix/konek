@@ -12,6 +12,15 @@ const SOL_AMOUNT_PATTERN = /^(\d+)(?:\.(\d{1,9}))?$/;
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 const FINAL_STATUSES = new Set(['confirmed', 'finalized']);
 
+class VerifyConfigError extends Error {
+  constructor(code, message, httpStatus = 500) {
+    super(message);
+    this.name = 'VerifyConfigError';
+    this.code = code;
+    this.httpStatus = httpStatus;
+  }
+}
+
 const buildExplorerUrl = (signature) => (
   `https://explorer.solana.com/tx/${encodeURIComponent(signature)}?cluster=devnet`
 );
@@ -32,14 +41,41 @@ const getSolanaRpcUrl = () => (
 );
 
 const getDevnetConnection = () => {
-  const rpcUrl = getSolanaRpcUrl();
+  const rpcUrl = getSolanaRpcUrl().trim();
+  let parsedRpcUrl;
 
-  if (/mainnet/i.test(rpcUrl)) {
-    throw new Error('Mainnet RPC is not allowed for devnet payment verification.');
+  try {
+    parsedRpcUrl = new URL(rpcUrl);
+  } catch {
+    throw new VerifyConfigError(
+      'SOLANA_RPC_INVALID',
+      'Backend SOLANA_RPC_URL is invalid. Set SOLANA_RPC_URL to a Solana devnet HTTP RPC URL.'
+    );
   }
 
-  return new Connection(rpcUrl, 'confirmed');
+  if (!['http:', 'https:'].includes(parsedRpcUrl.protocol)) {
+    throw new VerifyConfigError(
+      'SOLANA_RPC_INVALID',
+      'Backend SOLANA_RPC_URL must use http or https and point to Solana devnet.'
+    );
+  }
+
+  if (/mainnet/i.test(parsedRpcUrl.toString())) {
+    throw new VerifyConfigError(
+      'SOLANA_RPC_MAINNET_NOT_ALLOWED',
+      'Backend SOLANA_RPC_URL points at mainnet. Use a Solana devnet RPC URL for payment verification.'
+    );
+  }
+
+  return new Connection(parsedRpcUrl.toString(), 'confirmed');
 };
+
+const jsonRpcFailure = (res) => jsonFailure(
+  res,
+  502,
+  'SOLANA_RPC_INVALID',
+  'Backend SOLANA_RPC_URL could not read Solana devnet. Set SOLANA_RPC_URL to a working devnet RPC URL.'
+);
 
 const getTreasuryWallet = () => (
   process.env.TREASURY_WALLET
@@ -47,17 +83,23 @@ const getTreasuryWallet = () => (
   || ''
 );
 
-/**
- * Returns { ok: true, publicKey } or { ok: false }.
- * Does NOT throw — caller decides how to respond.
- */
-const parseTreasuryPublicKey = () => {
+const getRequiredTreasuryPublicKey = () => {
+  const wallet = getTreasuryWallet().trim();
+
+  if (!wallet) {
+    throw new VerifyConfigError(
+      'TREASURY_WALLET_NOT_CONFIGURED',
+      'Backend TREASURY_WALLET is missing. Set TREASURY_WALLET in local env.'
+    );
+  }
+
   try {
-    const wallet = getTreasuryWallet();
-    if (!wallet) return { ok: false };
-    return { ok: true, publicKey: new PublicKey(wallet) };
+    return new PublicKey(wallet);
   } catch {
-    return { ok: false };
+    throw new VerifyConfigError(
+      'TREASURY_WALLET_INVALID',
+      'Backend TREASURY_WALLET is not a valid Solana public key. Set TREASURY_WALLET to the devnet treasury wallet.'
+    );
   }
 };
 
@@ -114,6 +156,53 @@ const isConfirmedOrFinalized = (signatureStatus) => (
   || signatureStatus?.confirmations === null
 );
 
+const logVerificationDetails = ({
+  signature,
+  quote,
+  expectedLamports,
+  expectedDestination,
+  transfers,
+}) => {
+  console.info('[PAYMENT_VERIFY_ONCHAIN]', {
+    signature,
+    quoteSource: quote.source || 'UNKNOWN',
+    quoteSolAmount: quote.solAmount,
+    expectedLamports: expectedLamports.toString(),
+    expectedDestination,
+    detectedTransfers: transfers.map((transfer) => ({
+      destination: transfer.destination,
+      lamports: transfer.lamports.toString(),
+    })),
+  });
+};
+
+const persistVerifiedPayment = async ({ quote, signature }) => {
+  const quoteSource = quote.source || 'UNKNOWN';
+
+  if (quoteSource !== 'PERSISTED_TRANSACTION') {
+    console.info('[PAYMENT_VERIFY_PERSISTENCE] persistence skipped', {
+      signature,
+      quoteSource,
+    });
+    return;
+  }
+
+  try {
+    const { updateTransactionStatus } = await import('../../lib/transactions.js');
+    await updateTransactionStatus(quote.quoteId, 'CONFIRMED', signature);
+
+    console.info('[PAYMENT_VERIFY_PERSISTENCE] status updated', {
+      signature,
+      quoteSource,
+    });
+  } catch {
+    console.info('[PAYMENT_VERIFY_PERSISTENCE] persistence skipped', {
+      signature,
+      quoteSource,
+    });
+  }
+};
+
 // POST /api/v1/payment/verify
 export default async function handler(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -148,31 +237,40 @@ export default async function handler(req, res) {
       return jsonFailure(res, 404, 'QUOTE_NOT_FOUND', 'Payment quote was not found.');
     }
 
-    if (Date.now() >= new Date(quote.expiresAt).getTime()) {
+    const quoteExpiresAt = new Date(quote.expiresAt).getTime();
+
+    if (!Number.isFinite(quoteExpiresAt)) {
+      return jsonFailure(res, 400, 'INVALID_QUOTE', 'Payment quote expiration is invalid.');
+    }
+
+    if (Date.now() >= quoteExpiresAt) {
       return jsonFailure(res, 409, 'QUOTE_EXPIRED', 'Payment quote has expired.', {
         signature: trimmedSignature,
       });
     }
 
-    const treasury = parseTreasuryPublicKey();
+    const treasuryPublicKey = getRequiredTreasuryPublicKey();
+    const expectedDestination = treasuryPublicKey.toBase58();
+    let expectedLamports;
 
-    if (!treasury.ok) {
-      return jsonFailure(
-        res,
-        500,
-        'TREASURY_WALLET_NOT_CONFIGURED',
-        'Backend TREASURY_WALLET is missing. Set TREASURY_WALLET in local env.',
-      );
+    try {
+      expectedLamports = solToLamports(quote.solAmount);
+    } catch {
+      return jsonFailure(res, 400, 'INVALID_QUOTE', 'Payment quote SOL amount is invalid.');
     }
 
-    const expectedDestination = treasury.publicKey.toBase58();
-    const expectedLamports = solToLamports(quote.solAmount);
     const connection = getDevnetConnection();
-    const { value: signatureStatuses } = await connection.getSignatureStatuses(
-      [trimmedSignature],
-      { searchTransactionHistory: true }
-    );
-    const signatureStatus = signatureStatuses[0];
+    let signatureStatus;
+
+    try {
+      const { value: signatureStatuses } = await connection.getSignatureStatuses(
+        [trimmedSignature],
+        { searchTransactionHistory: true }
+      );
+      signatureStatus = signatureStatuses[0];
+    } catch {
+      return jsonRpcFailure(res);
+    }
 
     if (!signatureStatus) {
       return jsonFailure(res, 404, 'TX_NOT_FOUND', 'Transaction was not found on Solana devnet.', {
@@ -192,10 +290,16 @@ export default async function handler(req, res) {
       });
     }
 
-    const transaction = await connection.getParsedTransaction(trimmedSignature, {
-      commitment: 'confirmed',
-      maxSupportedTransactionVersion: 0,
-    });
+    let transaction;
+
+    try {
+      transaction = await connection.getParsedTransaction(trimmedSignature, {
+        commitment: 'confirmed',
+        maxSupportedTransactionVersion: 0,
+      });
+    } catch {
+      return jsonRpcFailure(res);
+    }
 
     if (!transaction) {
       return jsonFailure(res, 404, 'TX_NOT_FOUND', 'Transaction details were not found on Solana devnet.', {
@@ -204,6 +308,14 @@ export default async function handler(req, res) {
     }
 
     const transfers = readSystemTransfers(transaction);
+    logVerificationDetails({
+      signature: trimmedSignature,
+      quote,
+      expectedLamports,
+      expectedDestination,
+      transfers,
+    });
+
     const treasuryTransfers = transfers.filter((transfer) => (
       transfer.destination === expectedDestination
     ));
@@ -224,13 +336,21 @@ export default async function handler(req, res) {
       });
     }
 
+    await persistVerifiedPayment({ quote, signature: trimmedSignature });
+
     return res.status(200).json({
       status: 'PAID_VERIFIED',
       signature: trimmedSignature,
       explorerUrl: buildExplorerUrl(trimmedSignature),
     });
   } catch (error) {
-    console.error('[UNHANDLED_VERIFY_ERROR]', error);
+    if (error instanceof VerifyConfigError) {
+      return jsonFailure(res, error.httpStatus, error.code, error.message);
+    }
+
+    console.error('[UNHANDLED_VERIFY_ERROR]', {
+      message: error instanceof Error ? error.message : 'Unknown verification error',
+    });
 
     return jsonFailure(res, 500, 'INTERNAL_ERROR', 'An unexpected error occurred.');
   }
