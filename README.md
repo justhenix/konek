@@ -163,8 +163,12 @@ npm run dev
 Full-stack local development with Vercel serverless functions:
 
 ```bash
-npx vercel dev
+npm run dev:vercel
 ```
+
+This uses `dotenv-cli` to inject `.env.local` into the Vercel dev server so
+backend API routes can read `TREASURY_WALLET`, `PAYMENT_QUOTE_SECRET`, and
+other non-`VITE_` vars. No manual shell exports needed.
 
 Vite usually serves the frontend at:
 
@@ -178,13 +182,54 @@ http://localhost:5173
 http://localhost:3000
 ```
 
+### Local Vercel dev environment
+
+`.env.local` **must** exist with all required values before testing payments.
+Copy `.env.example` to `.env.local` and fill in real keys.
+
+**Pre-flight check:**
+
+```bash
+npm run dev:check-env
+```
+
+This loads `.env.local` and confirms every required variable is present. Run it
+whenever you change `.env.local` or set up a fresh checkout.
+
+**Start full-stack dev:**
+
+```bash
+npm run dev:vercel
+```
+
+This wraps `vercel dev` with `dotenv-cli -e .env.local`, ensuring all backend
+env vars (including `TREASURY_WALLET` and `PAYMENT_QUOTE_SECRET`) are visible
+to the serverless API routes.
+
+> **Why not raw `npx vercel dev`?**
+> Vercel CLI does not reliably forward non-`VITE_` vars from `.env.local` to
+> serverless functions on all platforms. `dotenv-cli` guarantees they are loaded
+> into `process.env` before the child process starts.
+
+If you prefer manual exports (e.g. in CI or scripts):
+
+| Shell      | Syntax                                    |
+| ---------- | ----------------------------------------- |
+| Git Bash   | `export TREASURY_WALLET="FHXQa...MYQTd"` |
+| PowerShell | `$env:TREASURY_WALLET="FHXQa...MYQTd"`   |
+| cmd.exe    | `set TREASURY_WALLET=FHXQa...MYQTd`      |
+
+But `npm run dev:vercel` is the recommended path.
+
 ## Scripts
 
 ```bash
-npm run dev       # Start the Vite development server
-npm run build     # Build the production frontend bundle
-npm run preview   # Preview the production build locally
-npm run lint      # Run ESLint
+npm run dev            # Start the Vite development server
+npm run build          # Build the production frontend bundle
+npm run preview        # Preview the production build locally
+npm run lint           # Run ESLint
+npm run dev:vercel     # Start Vercel dev with .env.local injected
+npm run dev:check-env  # Validate required env vars in .env.local
 ```
 
 ## Deployment
