@@ -47,11 +47,17 @@ const getTreasuryWallet = () => (
   || ''
 );
 
+/**
+ * Returns { ok: true, publicKey } or { ok: false }.
+ * Does NOT throw — caller decides how to respond.
+ */
 const parseTreasuryPublicKey = () => {
   try {
-    return new PublicKey(getTreasuryWallet());
+    const wallet = getTreasuryWallet();
+    if (!wallet) return { ok: false };
+    return { ok: true, publicKey: new PublicKey(wallet) };
   } catch {
-    throw new Error('Treasury wallet is not configured.');
+    return { ok: false };
   }
 };
 
@@ -148,8 +154,18 @@ export default async function handler(req, res) {
       });
     }
 
-    const treasuryPublicKey = parseTreasuryPublicKey();
-    const expectedDestination = treasuryPublicKey.toBase58();
+    const treasury = parseTreasuryPublicKey();
+
+    if (!treasury.ok) {
+      return jsonFailure(
+        res,
+        500,
+        'TREASURY_WALLET_NOT_CONFIGURED',
+        'Backend TREASURY_WALLET is missing. Set TREASURY_WALLET in local env.',
+      );
+    }
+
+    const expectedDestination = treasury.publicKey.toBase58();
     const expectedLamports = solToLamports(quote.solAmount);
     const connection = getDevnetConnection();
     const { value: signatureStatuses } = await connection.getSignatureStatuses(
