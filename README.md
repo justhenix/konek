@@ -26,15 +26,15 @@ Implemented:
 - QRIS scanning in the browser with device camera support.
 - EMVCo TLV parsing for QRIS payloads.
 - Phantom wallet connection on desktop and mobile deeplink flow.
+- Phantom devnet transfer flow.
 - Live SOL/IDR quote endpoint using Pyth Hermes price feeds.
 - Server-side quote validation that parses QRIS Tag 54 directly.
+- Server-side Solana devnet transaction verification against the quote and treasury wallet.
 - Supabase server-only helper modules for transaction persistence.
 - Vercel serverless API structure.
 
 In progress:
 
-- Creating and signing the final Solana transfer transaction.
-- Verifying submitted Solana transaction signatures.
 - Persisting full payment lifecycle states from quote to settlement.
 - Midtrans Iris disbursement integration for fiat merchant settlement.
 
@@ -115,6 +115,40 @@ Successful response:
 The endpoint does not trust client-provided fiat amounts. It parses QRIS Tag 54
 on the server and rejects malformed, missing, or unsupported payloads.
 
+### `POST /api/v1/payment/verify`
+
+Verifies a submitted Solana devnet transaction against a backend quote.
+
+Request:
+
+```json
+{
+  "quoteId": "demo_quote_v1....",
+  "signature": "5zy..."
+}
+```
+
+Successful response:
+
+```json
+{
+  "status": "PAID_VERIFIED",
+  "signature": "5zy...",
+  "explorerUrl": "https://explorer.solana.com/tx/5zy...?cluster=devnet"
+}
+```
+
+Common failures:
+
+| Error | Meaning |
+| ----- | ------- |
+| `TX_NOT_FOUND` | The signature was not found on Solana devnet. |
+| `TX_NOT_FINALIZED` | The transaction is not confirmed or finalized yet. |
+| `WRONG_DESTINATION` | The transaction does not pay the configured treasury wallet. |
+| `WRONG_AMOUNT` | The transferred lamports do not exactly match the quote. |
+| `QUOTE_EXPIRED` | The quote expired before verification. |
+| `TREASURY_WALLET_NOT_CONFIGURED` | `TREASURY_WALLET` is missing from backend env. |
+
 ## Getting Started
 
 ### Prerequisites
@@ -149,7 +183,7 @@ Fill in the values you need for the parts of the stack you are running.
 | `VITE_PUBLIC_SUPABASE_URL`      | Serverless API and future frontend reads | Supabase project URL              | Public     |
 | `VITE_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads           | Browser-safe Supabase access      | Public     |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Serverless API only                      | Transaction admin operations      | Secret     |
-| `SOLANA_RPC_URL`                | Future server verification               | Backend Solana reads              | Secret     |
+| `SOLANA_RPC_URL`                | Serverless payment verification          | Backend Solana devnet reads       | Secret     |
 | `MIDTRANS_SERVER_KEY`           | Future settlement API                    | Midtrans Iris disbursement        | Secret     |
 
 ### Run the app
@@ -220,6 +254,16 @@ If you prefer manual exports (e.g. in CI or scripts):
 | cmd.exe    | `set TREASURY_WALLET=FHXQa...MYQTd`      |
 
 But `npm run dev:vercel` is the recommended path.
+
+### Manual payment verification checklist
+
+1. Run `npm run dev:check-env`.
+2. Run `npm run dev:vercel`.
+3. Use **Demo QRIS** in the scanner.
+4. Confirm the generated quote.
+5. Pay with Phantom on Solana devnet.
+6. Verify the Payment Verified page appears.
+7. Open the Explorer receipt.
 
 ## Scripts
 
