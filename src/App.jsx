@@ -810,11 +810,7 @@ function App() {
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isProfileMenuOpen]);
 
-  useEffect(() => {
-    if (!userProfile.isLoggedIn) {
-      setIsProfileMenuOpen(false);
-    }
-  }, [userProfile.isLoggedIn]);
+
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const handleNext = () => setActiveIdx((prev) => (prev + 1) % teamMembers.length);
