@@ -146,6 +146,13 @@ export default function PaymentPage({
     }
     : null;
   const visiblePaymentError = externalPaymentError || paymentError;
+  const footerLabel = submittedPayment
+    ? 'Awaiting backend verification'
+    : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
+      ? 'Demo signed quote fallback'
+      : quote
+        ? `Quote ${String(quote.quoteId).slice(0, 12)}`
+        : 'Parsed locally from EMVCo QRIS TLV';
 
   const handleConfirm = async () => {
     if (!parsedPayment.isValid || isQuoteLoading) {
@@ -373,7 +380,7 @@ export default function PaymentPage({
 
           <div className="p-4 bg-zinc-50 dark:bg-zinc-950 text-center border-t border-zinc-100 dark:border-white/5 transition-colors">
             <div className="text-[9px] text-zinc-400 dark:text-zinc-600 font-bold tracking-[0.2em] uppercase transition-colors">
-              {submittedPayment ? 'Awaiting backend verification' : quote ? `Quote ${quote.quoteId}` : 'Parsed locally from EMVCo QRIS TLV'}
+              {footerLabel}
             </div>
           </div>
           
