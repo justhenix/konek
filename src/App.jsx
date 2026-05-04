@@ -259,6 +259,8 @@ function App() {
   const root = useRef(null);
   const scope = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState('dark');
@@ -269,7 +271,7 @@ function App() {
   ));
 
   const { connection } = useConnection();
-  const { select, wallets, publicKey, connect, sendTransaction } = useWallet();
+  const { select, wallets, publicKey, connect, disconnect, connected, sendTransaction } = useWallet();
 
   // --- STATE UNTUK FLOW APLIKASI (LOGIN -> SCAN -> PAY) ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -444,6 +446,37 @@ function App() {
       console.error("Failed to connect to wallet:", error);
     }
   };
+
+  const handleDisconnectWallet = useCallback(async () => {
+    try {
+      if (connected || publicKey) {
+        await disconnect();
+      }
+    } catch (error) {
+      console.error('Failed to disconnect wallet adapter:', error);
+    } finally {
+      [
+        PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY,
+        PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
+        PHANTOM_PUBLIC_KEY_STORAGE_KEY,
+        PHANTOM_SESSION_STORAGE_KEY,
+        PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
+      ].forEach((key) => localStorage.removeItem(key));
+
+      setMobileWalletPublicKey(null);
+      setIsProfileMenuOpen(false);
+      setIsLoginModalOpen(false);
+      setIsScannerOpen(false);
+      setIsMenuOpen(false);
+      setScannedData(null);
+      setParsedPaymentData(null);
+      setRestoredPaymentQuote(null);
+      setPaymentSubmission(null);
+      setPaymentError(null);
+      setPaymentVerification(createIdlePaymentVerification());
+      sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+    }
+  }, [connected, disconnect, publicKey]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -749,6 +782,27 @@ function App() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!userProfile.isLoggedIn) {
+      setIsProfileMenuOpen(false);
+    }
+  }, [userProfile.isLoggedIn]);
+
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const handleNext = () => setActiveIdx((prev) => (prev + 1) % teamMembers.length);
   const handlePrev = () => setActiveIdx((prev) => (prev - 1 + teamMembers.length) % teamMembers.length);
@@ -890,12 +944,43 @@ function App() {
           <div className="flex items-center gap-2 md:gap-4 relative z-10">
             {/* USER PROFILE / LOGIN BUTTON */}
             {userProfile.isLoggedIn ? (
-              <div className="flex items-center gap-2 md:gap-3 mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
-                <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
-                  Hi, {userProfile.name}!
-                </span>
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40 shadow-[0_0_10px_rgba(4,250,58,0.2)] hover:border-brand transition-all cursor-pointer">
-                  <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+              <div ref={profileMenuRef} className="relative mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
+                  className="flex items-center gap-2 md:gap-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900"
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileMenuOpen}
+                >
+                  <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
+                    Hi, {userProfile.name}!
+                  </span>
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40 shadow-[0_0_10px_rgba(4,250,58,0.2)] hover:border-brand transition-all">
+                    <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                  </div>
+                </button>
+
+                <div
+                  className={`absolute right-0 top-11 md:top-12 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
+                  role="menu"
+                >
+                  <div className="flex items-center gap-3 px-2 py-2 border-b border-zinc-200 dark:border-white/10 mb-2">
+                    <div className="w-9 h-9 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40">
+                      <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Wallet</p>
+                      <p className="truncate text-sm font-bold text-zinc-800 dark:text-white">{userProfile.name}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectWallet}
+                    className="w-full rounded-xl px-3 py-3 text-left text-sm font-black text-red-500 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
+                    role="menuitem"
+                  >
+                    Disconnect Wallet
+                  </button>
                 </div>
               </div>
             ) : (
