@@ -48,15 +48,15 @@ In progress:
 
 ## Tech Stack
 
-| Layer | Tools |
-| --- | --- |
-| Frontend | Vite, React, Tailwind CSS |
-| QR scanning | `html5-qrcode` |
-| Web3 | `@solana/web3.js`, Solana Wallet Adapter, Phantom |
-| Pricing | Pyth Network Hermes, USD/IDR fallback API |
-| Backend | Vercel Serverless Functions |
-| Database | Supabase Postgres |
-| Fiat gateway | Midtrans Iris API |
+| Layer        | Tools                                             |
+| ------------ | ------------------------------------------------- |
+| Frontend     | Vite, React, Tailwind CSS                         |
+| QR scanning  | `html5-qrcode`                                    |
+| Web3         | `@solana/web3.js`, Solana Wallet Adapter, Phantom |
+| Pricing      | Pyth Network Hermes, USD/IDR fallback API         |
+| Backend      | Vercel Serverless Functions                       |
+| Database     | Supabase Postgres                                 |
+| Fiat gateway | Midtrans Iris API                                 |
 
 ## Project Structure
 
@@ -65,18 +65,23 @@ api/
   lib/
     supabaseAdmin.js      Server-only Supabase client
     transactions.js       Transaction database helpers
+    paymentQuotes.js      Quote generation and HMAC signing
   v1/
     payment/
       quote.js            POST /api/v1/payment/quote
+      verify.js           POST /api/v1/payment/verify
 
 src/
   components/
     WalletContextProvider.jsx
   utils/
     parseEmvcoQris.js     EMVCo QRIS parser
+    demoQris.js           Synthetic demo QRIS payload generator
+    payment.js            Payment formatting helpers
+    solanaPayment.js      Solana transaction helpers
   App.jsx                 Main landing and wallet flow
-  QrisScanner.jsx         Camera QR scanner
-  PaymentPage.jsx         QRIS review screen
+  QrisScanner.jsx         Camera QR scanner + demo/paste input
+  PaymentPage.jsx         QRIS review and payment flow
 ```
 
 ## API
@@ -137,22 +142,15 @@ cp .env.example .env.local
 
 Fill in the values you need for the parts of the stack you are running.
 
-| Variable | Used by | Required for | Visibility |
-| --- | --- | --- | --- |
-| `VITE_SOLANA_RPC_URL` | Frontend wallet provider | Optional custom Solana devnet RPC | Public |
-| `VITE_TREASURY_WALLET` | Frontend payment flow | Destination wallet display | Public |
-| `VITE_PUBLIC_SUPABASE_URL` | Serverless API and future frontend reads | Supabase project URL | Public |
-| `VITE_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads | Browser-safe Supabase access | Public |
-| `SUPABASE_SERVICE_ROLE_KEY` | Serverless API only | Transaction admin operations | Secret |
-| `SOLANA_RPC_URL` | Future server verification | Backend Solana reads | Secret |
-| `MIDTRANS_SERVER_KEY` | Future settlement API | Midtrans Iris disbursement | Secret |
-
-Security notes:
-
-- Never commit `.env.local`.
-- Never import `SUPABASE_SERVICE_ROLE_KEY` into files under `src/`.
-- The Supabase service role key bypasses Row Level Security and must only be used in serverless functions.
-- Restart the dev server after changing environment variables.
+| Variable                        | Used by                                  | Required for                      | Visibility |
+| ------------------------------- | ---------------------------------------- | --------------------------------- | ---------- |
+| `VITE_SOLANA_RPC_URL`           | Frontend wallet provider                 | Optional custom Solana devnet RPC | Public     |
+| `VITE_TREASURY_WALLET`          | Frontend payment flow                    | Destination wallet display        | Public     |
+| `VITE_PUBLIC_SUPABASE_URL`      | Serverless API and future frontend reads | Supabase project URL              | Public     |
+| `VITE_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads           | Browser-safe Supabase access      | Public     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Serverless API only                      | Transaction admin operations      | Secret     |
+| `SOLANA_RPC_URL`                | Future server verification               | Backend Solana reads              | Secret     |
+| `MIDTRANS_SERVER_KEY`           | Future settlement API                    | Midtrans Iris disbursement        | Secret     |
 
 ### Run the app
 
@@ -219,6 +217,39 @@ QRIS does not have a Solana devnet. Use Midtrans Sandbox or Xendit Test Mode to
 generate QRIS test payloads. KonekPay uses the QRIS payload for merchant/amount
 parsing, then verifies the Solana devnet payment separately.
 
+### Demo QRIS (hackathon testing)
+
+> **Disclaimer:** Why are we using a "Demo QRIS" instead of a real devnet QRIS?
+> Standard Indonesian payment gateways (like Xendit or Midtrans) require a registered legal business entity (PT, CV, etc.) to access their QRIS APIs, _even in sandbox mode_. Since KonekPay is a hackathon prototype focused on the Web3 payment bridge (Solana to IDR), we use a synthetic EMVCo payload to simulate the fiat side. This allows us to fully demonstrate the Phantom wallet integration and Solana on-chain logic without getting blocked by real-world fiat gateway KYC requirements.
+
+Camera QR scanning can be unreliable during live demos. KonekPay includes a
+built-in **"Use Demo QRIS"** button in the scanner modal that injects a
+synthetic EMVCo payload into the parser without needing a camera or a real QRIS
+image.
+
+What happens when you click "Use Demo QRIS":
+
+1. A synthetic QRIS payload is generated with a demo merchant name
+   (`KANTIN 165 DEMO`) and a fixed IDR amount (`Rp 15.000`).
+2. The payload passes through the same `parseEmvcoQris()` parser as a
+   camera-scanned QR code. It is not a bypass.
+3. The parsed data is sent to the backend `/api/v1/payment/quote` endpoint,
+   which re-parses the QRIS payload server-side and fetches a live SOL/IDR
+   rate from Pyth Hermes.
+4. The Phantom wallet prompt is real — it signs a Solana devnet transfer.
+5. The backend `/api/v1/payment/verify` endpoint verifies the devnet
+   transaction against the quote.
+
+What is **not** real (currently):
+
+- The demo QRIS does not represent a real merchant acquirer.
+- No IDR settlement occurs unless Midtrans/Xendit integration is completed.
+- The "KANTIN 165 DEMO" merchant name is synthetic.
+
+You can also paste any valid EMVCo QRIS payload into the manual textarea in the
+scanner modal. The parser will validate it and show errors if the payload is
+malformed.
+
 ## Roadmap
 
 - Build the Solana transfer instruction and signature submission flow.
@@ -228,19 +259,7 @@ parsing, then verifies the Solana devnet payment separately.
 - Add automated parser and quote endpoint tests.
 - Add deployment screenshots and production demo links.
 
-## Contributing
-
-Issues and pull requests are welcome. For larger changes, open an issue first
-with the proposed behavior, affected files, and any security assumptions.
-
-Before opening a pull request:
-
-```bash
-npm run lint
-npm run build
-```
-
 ## Acknowledgements
 
 Built for the [Colosseum Frontier Hackathon](https://colosseum.org/) in the
-Superteam Indonesia track.
+[Superteam Indonesia track.](https://superteam.fun/earn/listing/indonesia-national-campus-hackathon)
