@@ -1,10 +1,10 @@
 import Decimal from 'decimal.js';
 import crypto from 'crypto';
+import { createDemoQuoteId, QUOTE_TTL_MS } from '../../lib/paymentQuotes.js';
 
 // ─────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────
-const QUOTE_TTL_MS = 2 * 60 * 1000; // 2 minutes
 const PYTH_HERMES_LATEST_PRICE_URL = 'https://hermes.pyth.network/v2/updates/price/latest';
 const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d';
 const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
@@ -281,9 +281,19 @@ export default async function handler(req, res) {
     const solAmountStr = solAmount.toDecimalPlaces(9, Decimal.ROUND_UP).toString();
 
     // ── Generate Quote ────────────────────────────────
-    const quoteId = crypto.randomUUID();
+    const internalQuoteId = crypto.randomUUID();
     const now = Date.now();
+    const createdAt = new Date(now).toISOString();
     const expiresAt = new Date(now + QUOTE_TTL_MS).toISOString();
+    const quoteId = createDemoQuoteId({
+      quoteId: internalQuoteId,
+      solAmount: solAmountStr,
+      exchangeRate: exchangeRateDecimal.toString(),
+      fiatAmount,
+      fiatCurrency: 'IDR',
+      expiresAt,
+      createdAt,
+    });
 
     // ── Response ──────────────────────────────────────
     return res.status(200).json({
@@ -293,7 +303,8 @@ export default async function handler(req, res) {
       fiatAmount,
       fiatCurrency: 'IDR',
       expiresAt,
-      createdAt: new Date(now).toISOString(),
+      createdAt,
+      quoteSource: 'DEMO_SIGNED_FALLBACK',
     });
 
   } catch (err) {

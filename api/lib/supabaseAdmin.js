@@ -4,12 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 // ─────────────────────────────────────────────────────
 // ENV VALIDATION
 // ─────────────────────────────────────────────────────
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL = process.env.VITE_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL) {
   throw new Error(
-    '[SUPABASE_ADMIN] Missing NEXT_PUBLIC_SUPABASE_URL. ' +
+    '[SUPABASE_ADMIN] Missing VITE_PUBLIC_SUPABASE_URL. ' +
     'Add it to .env.local and restart the dev server.'
   );
 }
