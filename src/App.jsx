@@ -5,6 +5,7 @@ import { animate, createScope, stagger, utils } from 'animejs';
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
 import './App.css';
+import { createT } from './utils/translations';
 
 // --- IMPORT FOTO TIM KREATOR ---
 import fotoAqiel from './assets/AKILRAJAIBLIS.png';
@@ -264,6 +265,18 @@ function App() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState('dark');
+  const [lang, setLang] = useState(() => {
+    const stored = localStorage.getItem('konek_lang');
+    return stored === 'en' || stored === 'id' ? stored : 'id';
+  });
+  const t = useMemo(() => createT(lang), [lang]);
+  const toggleLang = useCallback(() => {
+    setLang((prev) => {
+      const next = prev === 'id' ? 'en' : 'id';
+      localStorage.setItem('konek_lang', next);
+      return next;
+    });
+  }, []);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [mobileWalletPublicKey, setMobileWalletPublicKey] = useState(() => (
@@ -929,15 +942,15 @@ function App() {
 
           {/* MENU TENGAH DESKTOP */}
           <ul className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2 transition-colors duration-500">
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>HOME</li>
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>ABOUT</li>
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t('navbar.home')}</li>
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>{t('navbar.about')}</li>
             <li 
               className="bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-5 py-2 rounded-full cursor-pointer transition-all duration-300 shadow-[0_0_15px_rgba(4,250,58,0.2)] hover:shadow-[0_0_25px_rgba(4,250,58,0.5)]" 
               onClick={() => document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' })}
             >
-              HOW IT WORKS
+              {t('navbar.howItWorks')}
             </li>
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' })}>TEAM</li>
+            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' })}>{t('navbar.team')}</li>
           </ul>
 
           {/* TOMBOL KANAN */}
@@ -969,7 +982,7 @@ function App() {
                       <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0 text-left">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Wallet</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{t('navbar.wallet')}</p>
                       <p className="truncate text-sm font-bold text-zinc-800 dark:text-white">{userProfile.name}</p>
                     </div>
                   </div>
@@ -979,7 +992,7 @@ function App() {
                     className="w-full rounded-xl px-3 py-3 text-left text-sm font-black text-red-500 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
                     role="menuitem"
                   >
-                    Disconnect Wallet
+                    {t('navbar.disconnectWallet')}
                   </button>
                 </div>
               </div>
@@ -988,7 +1001,7 @@ function App() {
                 onClick={() => setIsLoginModalOpen(true)}
                 className="mr-2 text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white px-4 py-2 rounded-full transition-colors"
               >
-                Connect Wallet
+                {t('navbar.connectWallet')}
               </button>
             )}
 
@@ -998,6 +1011,12 @@ function App() {
               ) : (
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
               )}
+            </button>
+
+            <button onClick={toggleLang} className="px-2.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-[10px] font-black tracking-widest transition-all duration-300 focus:outline-none border border-transparent hover:border-brand/30" title="Switch language">
+              <span className={lang === 'id' ? 'text-brand' : 'text-zinc-400 dark:text-zinc-500'}>ID</span>
+              <span className="text-zinc-300 dark:text-zinc-600 mx-0.5">/</span>
+              <span className={lang === 'en' ? 'text-brand' : 'text-zinc-400 dark:text-zinc-500'}>EN</span>
             </button>
 
             <button className="md:hidden p-2 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand focus:outline-none transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -1014,15 +1033,15 @@ function App() {
       {/* DROPDOWN MENU MOBILE */}
       <div className={`md:hidden fixed top-24 left-6 right-6 z-40 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl transition-all duration-500 flex flex-col items-center ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-8 invisible'}`}>
         <ul className="flex flex-col gap-6 text-center font-bold tracking-widest text-zinc-800 dark:text-white items-center w-full">
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>HOME</li>
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }); }}>ABOUT</li>
+          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{t('navbar.home')}</li>
+          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }); }}>{t('navbar.about')}</li>
           <li 
             className="cursor-pointer bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-6 py-3 rounded-full w-max shadow-[0_0_15px_rgba(4,250,58,0.2)] transition-colors" 
             onClick={() => { setIsMenuOpen(false); document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' }); }}
           >
-            HOW IT WORKS
+            {t('navbar.howItWorks')}
           </li>
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' }); }}>TEAM</li>
+          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' }); }}>{t('navbar.team')}</li>
         </ul>
       </div>
 
@@ -1030,16 +1049,16 @@ function App() {
       <main className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 md:mt-24 gap-10 md:gap-0 z-10 min-h-[60vh]">
         <div className="flex-1 text-center md:text-left">
           <div className="hero-text opacity-0 inline-block px-4 py-1.5 bg-brand/10 border border-brand/20 rounded-full text-brand text-[10px] font-bold tracking-[0.3em] mb-6 uppercase">
-            Colosseum Frontier Hackathon 2026
+            {t('hero.badge')}
           </div>
           
           <h1 className="hero-text opacity-0 text-5xl md:text-7xl font-black tracking-tighter leading-[0.95] mb-6 text-zinc-900 dark:text-white transition-colors duration-500">
-            BRIDGING <span className="text-purple-600 dark:text-purple-500">SOLANA</span><br/>
-            TO THE <span className="text-brand">REAL WORLD</span>.
+            {t('hero.titleLine1')} <span className="text-purple-600 dark:text-purple-500">{t('hero.titleSolana')}</span><br/>
+            {t('hero.titleLine2')} <span className="text-brand">{t('hero.titleHighlight')}</span>.
           </h1>
           
           <p className="hero-text opacity-0 text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-xl mb-8 leading-relaxed mx-auto md:mx-0 transition-colors duration-500">
-            Pay any Indonesian QRIS merchant instantly using your Phantom wallet. Zero centralized exchange friction.
+            {t('hero.subtitle')}
           </p>
           
           {/* CTA & Ticker Container */}
@@ -1050,7 +1069,7 @@ function App() {
               onClick={handleOpenApp}
               className="bg-brand text-black font-black tracking-widest uppercase px-8 py-3 rounded-full shadow-[0_0_20px_rgba(4,250,58,0.4)] hover:shadow-[0_0_30px_rgba(4,250,58,0.6)] hover:scale-105 transition-all duration-300"
             >
-              Launch App
+              {t('hero.ctaBtn')}
             </button>
 
             {/* PYTH RATE TICKER */}
@@ -1063,13 +1082,13 @@ function App() {
               </div>
               
               <div className="flex items-center gap-2 text-sm">
-                <span className="hidden md:inline text-zinc-400 dark:text-zinc-500 font-bold tracking-widest uppercase text-[10px] mr-1">Pyth Rate</span>
+                <span className="hidden md:inline text-zinc-400 dark:text-zinc-500 font-bold tracking-widest uppercase text-[10px] mr-1">{t('hero.pythRate')}</span>
                 <span className="font-bold text-zinc-800 dark:text-white flex items-center gap-1 transition-colors duration-500">
                   <span className="w-4 h-4 rounded-full bg-linear-to-tr from-[#9945FF] to-[#14F195] inline-block"></span> 1 SOL
                 </span>
                 <span className="text-zinc-400 dark:text-zinc-600">=</span>
                 <span className="font-black text-brand tracking-wide">
-                  {solPrice ? `Rp ${solPrice.toLocaleString('id-ID')}` : 'Loading...'}
+                  {solPrice ? `Rp ${solPrice.toLocaleString('id-ID')}` : t('hero.loading')}
                 </span>
               </div>
             </div>
@@ -1089,7 +1108,7 @@ function App() {
         <div className="w-full relative overflow-hidden flex flex-col items-center">
           
           <p className="text-center text-[10px] md:text-xs uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-400 font-bold mb-12 md:mb-16 relative z-10 transition-colors duration-500">
-            Didukung Oleh Jaringan Global & Lokal
+            {t('partner.heading')}
           </p>
           
           {/* 1. Tambahin class "group" dan "py-4" di container bungkusnya yang diem */}
@@ -1145,18 +1164,18 @@ function App() {
               <div className="w-full md:w-5/12 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-900/80 rounded-full border border-zinc-200 dark:border-white/5 mb-6 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 dark:text-zinc-400 uppercase">The Vision</span>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 dark:text-zinc-400 uppercase">{t('about.badge')}</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 dark:text-white leading-[1.1] transition-colors duration-500">
-                  ABOUT <br className="hidden md:block"/>
-                  <span className="text-brand">KONEK</span>
+                  {t('about.title')} <br className="hidden md:block"/>
+                  <span className="text-brand">{t('about.titleHighlight')}</span>
                 </h2>
               </div>
 
               {/* Bagian Kanan: Teks Penjelasan */}
               <div className="w-full md:w-7/12">
                 <p className="text-zinc-600 dark:text-zinc-300 text-lg md:text-xl leading-relaxed font-medium mb-6 transition-colors duration-500">
-                  KONEK adalah jembatan pembayaran masa depan yang menghubungkan ekosistem Web3 dengan ekonomi dunia nyata. 
+                  {t('about.desc')} 
                 </p>
                 
                 {/* Kotak Highlight QRIS  */}
@@ -1166,7 +1185,7 @@ function App() {
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 md:w-2 bg-brand"></div>
                   
                   <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-400 leading-relaxed transition-colors duration-500">
-                    Membayar apapun kini semudah memindai <strong className="text-zinc-900 dark:text-white">QRIS</strong> menggunakan dompet kripto Anda. Instan, aman, dan tanpa friksi pertukaran fiat.
+                    {t('about.qrisDesc')} <strong className="text-zinc-900 dark:text-white">{t('about.qrisHighlight')}</strong> {t('about.qrisDesc2')}
                   </p>
                   
                 </div>
@@ -1188,7 +1207,7 @@ function App() {
             <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
               <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase text-white shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-                WORKFLOW
+                {t('workflow.badge')}
               </div>
             </div>
 
@@ -1204,9 +1223,9 @@ function App() {
 
             {/* Teks Bawah (Overlay) */}
             <div className="relative z-20 p-8 md:p-10 bg-linear-to-t from-zinc-900 via-zinc-900/80 to-transparent w-full">
-              <p className="text-brand font-bold text-[10px] tracking-[0.3em] uppercase mb-3 drop-shadow-md">Impact Layer</p>
+              <p className="text-brand font-bold text-[10px] tracking-[0.3em] uppercase mb-3 drop-shadow-md">{t('workflow.impactLabel')}</p>
               <h3 className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow-lg">
-                Membawa perlindungan ekosistem desentralisasi ke setiap rupiah transaksi nyata Anda.
+                {t('workflow.impactDesc')}
               </h3>
             </div>
           </div>
@@ -1215,16 +1234,16 @@ function App() {
           <div className="w-full lg:w-7/12 flex flex-col justify-center scroll-animate opacity-0 py-4">
             
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6 text-zinc-900 dark:text-white leading-[1.1]">
-              Membangun Standar Baru <br className="hidden md:block" />
-              Pembayaran <span className="text-brand">Web3</span>.
+              {t('workflow.sectionTitle')} <br className="hidden md:block" />
+              {t('workflow.sectionTitleEnd')} <span className="text-brand">{t('workflow.sectionHighlight')}</span>.
             </h2>
 
             <div className="text-zinc-600 dark:text-zinc-400 text-base md:text-lg leading-relaxed space-y-6 mb-12">
               <p>
-                Konek Protocol menyediakan infrastruktur terverifikasi untuk menjembatani ekosistem jaringan Solana dengan ekonomi sirkular lokal. Dengan mengubah pemindaian kode respons cepat (QR) menjadi catatan digital yang kekal, kami memungkinkan audit yang transparan dan aman.
+                {t('workflow.paragraph1')}
               </p>
               <p>
-                Tujuan objektif kami di Frontier Hackathon ini definitif: melacak, memverifikasi, dan memvalidasi setiap transaksi dengan data on-chain secara instan, menghilangkan kerumitan konversi fiat tradisional.
+                {t('workflow.paragraph2')}
               </p>
             </div>
 
@@ -1233,18 +1252,18 @@ function App() {
               {[
                 { 
                   step: "01", 
-                  title: "Inherent Traceability", 
-                  desc: "Setiap transaksi bermula dari dompet non-kustodial Anda. Kami mengganti sistem login dan klaim yang tidak terverifikasi dengan autentikasi sumber data yang kuat menggunakan Phantom." 
+                  title: t('workflow.step1Title'), 
+                  desc: t('workflow.step1Desc') 
                 },
                 { 
                   step: "02", 
-                  title: "Rigorous Verification", 
-                  desc: "Kamera pemindai Konek memastikan integritas data melalui analisis otomatis dan pembacaan string QRIS standar untuk secara aktif memitigasi kesalahan transfer dana." 
+                  title: t('workflow.step2Title'), 
+                  desc: t('workflow.step2Desc') 
                 },
                 { 
                   step: "03", 
-                  title: "Unified Architecture", 
-                  desc: "Satu klik untuk validasi akhir. Smart contract menyediakan sumber kebenaran tunggal yang kekal, menyelaraskan pengguna dan merchant lokal dari input awal hingga penerimaan dana real-time." 
+                  title: t('workflow.step3Title'), 
+                  desc: t('workflow.step3Desc') 
                 }
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 md:gap-8 group">
@@ -1292,7 +1311,7 @@ function App() {
 
         <div key={activeIdx} className="flex-1 text-center md:text-left mt-16 md:mt-0 relative z-40 animate-fade-in">
           <div className="inline-block px-4 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-full text-zinc-500 dark:text-zinc-400 text-[10px] font-bold tracking-[0.3em] mb-4 uppercase transition-colors duration-500">
-            Core Team
+            {t('team.badge')}
           </div>
           <h2 className="text-3xl md:text-5xl font-black tracking-widest text-zinc-900 dark:text-white mb-2 transition-colors duration-500">
             {teamMembers[activeIdx].name}
@@ -1321,7 +1340,7 @@ function App() {
           </svg>
           <span className="text-sm font-extrabold tracking-widest text-black dark:text-white">Konek<span className="text-brand">Pay</span></span>
         </div>
-        <p>Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia</p>
+        <p>{t('footer.builtFor')}</p>
       </footer>
 
       {/* FLOATING ACTION BUTTON (QRIS PAY) */}
@@ -1332,7 +1351,7 @@ function App() {
         <svg className="w-6 h-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
         </svg>
-        QRIS PAY
+        {t('fab.qrisPay')}
       </button>
 
 
@@ -1353,16 +1372,16 @@ function App() {
               <img src={logoPhantom} alt="Phantom" className="w-12 h-12 object-contain" />
             </div>
             
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tight">Connect Wallet</h3>
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tight">{t('loginModal.title')}</h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
-              Hubungkan Phantom Wallet kamu untuk mulai membayar pakai Solana.
+              {t('loginModal.desc')}
             </p>
             
             <button 
               onClick={handleConnectWallet}
               className="w-full bg-[#AB9FF2] text-zinc-900 font-black tracking-widest uppercase py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex justify-center items-center gap-3"
             >
-              Connect Phantom
+              {t('loginModal.btn')}
             </button>
           </div>
         </div>
@@ -1372,7 +1391,8 @@ function App() {
       {isScannerOpen && (
         <QrisScanner 
           onClose={() => setIsScannerOpen(false)} 
-          onResult={handleScannerResult} 
+          onResult={handleScannerResult}
+          t={t} 
         />
       )}
 
@@ -1391,6 +1411,7 @@ function App() {
           onConfirm={handlePaymentConfirm}
           onRetryVerification={handleRetryPaymentVerification}
           onScanAnother={handleScanAnotherPayment}
+          t={t}
         />
       )}
 
