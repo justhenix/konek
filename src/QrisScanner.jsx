@@ -2,10 +2,13 @@ import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 
+const DEMO_QRIS_PAYLOAD = '00020101021226430019ID.CO.KONEKPAY.DEMO0116SANDBOX-QRIS-0015204000053033605405250005802ID5922KONEKPAY DEMO MERCHANT6007JAKARTA63047F45';
+
 // Tambahan properti "onResult" untuk ngirim data ke App.jsx
 export default function QrisScanner({ onClose, onResult, t }) {
   const [permission, setPermission] = useState('prompt'); 
   const [scanResult, setScanResult] = useState(null);
+  const [manualPayload, setManualPayload] = useState('');
   const scannerRef = useRef(null);
   const scannerId = "reader"; 
 
@@ -48,6 +51,18 @@ export default function QrisScanner({ onClose, onResult, t }) {
     setPermission('starting');
   };
 
+  const handleManualSubmit = async (event) => {
+    event.preventDefault();
+    await stopCamera();
+    processPayment(manualPayload);
+  };
+
+  const handleUseDemoQris = async () => {
+    setManualPayload(DEMO_QRIS_PAYLOAD);
+    await stopCamera();
+    processPayment(DEMO_QRIS_PAYLOAD);
+  };
+
   useEffect(() => {
     if (permission === 'starting') {
       const initScanner = async () => {
@@ -88,7 +103,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
       </style>
 
       <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-all">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl relative flex flex-col transition-colors duration-500">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-[2.5rem] w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl relative flex flex-col transition-colors duration-500">
           
           <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900">
             <div>
@@ -145,6 +160,47 @@ export default function QrisScanner({ onClose, onResult, t }) {
               </div>
             </div>
           )}
+
+          <form onSubmit={handleManualSubmit} className="p-6 border-t border-zinc-100 dark:border-white/5 bg-white dark:bg-zinc-900 transition-colors">
+            <div className="mb-4">
+              <div className="text-[10px] text-brand font-black tracking-[0.25em] uppercase mb-2">
+                {t('scanner.demoLabel')}
+              </div>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed">
+                {t('scanner.demoDesc')}
+              </p>
+            </div>
+            <label htmlFor="manual-qris-payload" className="block text-[10px] text-zinc-500 dark:text-zinc-500 font-black tracking-[0.2em] uppercase mb-2">
+              {t('scanner.manualLabel')}
+            </label>
+            <textarea
+              id="manual-qris-payload"
+              value={manualPayload}
+              onChange={(event) => setManualPayload(event.target.value)}
+              rows={4}
+              placeholder={t('scanner.manualPlaceholder')}
+              className="w-full resize-none rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950 p-4 text-xs font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-700 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              <button
+                type="submit"
+                disabled={!manualPayload.trim()}
+                className="min-h-12 rounded-2xl bg-zinc-900 dark:bg-zinc-800 text-white font-black uppercase text-xs tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-700 disabled:opacity-50 transition-all"
+              >
+                {t('scanner.submitManualBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={handleUseDemoQris}
+                className="min-h-12 rounded-2xl bg-brand text-black font-black uppercase text-xs tracking-widest shadow-lg hover:scale-105 transition-all"
+              >
+                {t('scanner.demoBtn')}
+              </button>
+            </div>
+            <p className="text-[10px] text-zinc-400 dark:text-zinc-600 leading-relaxed mt-4">
+              {t('scanner.demoDisclaimer')}
+            </p>
+          </form>
 
           {scanResult && !scanResult.parsedData.isValid && (
             <div className="px-6 py-4 bg-red-500/10 border-t border-red-500/20">

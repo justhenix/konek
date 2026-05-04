@@ -213,6 +213,12 @@ and exposes the fields used by the payment review flow, including:
 The backend quote endpoint has its own validation path so pricing cannot be
 manipulated by client-side state.
 
+### QRIS test payloads
+
+QRIS does not have a Solana devnet. Use Midtrans Sandbox or Xendit Test Mode to
+generate QRIS test payloads. KonekPay uses the QRIS payload for merchant/amount
+parsing, then verifies the Solana devnet payment separately.
+
 ## Roadmap
 
 - Build the Solana transfer instruction and signature submission flow.
