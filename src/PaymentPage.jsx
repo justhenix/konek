@@ -94,6 +94,7 @@ export default function PaymentPage({
   onRetryVerification,
   onScanAnother,
   onCancel,
+  t,
 }) {
   const [parsedPayment] = useState(() => (
     getParsedPayment(qrisData, initialParsedData)
@@ -121,13 +122,13 @@ export default function PaymentPage({
     return () => clearInterval(timer);
   }, [quote]);
 
-  const merchantName = parsedPayment.merchantName || 'Unknown Merchant';
+  const merchantName = parsedPayment.merchantName || t('payment.lblMissing');
   const amountLabel = Number.isFinite(parsedPayment.amount)
     ? `Rp ${parsedPayment.formattedAmount}`
-    : 'Not provided';
+    : t('payment.lblNotProvided');
   const currencyLabel = parsedPayment.currencyCode === '360'
     ? 'IDR'
-    : parsedPayment.currencyCode || 'Not provided';
+    : parsedPayment.currencyCode || t('payment.lblNotProvided');
   const quoteReview = useMemo(() => {
     if (!quote) {
       return null;
@@ -179,27 +180,27 @@ export default function PaymentPage({
     visiblePaymentError,
   ]);
   const headerTitle = {
-    idle: 'Review Payment',
-    parsed: 'Review Payment',
-    quoting: 'Creating Quote',
-    quote_ready: 'Quote Review',
-    awaiting_signature: 'Wallet Approval',
-    tx_submitted: 'Submitted',
-    verifying: 'Verifying',
-    paid_verified: 'Payment Verified',
-    failed: 'Action Required',
+    idle: t('payment.headerIdle'),
+    parsed: t('payment.headerIdle'),
+    quoting: t('payment.headerQuoting'),
+    quote_ready: t('payment.headerQuoteReady'),
+    awaiting_signature: t('payment.headerAwaiting'),
+    tx_submitted: t('payment.headerSubmitted'),
+    verifying: t('payment.headerVerifying'),
+    paid_verified: t('payment.headerPaid'),
+    failed: t('payment.headerFailed'),
   }[flowState];
   const footerLabel = flowState === 'paid_verified'
-    ? 'Verified by backend'
+    ? t('payment.footerPaid')
     : flowState === 'verifying'
-      ? 'Verifying on Solana devnet'
+      ? t('payment.footerVerifying')
       : flowState === 'tx_submitted'
-        ? 'Submitted, waiting for backend verification'
+        ? t('payment.footerSubmitted')
         : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
-          ? 'Demo signed quote fallback'
+          ? t('payment.footerDemo')
           : quote
             ? `Quote ${String(quote.quoteId).slice(0, 12)}`
-            : 'Parsed locally from EMVCo QRIS TLV';
+            : t('payment.footerParsed');
   const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
   const showScanAnother = flowState === 'failed' || flowState === 'paid_verified';
   const primaryExplorerUrl = verifiedPayment?.explorerUrl || submittedPayment?.explorerUrl || '';
@@ -278,10 +279,10 @@ export default function PaymentPage({
   return (
     <Fragment>
       <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 transition-all animate-fade-in">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-md max-h-[calc(100vh-2rem)] overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-4xl sm:rounded-[2.5rem] w-full max-w-md max-h-[calc(100vh-2rem)] overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
           
           <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900 transition-colors">
-            <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">QRIS Parsed Data</div>
+            <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">{t('payment.qrisParsed')}</div>
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter transition-colors">
               {headerTitle}
             </h3>
@@ -290,7 +291,7 @@ export default function PaymentPage({
           <div className="p-6 sm:p-8 space-y-6 overflow-y-auto">
             {!parsedPayment.isValid && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">Parser Error</div>
+                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{t('payment.errParser')}</div>
                 <div className="space-y-1">
                   {parsedPayment.errors.map((error) => (
                     <p key={error} className="text-red-300 text-sm">{error}</p>
@@ -317,7 +318,7 @@ export default function PaymentPage({
                     rel="noreferrer"
                     className="inline-flex mt-4 text-brand text-xs font-black uppercase tracking-widest hover:underline"
                   >
-                    View Explorer
+                    {t('payment.btnViewExplorer')}
                   </a>
                 )}
               </div>
@@ -327,8 +328,8 @@ export default function PaymentPage({
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
                 <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
                 <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">Loading Quote</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Fetching backend SOL price and expiry.</p>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusLoading')}</div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.statusFetching')}</p>
                 </div>
               </div>
             )}
@@ -337,20 +338,20 @@ export default function PaymentPage({
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
                 <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
                 <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">Opening Phantom</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Approve the devnet SOL transfer in Phantom.</p>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusOpening')}</div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.statusApprove')}</p>
                 </div>
               </div>
             )}
 
             {flowState === 'tx_submitted' && submittedPayment && (
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">Transaction Submitted</div>
+                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">{t('payment.statusTxSub')}</div>
                 <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
-                  Submitted, waiting for backend verification.
+                  {t('payment.statusTxSubDesc')}
                 </p>
                 <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
-                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">Signature</div>
+                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('payment.lblSignature')}</div>
                   <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{submittedPayment.signature}</p>
                 </div>
               </div>
@@ -360,9 +361,9 @@ export default function PaymentPage({
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
                 <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
                 <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">Verifying Payment</div>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusVerifying')}</div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                    Backend is checking the devnet transaction before marking it paid.
+                    {t('payment.statusChecking')}
                   </p>
                 </div>
               </div>
@@ -370,12 +371,12 @@ export default function PaymentPage({
 
             {flowState === 'paid_verified' && verifiedPayment && (
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">Paid Verified</div>
+                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">{t('payment.statusPaid')}</div>
                 <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
-                  Backend verified the Solana devnet transfer to the KonekPay treasury.
+                  {t('payment.statusPaidDesc')}
                 </p>
                 <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
-                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">Signature</div>
+                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('payment.lblSignature')}</div>
                   <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{verifiedPayment.signature}</p>
                 </div>
               </div>
@@ -383,7 +384,7 @@ export default function PaymentPage({
 
             <div className="space-y-4">
               <div className="flex justify-between items-start gap-4">
-                <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest transition-colors">Merchant</span>
+                <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest transition-colors">{t('payment.lblMerchant')}</span>
                 <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] wrap-break-word transition-colors" title={merchantName}>
                   {merchantName}
                 </span>
@@ -393,7 +394,7 @@ export default function PaymentPage({
                 <Fragment>
                   <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 border border-zinc-100 dark:border-white/5 transition-colors">
                     <div className="flex justify-between items-center gap-4">
-                      <span className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-widest transition-colors">Total Pay</span>
+                      <span className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-widest transition-colors">{t('payment.lblTotalPay')}</span>
                       <div className="text-right">
                         <div className="text-3xl font-black text-brand">{amountLabel}</div>
                         <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">{currencyLabel}</div>
@@ -404,7 +405,7 @@ export default function PaymentPage({
                   <div className="rounded-3xl border border-zinc-100 dark:border-white/5 overflow-hidden">
                     <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
                       <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Tag 54</span>
-                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right break-all">{parsedPayment.tags['54'] || 'Missing'}</span>
+                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right break-all">{parsedPayment.tags['54'] || t('payment.lblMissing')}</span>
                     </div>
                     <div className="flex justify-between items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-950 transition-colors">
                       <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Tag 59</span>
@@ -417,22 +418,22 @@ export default function PaymentPage({
               {quoteReview && (
                 <div className="space-y-4">
                   <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 border border-zinc-100 dark:border-white/5 transition-colors">
-                    <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-2">Backend Quote</div>
+                    <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-2">{t('payment.lblBackendQuote')}</div>
                     <div className="text-4xl font-black text-brand leading-none">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                     <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-2">SOL</div>
                   </div>
 
                   <div className="rounded-3xl border border-zinc-100 dark:border-white/5 overflow-hidden">
                     <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">IDR Amount</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblIdrAmount')}</span>
                       <span className="text-sm text-zinc-900 dark:text-white font-bold text-right">{quoteReview.idrAmountLabel}</span>
                     </div>
                     <div className="flex justify-between items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-950 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Rate</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblRate')}</span>
                       <span className="text-sm text-zinc-900 dark:text-white font-bold text-right">{quoteReview.exchangeRateLabel}</span>
                     </div>
                     <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Expires</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblExpires')}</span>
                       <span className={`text-sm font-bold text-right ${quoteReview.isExpired ? 'text-red-400' : 'text-zinc-900 dark:text-white'}`}>
                         {quoteReview.expiresAtLabel}
                       </span>
@@ -449,7 +450,7 @@ export default function PaymentPage({
               disabled={isBusy && !showScanAnother}
               className="min-h-14 py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold uppercase text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
             >
-              {showScanAnother ? 'Scan another QRIS' : 'Cancel'}
+              {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
             </button>
             
             {flowState === 'paid_verified' && primaryExplorerUrl ? (
@@ -459,7 +460,7 @@ export default function PaymentPage({
                 rel="noreferrer"
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
               >
-                View Explorer
+                {t('payment.btnViewExplorer')}
               </a>
             ) : showTryAgain ? (
               <button
@@ -467,7 +468,7 @@ export default function PaymentPage({
                 disabled={isBusy}
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
               >
-                Try Again
+                {t('payment.btnTryAgain')}
               </button>
             ) : submittedPayment && primaryExplorerUrl ? (
               <a
@@ -476,7 +477,7 @@ export default function PaymentPage({
                 rel="noreferrer"
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
               >
-                View Explorer
+                {t('payment.btnViewExplorer')}
               </a>
             ) : quoteReview ? (
               <button 
@@ -484,7 +485,7 @@ export default function PaymentPage({
                 disabled={quoteReview.isExpired || isPaymentSubmitting}
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
               >
-                {isPaymentSubmitting ? 'Opening Phantom...' : 'Pay with Phantom'}
+                {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
               </button>
             ) : (
               <button 
@@ -492,7 +493,7 @@ export default function PaymentPage({
                 disabled={!parsedPayment.isValid || isQuoteLoading}
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center"
               >
-                {isQuoteLoading ? 'Loading...' : 'Confirm'}
+                {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
               </button>
             )}
           </div>
