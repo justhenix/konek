@@ -140,12 +140,12 @@ Fill in the values you need for the parts of the stack you are running.
 | Variable | Used by | Required for | Visibility |
 | --- | --- | --- | --- |
 | `VITE_SOLANA_RPC_URL` | Frontend wallet provider | Optional custom Solana devnet RPC | Public |
-| `NEXT_PUBLIC_SUPABASE_URL` | Serverless API | Supabase admin client | Public |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads | Browser-safe Supabase access | Public |
+| `VITE_TREASURY_WALLET` | Frontend payment flow | Destination wallet display | Public |
+| `VITE_PUBLIC_SUPABASE_URL` | Serverless API and future frontend reads | Supabase project URL | Public |
+| `VITE_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads | Browser-safe Supabase access | Public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Serverless API only | Transaction admin operations | Secret |
 | `SOLANA_RPC_URL` | Future server verification | Backend Solana reads | Secret |
 | `MIDTRANS_SERVER_KEY` | Future settlement API | Midtrans Iris disbursement | Secret |
-| `NEXT_PUBLIC_TREASURY_WALLET` | Future payment flow | Destination wallet display | Public |
 
 Security notes:
 
