@@ -87,9 +87,12 @@ export default function PaymentPage({
   initialParsedData,
   initialQuote,
   paymentSubmission,
+  paymentVerification,
   externalPaymentError,
   onParsedData,
   onConfirm,
+  onRetryVerification,
+  onScanAnother,
   onCancel,
 }) {
   const [parsedPayment] = useState(() => (
@@ -138,21 +141,69 @@ export default function PaymentPage({
       isExpired: isQuoteExpired(quote.expiresAt, quoteClock),
     };
   }, [quote, quoteClock]);
-  const submittedPayment = paymentSubmission?.signature
-    ? {
-      ...paymentSubmission,
-      explorerUrl: paymentSubmission.explorerUrl
-        || buildSolanaExplorerDevnetTxUrl(paymentSubmission.signature),
-    }
+  const submittedPayment = useMemo(() => (
+    paymentSubmission?.signature
+      ? {
+        ...paymentSubmission,
+        explorerUrl: paymentSubmission.explorerUrl
+          || buildSolanaExplorerDevnetTxUrl(paymentSubmission.signature),
+      }
+      : null
+  ), [paymentSubmission]);
+  const verificationStatus = paymentVerification?.status || 'idle';
+  const verifiedPayment = verificationStatus === 'paid_verified'
+    ? paymentVerification?.result
     : null;
-  const visiblePaymentError = externalPaymentError || paymentError;
-  const footerLabel = submittedPayment
-    ? 'Awaiting backend verification'
-    : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
-      ? 'Demo signed quote fallback'
-      : quote
-        ? `Quote ${String(quote.quoteId).slice(0, 12)}`
-        : 'Parsed locally from EMVCo QRIS TLV';
+  const verificationError = verificationStatus === 'failed'
+    ? paymentVerification?.error
+    : null;
+  const visiblePaymentError = verificationError || externalPaymentError || paymentError;
+  const flowState = useMemo(() => {
+    if (verificationStatus === 'paid_verified') return 'paid_verified';
+    if (verificationStatus === 'verifying') return 'verifying';
+    if (verificationStatus === 'failed' || quoteError || visiblePaymentError) return 'failed';
+    if (submittedPayment) return 'tx_submitted';
+    if (isPaymentSubmitting) return 'awaiting_signature';
+    if (isQuoteLoading) return 'quoting';
+    if (quoteReview) return 'quote_ready';
+    if (parsedPayment) return 'parsed';
+    return 'idle';
+  }, [
+    isPaymentSubmitting,
+    isQuoteLoading,
+    parsedPayment,
+    quoteError,
+    quoteReview,
+    submittedPayment,
+    verificationStatus,
+    visiblePaymentError,
+  ]);
+  const headerTitle = {
+    idle: 'Review Payment',
+    parsed: 'Review Payment',
+    quoting: 'Creating Quote',
+    quote_ready: 'Quote Review',
+    awaiting_signature: 'Wallet Approval',
+    tx_submitted: 'Submitted',
+    verifying: 'Verifying',
+    paid_verified: 'Payment Verified',
+    failed: 'Action Required',
+  }[flowState];
+  const footerLabel = flowState === 'paid_verified'
+    ? 'Verified by backend'
+    : flowState === 'verifying'
+      ? 'Verifying on Solana devnet'
+      : flowState === 'tx_submitted'
+        ? 'Submitted, waiting for backend verification'
+        : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
+          ? 'Demo signed quote fallback'
+          : quote
+            ? `Quote ${String(quote.quoteId).slice(0, 12)}`
+            : 'Parsed locally from EMVCo QRIS TLV';
+  const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
+  const showScanAnother = flowState === 'failed' || flowState === 'paid_verified';
+  const primaryExplorerUrl = verifiedPayment?.explorerUrl || submittedPayment?.explorerUrl || '';
+  const isBusy = isQuoteLoading || isPaymentSubmitting || flowState === 'verifying';
 
   const handleConfirm = async () => {
     if (!parsedPayment.isValid || isQuoteLoading) {
@@ -176,7 +227,7 @@ export default function PaymentPage({
   };
 
   const handleContinueToPhantom = async () => {
-    if (!quote || quoteReview?.isExpired || isPaymentSubmitting || submittedPayment) {
+    if (!quote || quoteReview?.isExpired || isPaymentSubmitting || submittedPayment || verificationStatus === 'verifying') {
       return;
     }
 
@@ -208,6 +259,22 @@ export default function PaymentPage({
     }
   };
 
+  const handleTryAgain = async () => {
+    setPaymentError(null);
+
+    if (verificationStatus === 'failed' && submittedPayment) {
+      await onRetryVerification?.();
+      return;
+    }
+
+    if (quoteReview) {
+      await handleContinueToPhantom();
+      return;
+    }
+
+    await handleConfirm();
+  };
+
   return (
     <Fragment>
       <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 transition-all animate-fade-in">
@@ -216,7 +283,7 @@ export default function PaymentPage({
           <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900 transition-colors">
             <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">QRIS Parsed Data</div>
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter transition-colors">
-              {submittedPayment ? 'Submitted' : quote ? 'Quote Review' : 'Review Payment'}
+              {headerTitle}
             </h3>
           </div>
           
@@ -243,6 +310,16 @@ export default function PaymentPage({
               <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
                 <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{visiblePaymentError.code}</div>
                 <p className="text-red-300 text-sm leading-relaxed">{visiblePaymentError.message}</p>
+                {primaryExplorerUrl && (
+                  <a
+                    href={primaryExplorerUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex mt-4 text-brand text-xs font-black uppercase tracking-widest hover:underline"
+                  >
+                    View Explorer
+                  </a>
+                )}
               </div>
             )}
 
@@ -266,7 +343,7 @@ export default function PaymentPage({
               </div>
             )}
 
-            {submittedPayment && (
+            {flowState === 'tx_submitted' && submittedPayment && (
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
                 <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">Transaction Submitted</div>
                 <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
@@ -275,6 +352,31 @@ export default function PaymentPage({
                 <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
                   <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">Signature</div>
                   <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{submittedPayment.signature}</p>
+                </div>
+              </div>
+            )}
+
+            {flowState === 'verifying' && submittedPayment && (
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
+                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
+                <div>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">Verifying Payment</div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                    Backend is checking the devnet transaction before marking it paid.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {flowState === 'paid_verified' && verifiedPayment && (
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
+                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">Paid Verified</div>
+                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+                  Backend verified the Solana devnet transfer to the KonekPay treasury.
+                </p>
+                <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
+                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">Signature</div>
+                  <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{verifiedPayment.signature}</p>
                 </div>
               </div>
             )}
@@ -343,16 +445,33 @@ export default function PaymentPage({
 
           <div className="p-6 sm:p-8 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button 
-              onClick={onCancel}
-              disabled={isQuoteLoading || isPaymentSubmitting}
+              onClick={showScanAnother ? onScanAnother : onCancel}
+              disabled={isBusy && !showScanAnother}
               className="min-h-14 py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold uppercase text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
             >
-              {submittedPayment ? 'Close' : 'Cancel'}
+              {showScanAnother ? 'Scan another QRIS' : 'Cancel'}
             </button>
             
-            {submittedPayment ? (
+            {flowState === 'paid_verified' && primaryExplorerUrl ? (
               <a
-                href={submittedPayment.explorerUrl}
+                href={primaryExplorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
+              >
+                View Explorer
+              </a>
+            ) : showTryAgain ? (
+              <button
+                onClick={handleTryAgain}
+                disabled={isBusy}
+                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
+              >
+                Try Again
+              </button>
+            ) : submittedPayment && primaryExplorerUrl ? (
+              <a
+                href={primaryExplorerUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"

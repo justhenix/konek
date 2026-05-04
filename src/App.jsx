@@ -20,6 +20,7 @@ import logoSuperteam from './assets/LogoSuperteam.png';
 // --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage'; // Pastikan file PaymentPage.jsx udah ada di folder src
+import { normalizeApiError } from './utils/payment';
 import {
   buildDevnetSolTransferTransaction,
   buildPhantomSignTransactionUrl,
@@ -47,6 +48,75 @@ const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
 const PHANTOM_SESSION_STORAGE_KEY = 'phantom_session';
 const PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY = 'phantom_wallet_encryption_public_key';
 const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
+const VERIFY_RETRYABLE_ERRORS = new Set(['TX_NOT_FOUND', 'TX_NOT_FINALIZED']);
+const VERIFY_RETRY_DELAY_MS = 2000;
+const VERIFY_MAX_ATTEMPTS = 10;
+
+const createIdlePaymentVerification = () => ({
+  status: 'idle',
+  result: null,
+  error: null,
+});
+
+const delay = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
+const readJsonResponse = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const verifyPaymentSignature = async ({ quoteId, signature }) => {
+  const response = await fetch('/api/v1/payment/verify', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ quoteId, signature }),
+  });
+  const responseBody = await readJsonResponse(response);
+
+  if (!response.ok) {
+    const apiError = normalizeApiError(
+      {
+        ...(responseBody || {}),
+        status: response.status,
+      },
+      'Unable to verify payment.'
+    );
+    const error = new Error(apiError.message);
+    error.apiError = apiError;
+    throw error;
+  }
+
+  return responseBody;
+};
+
+const verifyPaymentSignatureWithRetry = async ({ quoteId, signature }) => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= VERIFY_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await verifyPaymentSignature({ quoteId, signature });
+    } catch (error) {
+      lastError = error;
+      const code = error.apiError?.code;
+
+      if (!VERIFY_RETRYABLE_ERRORS.has(code) || attempt === VERIFY_MAX_ATTEMPTS) {
+        break;
+      }
+
+      await delay(VERIFY_RETRY_DELAY_MS);
+    }
+  }
+
+  throw lastError;
+};
 
 const normalizePythId = (id) => String(id ?? '').replace(/^0x/i, '').toLowerCase();
 
@@ -209,6 +279,7 @@ function App() {
   const [restoredPaymentQuote, setRestoredPaymentQuote] = useState(null);
   const [paymentSubmission, setPaymentSubmission] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
+  const [paymentVerification, setPaymentVerification] = useState(createIdlePaymentVerification);
 
   const readPendingPhantomPayment = useCallback(() => {
     const pendingPayment = sessionStorage.getItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
@@ -249,6 +320,55 @@ function App() {
       bs58.decode(phantomEncryptionPublicKey),
       dappEncryptionSecretKey
     );
+  }, []);
+
+  const verifySubmittedPayment = useCallback(async ({ quote, signature, explorerUrl }) => {
+    if (!quote?.quoteId || !signature) {
+      setPaymentVerification({
+        status: 'failed',
+        result: null,
+        error: {
+          code: 'MISSING_VERIFICATION_DATA',
+          message: 'Missing quote or transaction signature for verification.',
+        },
+      });
+      return null;
+    }
+
+    setPaymentVerification({
+      status: 'verifying',
+      result: null,
+      error: null,
+    });
+
+    try {
+      const result = await verifyPaymentSignatureWithRetry({
+        quoteId: quote.quoteId,
+        signature,
+      });
+      const verifiedResult = {
+        ...result,
+        explorerUrl: result.explorerUrl || explorerUrl,
+      };
+
+      setPaymentVerification({
+        status: 'paid_verified',
+        result: verifiedResult,
+        error: null,
+      });
+
+      return verifiedResult;
+    } catch (error) {
+      const apiError = error.apiError || normalizeApiError(null, error.message);
+
+      setPaymentVerification({
+        status: 'failed',
+        result: null,
+        error: apiError,
+      });
+
+      return null;
+    }
   }, []);
 
   // ==========================================
@@ -394,15 +514,23 @@ function App() {
               preflightCommitment: 'confirmed',
             }
           );
-
-          setPaymentSubmission(createPaymentSubmission(signature, {
+          const submission = createPaymentSubmission(signature, {
             quote: pendingPayment?.quote || null,
             submittedBy: 'phantom-mobile',
-          }));
+          });
+
+          setPaymentSubmission(submission);
           setPaymentError(null);
+          setPaymentVerification(createIdlePaymentVerification());
           sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+          verifySubmittedPayment({
+            quote: pendingPayment?.quote || null,
+            signature,
+            explorerUrl: submission.explorerUrl,
+          });
         } catch (error) {
           setPaymentSubmission(null);
+          setPaymentVerification(createIdlePaymentVerification());
           setPaymentError({
             code: 'PAYMENT_SUBMISSION_FAILED',
             message: error.message || 'Unable to submit signed transaction to devnet.',
@@ -439,7 +567,7 @@ function App() {
     } finally {
       window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
     }
-  }, [getStoredPhantomSharedSecret, readPendingPhantomPayment, restorePendingPaymentReview]);
+  }, [getStoredPhantomSharedSecret, readPendingPhantomPayment, restorePendingPaymentReview, verifySubmittedPayment]);
   // ==========================================
 
   // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
@@ -457,6 +585,7 @@ function App() {
     setRestoredPaymentQuote(null);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setPaymentVerification(createIdlePaymentVerification());
     setIsScannerOpen(false);
   }, []);
 
@@ -470,7 +599,19 @@ function App() {
     setRestoredPaymentQuote(null);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setPaymentVerification(createIdlePaymentVerification());
     sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+  }, []);
+
+  const handleScanAnotherPayment = useCallback(() => {
+    setScannedData(null);
+    setParsedPaymentData(null);
+    setRestoredPaymentQuote(null);
+    setPaymentSubmission(null);
+    setPaymentError(null);
+    setPaymentVerification(createIdlePaymentVerification());
+    sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+    setIsScannerOpen(true);
   }, []);
 
   const startPhantomMobilePayment = useCallback(({ transaction, parsedPayment, quote }) => {
@@ -520,6 +661,7 @@ function App() {
     setRestoredPaymentQuote(quote);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setPaymentVerification(createIdlePaymentVerification());
 
     const payerPublicKey = publicKey || mobileWalletPublicKey;
 
@@ -562,6 +704,12 @@ function App() {
     });
 
     setPaymentSubmission(submission);
+    verifySubmittedPayment({
+      quote,
+      signature,
+      explorerUrl: submission.explorerUrl,
+    });
+
     return submission;
   }, [
     connection,
@@ -569,7 +717,20 @@ function App() {
     publicKey,
     sendTransaction,
     startPhantomMobilePayment,
+    verifySubmittedPayment,
   ]);
+
+  const handleRetryPaymentVerification = useCallback(async () => {
+    if (!paymentSubmission?.signature) {
+      return null;
+    }
+
+    return verifySubmittedPayment({
+      quote: paymentSubmission.quote || restoredPaymentQuote,
+      signature: paymentSubmission.signature,
+      explorerUrl: paymentSubmission.explorerUrl,
+    });
+  }, [paymentSubmission, restoredPaymentQuote, verifySubmittedPayment]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1138,10 +1299,13 @@ function App() {
           initialParsedData={parsedPaymentData}
           initialQuote={restoredPaymentQuote}
           paymentSubmission={paymentSubmission}
+          paymentVerification={paymentVerification}
           externalPaymentError={paymentError}
           onParsedData={handleParsedPaymentData}
           onCancel={handlePaymentCancel}
           onConfirm={handlePaymentConfirm}
+          onRetryVerification={handleRetryPaymentVerification}
+          onScanAnother={handleScanAnotherPayment}
         />
       )}
 
