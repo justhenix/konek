@@ -33,6 +33,41 @@ const readJsonResponse = async (response) => {
   }
 };
 
+const fetchSettleDemo = async ({ quoteId, signature }) => {
+  const response = await fetch('/api/v1/payment/settle-demo', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ quoteId, signature }),
+  });
+  const responseBody = await readJsonResponse(response);
+
+  if (!response.ok) {
+    const apiError = normalizeApiError(
+      { ...(responseBody || {}), status: response.status },
+      'Unable to simulate settlement.'
+    );
+    const error = new Error(apiError.message);
+    error.apiError = apiError;
+    throw error;
+  }
+
+  return responseBody;
+};
+
+const formatSettledAt = (iso) => {
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+};
+
 const fetchPaymentQuote = async (qrisPayload) => {
   const response = await fetch('/api/v1/payment/quote', {
     method: 'POST',
@@ -105,6 +140,9 @@ export default function PaymentPage({
   const [quoteClock, setQuoteClock] = useState(() => new Date());
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+  const [settlementResult, setSettlementResult] = useState(null);
+  const [settlementError, setSettlementError] = useState(null);
+  const [isSettling, setIsSettling] = useState(false);
 
   useEffect(() => {
     onParsedData?.(parsedPayment);
@@ -160,6 +198,7 @@ export default function PaymentPage({
     : null;
   const visiblePaymentError = verificationError || externalPaymentError || paymentError;
   const flowState = useMemo(() => {
+    if (settlementResult) return 'settled';
     if (verificationStatus === 'paid_verified') return 'paid_verified';
     if (verificationStatus === 'verifying') return 'verifying';
     if (verificationStatus === 'failed' || quoteError || visiblePaymentError) return 'failed';
@@ -175,6 +214,7 @@ export default function PaymentPage({
     parsedPayment,
     quoteError,
     quoteReview,
+    settlementResult,
     submittedPayment,
     verificationStatus,
     visiblePaymentError,
@@ -188,23 +228,26 @@ export default function PaymentPage({
     tx_submitted: t('payment.headerSubmitted'),
     verifying: t('payment.headerVerifying'),
     paid_verified: t('payment.headerPaid'),
+    settled: t('payment.headerSettled'),
     failed: t('payment.headerFailed'),
   }[flowState];
-  const footerLabel = flowState === 'paid_verified'
-    ? t('payment.footerPaid')
-    : flowState === 'verifying'
-      ? t('payment.footerVerifying')
-      : flowState === 'tx_submitted'
-        ? t('payment.footerSubmitted')
-        : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
-          ? t('payment.footerDemo')
-          : quote
-            ? `Quote ${String(quote.quoteId).slice(0, 12)}`
-            : t('payment.footerParsed');
+  const footerLabel = flowState === 'settled'
+    ? t('payment.footerSettled')
+    : flowState === 'paid_verified'
+      ? t('payment.footerPaid')
+      : flowState === 'verifying'
+        ? t('payment.footerVerifying')
+        : flowState === 'tx_submitted'
+          ? t('payment.footerSubmitted')
+          : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
+            ? t('payment.footerDemo')
+            : quote
+              ? `Quote ${String(quote.quoteId).slice(0, 12)}`
+              : t('payment.footerParsed');
   const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
-  const showScanAnother = flowState === 'failed' || flowState === 'paid_verified';
+  const showScanAnother = flowState === 'failed' || flowState === 'paid_verified' || flowState === 'settled';
   const primaryExplorerUrl = verifiedPayment?.explorerUrl || submittedPayment?.explorerUrl || '';
-  const isBusy = isQuoteLoading || isPaymentSubmitting || flowState === 'verifying';
+  const isBusy = isQuoteLoading || isPaymentSubmitting || flowState === 'verifying' || isSettling;
 
   const handleConfirm = async () => {
     if (!parsedPayment.isValid || isQuoteLoading) {
@@ -274,6 +317,32 @@ export default function PaymentPage({
     }
 
     await handleConfirm();
+  };
+
+  const handleSettleDemo = async () => {
+    if (isSettling || settlementResult) return;
+
+    const sig = verifiedPayment?.signature || submittedPayment?.signature;
+    const qId = quote?.quoteId;
+
+    if (!sig || !qId) return;
+
+    setIsSettling(true);
+    setSettlementError(null);
+
+    try {
+      const result = await fetchSettleDemo({ quoteId: qId, signature: sig });
+      setSettlementResult(result);
+    } catch (error) {
+      setSettlementError(error.apiError || { code: 'SETTLEMENT_FAILED', message: error.message });
+    } finally {
+      setIsSettling(false);
+    }
+  };
+
+  const shortSignature = (sig) => {
+    if (!sig || sig.length < 16) return sig || '';
+    return `${sig.slice(0, 8)}...${sig.slice(-8)}`;
   };
 
   return (
@@ -369,16 +438,63 @@ export default function PaymentPage({
               </div>
             )}
 
-            {flowState === 'paid_verified' && verifiedPayment && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">{t('payment.statusPaid')}</div>
-                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+            {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 space-y-3">
+                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-1">{flowState === 'settled' ? '✅ ' + t('payment.headerSettled') : t('payment.statusPaid')}</div>
+                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed">
                   {t('payment.statusPaidDesc')}
                 </p>
-                <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
-                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('payment.lblSignature')}</div>
-                  <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{verifiedPayment.signature}</p>
+
+                <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 overflow-hidden">
+                  <div className="flex justify-between items-start gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSignature')}</span>
+                    <span className="text-xs text-zinc-900 dark:text-white font-mono text-right" title={verifiedPayment.signature}>{shortSignature(verifiedPayment.signature)}</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblNetwork')}</span>
+                    <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptNetwork')}</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblVerifiedBy')}</span>
+                    <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptVerifier')}</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-4 p-3">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlement')}</span>
+                    <span className={`text-xs font-bold ${settlementResult ? 'text-brand' : 'text-zinc-400'}`}>{settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}</span>
+                  </div>
+                  {settlementResult && (
+                    <>
+                      <div className="flex justify-between items-center gap-4 p-3 border-t border-zinc-100 dark:border-white/5">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlementRef')}</span>
+                        <span className="text-xs text-brand font-mono font-bold">{settlementResult.settlementReference}</span>
+                      </div>
+                      <div className="flex justify-between items-center gap-4 p-3 border-t border-zinc-100 dark:border-white/5">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettledAt')}</span>
+                        <span className="text-xs text-zinc-900 dark:text-white font-bold">{formatSettledAt(settlementResult.settledAt)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
+
+                {settlementResult && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mt-2">
+                    <p className="text-yellow-400 text-xs leading-relaxed">{t('payment.receiptDemoNote')}</p>
+                  </div>
+                )}
+
+                {settlementError && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-2">
+                    <div className="text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1">{settlementError.code}</div>
+                    <p className="text-red-300 text-xs">{settlementError.message}</p>
+                  </div>
+                )}
+
+                {isSettling && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></span>
+                    <span className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.btnSettling')}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -453,15 +569,25 @@ export default function PaymentPage({
               {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
             </button>
             
-            {flowState === 'paid_verified' && primaryExplorerUrl ? (
-              <a
-                href={primaryExplorerUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
-              >
-                {t('payment.btnViewExplorer')}
-              </a>
+            {(flowState === 'paid_verified' || flowState === 'settled') && primaryExplorerUrl ? (
+              <div className="flex flex-col gap-2">
+                {flowState === 'paid_verified' && !settlementResult && !isSettling && (
+                  <button
+                    onClick={handleSettleDemo}
+                    className="min-h-14 py-4 rounded-2xl bg-purple-600 text-white font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
+                  >
+                    {t('payment.btnSettleDemo')}
+                  </button>
+                )}
+                <a
+                  href={primaryExplorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
+                >
+                  {t('payment.btnViewExplorer')}
+                </a>
+              </div>
             ) : showTryAgain ? (
               <button
                 onClick={handleTryAgain}
