@@ -1,5 +1,6 @@
 import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import { getDemoQrisPayload } from './utils/demoQris';
 
@@ -8,6 +9,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
   const [permission, setPermission] = useState('prompt'); 
   const [scanResult, setScanResult] = useState(null);
   const [manualPayload, setManualPayload] = useState('');
+  const [showDemoQr, setShowDemoQr] = useState(false);
   const scannerRef = useRef(null);
   const scannerId = "reader"; 
   const isCameraActive = permission === 'granted' || permission === 'starting';
@@ -177,15 +179,44 @@ export default function QrisScanner({ onClose, onResult, t }) {
               <p className="mb-3 text-sm font-semibold text-zinc-300">
                 {t('scanner.noQrisLabel')}
               </p>
-              <button
-                type="button"
-                onClick={handleUseDemoQris}
-                className="min-h-11 w-full border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-bold text-brand transition-all hover:bg-brand/10"
-              >
-                {t('scanner.demoBtn')}
-              </button>
+              <div className="flex w-full gap-2">
+                <button
+                  type="button"
+                  onClick={handleUseDemoQris}
+                  className="min-h-11 flex-1 border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-bold text-brand transition-all hover:bg-brand/10"
+                >
+                  {t('scanner.demoBtn')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDemoQr((prev) => !prev)}
+                  className="min-h-11 flex-1 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand/30 hover:text-brand"
+                >
+                  {t('scanner.showDemoBtn')}
+                </button>
+              </div>
+
+              {showDemoQr && (
+                <div className="mt-3 flex w-full flex-col items-center border border-white/10 bg-[#0b0f0b] p-4">
+                  <p className="mb-3 text-xs font-semibold text-zinc-300">{t('scanner.showDemoTitle')}</p>
+                  <div className="flex items-center justify-center rounded bg-white p-3" style={{ minWidth: 220, minHeight: 220 }}>
+                    <QRCodeSVG
+                      value={getDemoQrisPayload()}
+                      size={196}
+                      level="M"
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                      includeMargin={false}
+                    />
+                  </div>
+                  <p className="mt-3 max-w-xs text-center text-xs leading-5 text-zinc-400">
+                    {t('scanner.showDemoHelper')}
+                  </p>
+                </div>
+              )}
+
               <p className="mt-2 text-xs text-zinc-500">
-                {t('scanner.demoDisclaimer')}
+                {t('scanner.showDemoNote')}
               </p>
             </div>
 

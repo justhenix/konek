@@ -371,11 +371,7 @@ export default function PaymentPage({
                 ? t('payment.mobileReturned')
                 : flowState === 'mobile_submitting'
                   ? t('payment.mobileSubmitting')
-          : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
-            ? t('payment.footerDemo')
-            : quote
-              ? `Quote ${String(quote.quoteId).slice(0, 12)}`
-              : t('payment.footerParsed');
+                  : null;
   const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
   const showScanAnother = flowState === 'failed'
     || flowState === 'paid_verified'
@@ -740,19 +736,26 @@ export default function PaymentPage({
               )}
 
               {quoteReview && (
-                <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                  <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
-                    <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
-                    <div className="wrap-break-word text-3xl font-semibold leading-none text-brand sm:text-4xl">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
-                    <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
-                  </div>
+                <>
+                  {quoteReview.isExpired && (
+                    <AppNotice variant="warning" title={t('payment.quoteExpiredTitle')}>
+                      <p>{t('payment.quoteExpiredBody')}</p>
+                    </AppNotice>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-white/10 bg-white/[0.035] opacity-60' : 'border-brand/25 bg-brand/8'}`}>
+                      <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
+                      <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                      <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
+                    </div>
 
-                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
-                    <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
-                    <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
-                    <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                    <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                      <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
+                      <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
+                      <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
             )}
@@ -792,12 +795,21 @@ export default function PaymentPage({
                   {t('payment.btnViewExplorer')}
                 </RailButton>
               ) : quoteReview ? (
-                <RailButton
-                  onClick={handleContinueToPhantom}
-                  disabled={quoteReview.isExpired || isPaymentSubmitting}
-                >
-                  {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
-                </RailButton>
+                quoteReview.isExpired ? (
+                  <RailButton
+                    onClick={handleConfirm}
+                    disabled={isQuoteLoading}
+                  >
+                    {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnTryAgain')}
+                  </RailButton>
+                ) : (
+                  <RailButton
+                    onClick={handleContinueToPhantom}
+                    disabled={isPaymentSubmitting}
+                  >
+                    {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
+                  </RailButton>
+                )
               ) : (
                 <RailButton
                   onClick={handleConfirm}
@@ -809,11 +821,13 @@ export default function PaymentPage({
             </div>
           )}
 
-          <div className="border-t border-white/10 bg-[#050705] p-4 text-center transition-colors">
-            <div className="text-xs font-semibold text-zinc-600 transition-colors">
-              {footerLabel}
+          {footerLabel && (
+            <div className="border-t border-white/10 bg-[#050705] p-4 text-center transition-colors">
+              <div className="text-xs font-semibold text-zinc-600 transition-colors">
+                {footerLabel}
+              </div>
             </div>
-          </div>
+          )}
           
         </div>
       </div>
