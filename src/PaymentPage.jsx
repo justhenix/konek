@@ -53,7 +53,13 @@ const formatPaymentErrorForDisplay = (error) => {
 };
 
 const getParsedPayment = (qrisData, initialParsedData) => {
-  if (initialParsedData?.rawData === qrisData) {
+  const hasUsableInitialParsedData = initialParsedData?.rawData === qrisData
+    && typeof initialParsedData.isValid === 'boolean'
+    && Array.isArray(initialParsedData.errors)
+    && initialParsedData.tags
+    && typeof initialParsedData.tags === 'object';
+
+  if (hasUsableInitialParsedData) {
     return initialParsedData;
   }
 
@@ -159,6 +165,7 @@ export default function PaymentPage({
   paymentSubmission,
   paymentVerification,
   externalPaymentError,
+  mobilePaymentState,
   onParsedData,
   onConfirm,
   onRetryVerification,
@@ -234,12 +241,17 @@ export default function PaymentPage({
   const visiblePaymentError = formatPaymentErrorForDisplay(
     verificationError || externalPaymentError || paymentError
   );
+  const mobileStatus = mobilePaymentState?.status || null;
   const flowState = useMemo(() => {
     if (settlementResult) return 'settled';
     if (verificationStatus === 'paid_verified') return 'paid_verified';
     if (verificationStatus === 'verifying') return 'verifying';
+    if (mobileStatus === 'returned') return 'mobile_returned';
+    if (mobileStatus === 'submitting_signed_transaction') return 'mobile_submitting';
+    if (mobileStatus === 'expired') return 'mobile_expired';
     if (verificationStatus === 'failed' || quoteError || visiblePaymentError) return 'failed';
     if (submittedPayment) return 'tx_submitted';
+    if (mobileStatus === 'restored') return 'mobile_restored';
     if (isPaymentSubmitting) return 'awaiting_signature';
     if (isQuoteLoading) return 'quoting';
     if (quoteReview) return 'quote_ready';
@@ -248,6 +260,7 @@ export default function PaymentPage({
   }, [
     isPaymentSubmitting,
     isQuoteLoading,
+    mobileStatus,
     parsedPayment,
     quoteError,
     quoteReview,
@@ -262,6 +275,10 @@ export default function PaymentPage({
     quoting: t('payment.headerQuoting'),
     quote_ready: t('payment.headerQuoteReady'),
     awaiting_signature: t('payment.headerAwaiting'),
+    mobile_returned: t('payment.headerAwaiting'),
+    mobile_submitting: t('payment.headerSubmitted'),
+    mobile_restored: t('payment.mobileSessionRestored'),
+    mobile_expired: t('payment.headerFailed'),
     tx_submitted: t('payment.headerSubmitted'),
     verifying: t('payment.headerVerifying'),
     paid_verified: t('payment.headerPaid'),
@@ -276,15 +293,32 @@ export default function PaymentPage({
         ? t('payment.footerVerifying')
         : flowState === 'tx_submitted'
           ? t('payment.footerSubmitted')
+          : flowState === 'mobile_restored'
+            ? t('payment.mobileSessionRestored')
+            : flowState === 'mobile_expired'
+              ? t('payment.mobileQuoteExpired')
+              : flowState === 'mobile_returned'
+                ? t('payment.mobileReturned')
+                : flowState === 'mobile_submitting'
+                  ? t('payment.mobileSubmitting')
           : quote?.quoteSource === 'DEMO_SIGNED_FALLBACK'
             ? t('payment.footerDemo')
             : quote
               ? `Quote ${String(quote.quoteId).slice(0, 12)}`
               : t('payment.footerParsed');
   const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
-  const showScanAnother = flowState === 'failed' || flowState === 'paid_verified' || flowState === 'settled';
+  const showScanAnother = flowState === 'failed'
+    || flowState === 'paid_verified'
+    || flowState === 'settled'
+    || flowState === 'mobile_restored'
+    || flowState === 'mobile_expired';
   const primaryExplorerUrl = verifiedPayment?.explorerUrl || submittedPayment?.explorerUrl || '';
-  const isBusy = isQuoteLoading || isPaymentSubmitting || flowState === 'verifying' || isSettling;
+  const isBusy = isQuoteLoading
+    || isPaymentSubmitting
+    || flowState === 'verifying'
+    || flowState === 'mobile_returned'
+    || flowState === 'mobile_submitting'
+    || isSettling;
 
   const handleConfirm = async () => {
     if (!parsedPayment.isValid || isQuoteLoading) {
@@ -322,8 +356,11 @@ export default function PaymentPage({
           merchantName: parsedPayment.merchantName,
           amount: parsedPayment.amount,
           amountText: parsedPayment.amountText,
+          formattedAmount: parsedPayment.formattedAmount,
           currencyCode: parsedPayment.currencyCode,
           tags: parsedPayment.tags,
+          isValid: parsedPayment.isValid,
+          errors: parsedPayment.errors,
         },
         quote,
       });
@@ -332,9 +369,16 @@ export default function PaymentPage({
         setIsPaymentSubmitting(false);
       }
     } catch (error) {
-      setPaymentError({
-        code: 'PAYMENT_FAILED',
+      const apiError = error.apiError || {
+        code: error.code || 'PAYMENT_FAILED',
         message: error.message || 'Unable to submit payment with Phantom.',
+        status: null,
+        details: null,
+      };
+
+      setPaymentError({
+        ...apiError,
+        code: apiError.code || 'PAYMENT_FAILED',
       });
       setIsPaymentSubmitting(false);
     }
@@ -444,8 +488,39 @@ export default function PaymentPage({
               <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
                 <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
                 <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusOpening')}</div>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.mobileWaiting')}</div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.statusApprove')}</p>
+                </div>
+              </div>
+            )}
+
+            {flowState === 'mobile_restored' && (
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
+                <span className="w-3 h-3 rounded-full bg-brand shrink-0"></span>
+                <div>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.mobileSessionRestored')}</div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.mobileInterrupted')}</p>
+                </div>
+              </div>
+            )}
+
+            {flowState === 'mobile_expired' && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
+                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{t('payment.headerFailed')}</div>
+                <p className="text-red-300 text-sm leading-relaxed">{t('payment.mobileQuoteExpired')}</p>
+              </div>
+            )}
+
+            {(flowState === 'mobile_returned' || flowState === 'mobile_submitting') && (
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
+                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
+                <div>
+                  <div className="text-brand text-xs font-bold uppercase tracking-widest">
+                    {flowState === 'mobile_submitting' ? t('payment.mobileSubmitting') : t('payment.mobileReturned')}
+                  </div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                    {flowState === 'mobile_submitting' ? t('payment.mobileSubmittingDesc') : t('payment.mobileReturnedDesc')}
+                  </p>
                 </div>
               </div>
             )}
@@ -625,6 +700,14 @@ export default function PaymentPage({
                   {t('payment.btnViewExplorer')}
                 </a>
               </div>
+            ) : flowState === 'mobile_expired' ? null : flowState === 'mobile_restored' ? (
+              <button
+                onClick={handleContinueToPhantom}
+                disabled={quoteReview?.isExpired || isPaymentSubmitting}
+                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
+              >
+                {t('payment.btnResumePayment')}
+              </button>
             ) : showTryAgain ? (
               <button
                 onClick={handleTryAgain}
