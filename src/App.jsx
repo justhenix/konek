@@ -35,6 +35,7 @@ const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc
 const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
 const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
+const PHANTOM_WEBSITE_URL = 'https://phantom.app/';
 const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
 const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
@@ -465,6 +466,7 @@ function App() {
 
   // --- STATE UNTUK FLOW APLIKASI (LOGIN -> SCAN -> PAY) ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [walletNotice, setWalletNotice] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
   const [parsedPaymentData, setParsedPaymentData] = useState(null);
@@ -743,12 +745,18 @@ function App() {
           await connect();
           setIsLoginModalOpen(false);
         } else {
-          alert("Phantom Wallet is not ready or installed. Please install it to continue.");
-          window.open("https://phantom.app/", "_blank");
+          setIsLoginModalOpen(false);
+          setWalletNotice({
+            title: t('walletNotice.title'),
+            body: t('walletNotice.body'),
+          });
         }
       } else {
-        alert("Phantom Wallet is not installed.");
-        window.open("https://phantom.app/", "_blank");
+        setIsLoginModalOpen(false);
+        setWalletNotice({
+          title: t('walletNotice.title'),
+          body: t('walletNotice.body'),
+        });
       }
     } catch (error) {
       console.error("Failed to connect to wallet:", error);
@@ -1379,6 +1387,22 @@ function App() {
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isProfileMenuOpen]);
 
+  useEffect(() => {
+    if (!isLoginModalOpen && !walletNotice) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsLoginModalOpen(false);
+        setWalletNotice(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isLoginModalOpen, walletNotice]);
+
 
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -1482,20 +1506,20 @@ function App() {
                   </button>
 
                   <div
-                    className={`absolute right-0 top-11 w-56 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#0c100d]/95 p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
+                    className={`absolute right-0 top-11 w-64 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#080b08]/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
                     role="menu"
                   >
-                    <div className="mb-2 flex items-center gap-3 border-b border-white/10 px-2 py-2">
-                      <img src={userProfile.avatarUrl} alt="User Avatar" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    <div className="mb-2 flex items-center gap-3 border-b border-white/10 px-2 pb-3 pt-1">
+                      <img src={userProfile.avatarUrl} alt="User Avatar" className="h-9 w-9 shrink-0 border border-purple-400/30 object-cover" />
                       <div className="min-w-0 text-left">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">{t('navbar.wallet')}</p>
-                        <p className="truncate text-sm font-semibold text-white">{userProfile.name}</p>
+                        <p className="text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
+                        <p className="mt-1 truncate font-mono text-sm font-semibold text-white">{userProfile.name}</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={handleDisconnectWallet}
-                      className="w-full px-3 py-3 text-left text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                      className="w-full border border-red-500/15 bg-red-500/5 px-3 py-3 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10"
                       role="menuitem"
                     >
                       {t('navbar.disconnectWallet')}
@@ -1674,28 +1698,79 @@ function App() {
 
       {/* 1. POP-UP LOGIN (Tampil kalau belum konek dompet) */}
       {isLoginModalOpen && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in transition-all">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] max-w-sm w-full p-8 text-center shadow-2xl relative transition-colors">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
+          <div
+            className="relative w-full max-w-[30rem] border border-purple-400/25 bg-[#080b08] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-7"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wallet-connect-title"
+          >
             
-            <button onClick={() => setIsLoginModalOpen(false)} className="absolute top-6 right-6 text-zinc-400 hover:text-red-500 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button
+              onClick={() => setIsLoginModalOpen(false)}
+              className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300"
+              aria-label="Close wallet modal"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <div className="w-24 h-24 bg-purple-500/10 dark:bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(147,51,234,0.3)]">
-              <img src={logoPhantom} alt="Phantom" className="w-12 h-12 object-contain" />
+            <div className="mb-6 flex h-14 w-14 items-center justify-center border border-purple-400/25 bg-purple-500/10">
+              <img src={logoPhantom} alt="Phantom" className="h-8 w-8 object-contain" />
             </div>
             
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">{t('loginModal.title')}</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
+            <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
+            <h3 id="wallet-connect-title" className="pr-10 text-2xl font-semibold text-white">{t('loginModal.title')}</h3>
+            <p className="mb-7 mt-3 text-sm leading-7 text-zinc-400">
               {t('loginModal.desc')}
             </p>
             
             <button 
               onClick={handleConnectWallet}
-              className="w-full bg-[#AB9FF2] text-zinc-900 font-black py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex justify-center items-center gap-3"
+              className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#AB9FF2] px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
             >
               {t('loginModal.btn')}
             </button>
+          </div>
+        </div>
+      )}
+
+      {walletNotice && (
+        <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
+          <div
+            className="relative w-full max-w-[30rem] border border-purple-400/25 bg-[#080b08] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.42)] sm:p-7"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wallet-notice-title"
+          >
+            <button
+              onClick={() => setWalletNotice(null)}
+              className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300"
+              aria-label="Close Phantom notice"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div className="mb-5 flex h-12 w-12 items-center justify-center border border-purple-400/25 bg-purple-500/10">
+              <img src={logoPhantom} alt="Phantom" className="h-7 w-7 object-contain" />
+            </div>
+            <h3 id="wallet-notice-title" className="pr-10 text-2xl font-semibold text-white">{walletNotice.title}</h3>
+            <p className="mt-3 text-sm leading-7 text-zinc-400">{walletNotice.body}</p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setWalletNotice(null)}
+                className="min-h-11 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:border-white/20 hover:bg-white/7"
+              >
+                {t('walletNotice.primary')}
+              </button>
+              <a
+                href={PHANTOM_WEBSITE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex min-h-11 items-center justify-center bg-[#AB9FF2] px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff]"
+              >
+                {t('walletNotice.secondary')}
+              </a>
+            </div>
           </div>
         </div>
       )}

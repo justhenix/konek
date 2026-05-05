@@ -102,46 +102,55 @@ export default function QrisScanner({ onClose, onResult, t }) {
         {`@keyframes scan-laser { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}
       </style>
 
-      <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-all">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-[2.5rem] w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl relative flex flex-col transition-colors duration-500">
+      <div className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
+        <div
+          className="rail-scrollbar relative my-3 flex w-full max-w-[32rem] flex-col overflow-hidden border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="qris-scanner-title"
+        >
           
-          <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900">
-            <div>
-              <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-widest transition-colors">{t('scanner.title').split(' ')[0]} <span className="text-brand">{t('scanner.title').split(' ').slice(1).join(' ') || 'QRIS'}</span></h3>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest uppercase mt-1">
+          <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[#0b0f0b] p-5">
+            <div className="min-w-0">
+              <h3 id="qris-scanner-title" className="text-xl font-semibold text-white transition-colors">{t('scanner.title')}</h3>
+              <p className="mt-1 text-xs font-semibold text-zinc-500">
                 {permission === 'granted' ? t('scanner.cameraReady') : t('scanner.cameraAuth')}
               </p>
             </div>
-            <button onClick={handleClose} className="p-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-red-500 rounded-full transition-all">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button
+              onClick={handleClose}
+              className="grid h-9 w-9 shrink-0 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-all hover:border-red-500/30 hover:text-red-300"
+              aria-label="Close QRIS scanner"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
           {/* SCREEN: PROMPT */}
           {permission === 'prompt' && (
-            <div className="p-10 flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mb-6">
-                <svg className="w-10 h-10 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <div className="flex flex-col items-center p-7 text-center sm:p-8">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center border border-brand/25 bg-brand/8">
+                <svg className="h-8 w-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
               </div>
-              <h4 className="text-xl font-black text-zinc-900 dark:text-white mb-2">{t('scanner.promptTitle')}</h4>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8">{t('scanner.promptDesc')}</p>
-              <button onClick={triggerScanner} className="w-full bg-brand text-black font-black tracking-widest uppercase py-4 rounded-2xl shadow-lg hover:scale-105 transition-all">{t('scanner.enableBtn')}</button>
+              <h4 className="mb-2 text-xl font-semibold text-white">{t('scanner.promptTitle')}</h4>
+              <p className="mb-7 text-sm leading-7 text-zinc-400">{t('scanner.promptDesc')}</p>
+              <button onClick={triggerScanner} className="min-h-12 w-full bg-brand px-5 py-3 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.enableBtn')}</button>
             </div>
           )}
 
           {/* SCREEN: DENIED */}
           {permission === 'denied' && (
-            <div className="p-10 flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6 border border-red-500/30">
-                <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center p-7 text-center sm:p-8">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center border border-red-500/25 bg-red-500/10">
+                <svg className="h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
               </div>
-              <h4 className="text-xl font-black text-zinc-900 dark:text-white mb-2 transition-colors">{t('scanner.deniedTitle')}</h4>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 transition-colors">
+              <h4 className="mb-2 text-xl font-semibold text-white transition-colors">{t('scanner.deniedTitle')}</h4>
+              <p className="mb-7 text-sm leading-7 text-zinc-400 transition-colors">
                 {t('scanner.deniedDesc')}
               </p>
-              <button onClick={triggerScanner} className="w-full bg-zinc-800 text-white border border-zinc-700 font-bold tracking-widest uppercase px-6 py-4 rounded-xl hover:bg-zinc-700 transition-all">
+              <button onClick={triggerScanner} className="min-h-12 w-full border border-white/10 bg-white/4 px-5 py-3 text-sm font-semibold text-zinc-200 transition hover:border-brand/30 hover:text-brand">
                 {t('scanner.tryAgainBtn')}
               </button>
             </div>
@@ -149,28 +158,28 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
           {/* SCREEN: SCANNING */}
           {(permission === 'granted' || permission === 'starting') && (
-            <div className="relative w-full aspect-square bg-black overflow-hidden">
+            <div className="relative aspect-square w-full overflow-hidden bg-black">
               <div id={scannerId} className="absolute inset-0 w-full h-full [&_video]:object-cover! [&_video]:w-full! [&_video]:h-full!"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-64 h-64 border-2 border-dashed border-brand/50 rounded-3xl pointer-events-none">
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand rounded-tl-xl"></div>
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand rounded-tr-xl"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand rounded-bl-xl"></div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand rounded-br-xl"></div>
-                <div className="absolute left-0 right-0 h-0.5 bg-brand shadow-[0_0_15px_brand] z-10" style={{ animation: 'scan-laser 2.5s ease-in-out infinite' }}></div>
+              <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[68%] w-[68%] max-w-72 -translate-x-1/2 -translate-y-1/2 border border-dashed border-brand/50">
+                <div className="absolute left-0 top-0 h-8 w-8 border-l-2 border-t-2 border-brand"></div>
+                <div className="absolute right-0 top-0 h-8 w-8 border-r-2 border-t-2 border-brand"></div>
+                <div className="absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-brand"></div>
+                <div className="absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-brand"></div>
+                <div className="absolute left-0 right-0 z-10 h-px bg-brand" style={{ animation: 'scan-laser 2.5s ease-in-out infinite' }}></div>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleManualSubmit} className="p-6 border-t border-zinc-100 dark:border-white/5 bg-white dark:bg-zinc-900 transition-colors">
+          <form onSubmit={handleManualSubmit} className="border-t border-white/10 bg-[#0b0f0b] p-5 transition-colors">
             <div className="mb-4">
-              <div className="text-[10px] text-brand font-black tracking-[0.25em] uppercase mb-2">
+              <div className="mb-2 text-sm font-semibold text-white">
                 {t('scanner.demoLabel')}
               </div>
-              <p className="text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed">
+              <p className="text-xs leading-6 text-zinc-400">
                 {t('scanner.demoDesc')}
               </p>
             </div>
-            <label htmlFor="manual-qris-payload" className="block text-[10px] text-zinc-500 dark:text-zinc-500 font-black tracking-[0.2em] uppercase mb-2">
+            <label htmlFor="manual-qris-payload" className="mb-2 block text-xs font-semibold text-zinc-500">
               {t('scanner.manualLabel')}
             </label>
             <textarea
@@ -179,44 +188,44 @@ export default function QrisScanner({ onClose, onResult, t }) {
               onChange={(event) => setManualPayload(event.target.value)}
               rows={4}
               placeholder={t('scanner.manualPlaceholder')}
-              className="w-full resize-none rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950 p-4 text-xs font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-700 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+              className="rail-scrollbar w-full resize-none border border-white/10 bg-[#050705] p-4 font-mono text-xs text-white outline-none placeholder:text-zinc-700 transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 type="submit"
                 disabled={!manualPayload.trim()}
-                className="min-h-12 rounded-2xl bg-zinc-900 dark:bg-zinc-800 text-white font-black uppercase text-xs tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-700 disabled:opacity-50 transition-all"
+                className="min-h-12 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand/30 hover:text-brand disabled:opacity-50"
               >
                 {t('scanner.submitManualBtn')}
               </button>
               <button
                 type="button"
                 onClick={handleUseDemoQris}
-                className="min-h-12 rounded-2xl bg-brand text-black font-black uppercase text-xs tracking-widest shadow-lg hover:scale-105 transition-all"
+                className="min-h-12 bg-brand px-4 py-3 text-sm font-bold text-black transition-all hover:bg-brand/90"
               >
                 {t('scanner.demoBtn')}
               </button>
             </div>
-            <p className="text-[10px] text-zinc-400 dark:text-zinc-600 leading-relaxed mt-4">
+            <p className="mt-4 border border-amber-400/20 bg-amber-400/5 p-3 text-xs leading-6 text-amber-200/80">
               {t('scanner.demoDisclaimer')}
             </p>
           </form>
 
           {scanResult && !scanResult.parsedData.isValid && (
-            <div className="px-6 py-4 bg-red-500/10 border-t border-red-500/20">
-              <div className="text-red-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
+            <div className="border-t border-red-500/20 bg-red-500/10 px-5 py-4">
+              <div className="mb-1 text-xs font-semibold text-red-300">
                 {t('scanner.errorReady')}
               </div>
-              <p className="text-red-300 text-xs leading-relaxed">
+              <p className="text-xs leading-6 text-red-200">
                 {scanResult.parsedData.errors.join(' ')}
               </p>
             </div>
           )}
 
-          <div className="p-6 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-white/5 flex justify-center transition-colors">
+          <div className="flex justify-center border-t border-white/10 bg-[#080b08] p-4 transition-colors">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-              <span className="text-[10px] text-zinc-500 dark:text-brand font-black tracking-[0.2em] uppercase transition-colors">{t('scanner.footer')}</span>
+              <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
+              <span className="text-xs font-semibold text-zinc-500 transition-colors">{t('scanner.footer')}</span>
             </div>
           </div>
         </div>

@@ -158,6 +158,70 @@ const formatQuoteExpiry = (expiresAt) => {
   return quoteExpiryFormatter.format(expiresAtDate);
 };
 
+const noticeStyles = {
+  info: 'border-white/10 bg-white/[0.035] text-zinc-300',
+  success: 'border-brand/25 bg-brand/8 text-zinc-200',
+  warning: 'border-amber-400/25 bg-amber-400/8 text-amber-100',
+  danger: 'border-red-500/25 bg-red-500/10 text-red-100',
+};
+
+const noticeTitleStyles = {
+  info: 'text-zinc-200',
+  success: 'text-brand',
+  warning: 'text-amber-200',
+  danger: 'text-red-300',
+};
+
+const AppNotice = ({ variant = 'info', title, children, pulse = false }) => (
+  <div className={`border p-4 ${noticeStyles[variant] || noticeStyles.info}`}>
+    <div className="flex items-start gap-3">
+      <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${variant === 'danger' ? 'bg-red-400' : variant === 'warning' ? 'bg-amber-300' : 'bg-brand'} ${pulse ? 'animate-pulse' : ''}`}></span>
+      <div className="min-w-0">
+        {title && (
+          <p className={`text-sm font-semibold ${noticeTitleStyles[variant] || noticeTitleStyles.info}`}>{title}</p>
+        )}
+        <div className="mt-1 text-sm leading-6 text-current">{children}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const RailButton = ({ as = 'button', variant = 'primary', className = '', children, ...props }) => {
+  const ButtonComponent = as;
+  const variants = {
+    primary: 'bg-brand text-black hover:bg-brand/90 focus-visible:ring-brand',
+    wallet: 'bg-[#AB9FF2] text-zinc-950 hover:bg-[#bdb3ff] focus-visible:ring-purple-300',
+    secondary: 'border border-white/10 bg-white/4 text-zinc-300 hover:border-white/20 hover:bg-white/7 focus-visible:ring-zinc-500',
+    danger: 'border border-red-500/20 bg-red-500/5 text-red-300 hover:border-red-500/40 hover:bg-red-500/10 focus-visible:ring-red-400',
+  };
+
+  return (
+    <ButtonComponent
+      className={`flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
+      {...props}
+    >
+      {children}
+    </ButtonComponent>
+  );
+};
+
+const DetailRow = ({ label, value, mono = false, tone = 'default', title }) => {
+  const toneClass = tone === 'success'
+    ? 'text-brand'
+    : tone === 'muted'
+      ? 'text-zinc-500'
+      : 'text-white';
+
+  return (
+    <div className="grid grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] gap-4 border-b border-white/10 px-4 py-3 last:border-b-0">
+      <span className="text-xs font-semibold text-zinc-500">{label}</span>
+      <span className={`min-w-0 text-right text-sm font-semibold ${mono ? 'font-mono break-all' : 'break-words'} ${toneClass}`} title={title}>
+        {value}
+      </span>
+    </div>
+  );
+};
+
 export default function PaymentPage({
   qrisData,
   initialParsedData,
@@ -428,324 +492,260 @@ export default function PaymentPage({
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-3 sm:p-4 transition-all animate-fade-in">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/25 rounded-3xl sm:rounded-[2rem] w-full max-w-lg max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
-          
-          <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900 transition-colors">
-            <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">{t('payment.qrisParsed')}</div>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter transition-colors">
+      <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
+        <div
+          className="mx-auto my-3 w-full max-w-[35rem] border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="payment-panel-title"
+        >
+          <div className="border-b border-white/10 bg-[#0b0f0b] p-5 sm:p-6">
+            <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
+            <h3 id="payment-panel-title" className="text-2xl font-semibold text-white transition-colors">
               {headerTitle}
             </h3>
           </div>
           
-          <div className="p-5 sm:p-8 space-y-5 sm:space-y-6 overflow-y-auto">
+          <div className="space-y-5 p-4 sm:p-6">
             {!parsedPayment.isValid && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{t('payment.errParser')}</div>
+              <AppNotice variant="danger" title={t('payment.errParser')}>
                 <div className="space-y-1">
                   {parsedPayment.errors.map((error) => (
-                    <p key={error} className="text-red-300 text-sm">{error}</p>
+                    <p key={error}>{error}</p>
                   ))}
                 </div>
-              </div>
+              </AppNotice>
             )}
 
             {quoteError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{quoteError.code}</div>
-                <p className="text-red-300 text-sm leading-relaxed">{quoteError.message}</p>
-              </div>
+              <AppNotice variant="danger" title={quoteError.code}>
+                <p>{quoteError.message}</p>
+              </AppNotice>
             )}
 
             {visiblePaymentError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{visiblePaymentError.code}</div>
-                <p className="text-red-300 text-sm leading-relaxed">{visiblePaymentError.message}</p>
+              <AppNotice variant="danger" title={visiblePaymentError.code}>
+                <p>{visiblePaymentError.message}</p>
                 {primaryExplorerUrl && (
                   <a
                     href={primaryExplorerUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex mt-4 text-brand text-xs font-black uppercase tracking-widest hover:underline"
+                    className="mt-4 inline-flex text-sm font-semibold text-brand hover:underline"
                   >
                     {t('payment.btnViewExplorer')}
                   </a>
                 )}
-              </div>
+              </AppNotice>
             )}
 
             {isQuoteLoading && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
-                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
-                <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusLoading')}</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.statusFetching')}</p>
-                </div>
-              </div>
+              <AppNotice variant="success" title={t('payment.statusLoading')} pulse>
+                <p>{t('payment.statusFetching')}</p>
+              </AppNotice>
             )}
 
             {isPaymentSubmitting && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
-                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
-                <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.mobileWaiting')}</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.statusApprove')}</p>
-                </div>
-              </div>
+              <AppNotice variant="success" title={t('payment.mobileWaiting')} pulse>
+                <p>{t('payment.statusApprove')}</p>
+              </AppNotice>
             )}
 
             {flowState === 'mobile_restored' && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
-                <span className="w-3 h-3 rounded-full bg-brand shrink-0"></span>
-                <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.mobileSessionRestored')}</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{t('payment.mobileInterrupted')}</p>
-                </div>
-              </div>
+              <AppNotice variant="warning" title={t('payment.mobileSessionRestored')}>
+                <p>{t('payment.mobileInterrupted')}</p>
+              </AppNotice>
             )}
 
             {flowState === 'mobile_expired' && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{t('payment.headerFailed')}</div>
-                <p className="text-red-300 text-sm leading-relaxed">{t('payment.mobileQuoteExpired')}</p>
-              </div>
+              <AppNotice variant="danger" title={t('payment.headerFailed')}>
+                <p>{t('payment.mobileQuoteExpired')}</p>
+              </AppNotice>
             )}
 
             {(flowState === 'mobile_returned' || flowState === 'mobile_submitting') && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
-                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
-                <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">
-                    {flowState === 'mobile_submitting' ? t('payment.mobileSubmitting') : t('payment.mobileReturned')}
-                  </div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                    {flowState === 'mobile_submitting' ? t('payment.mobileSubmittingDesc') : t('payment.mobileReturnedDesc')}
-                  </p>
-                </div>
-              </div>
+              <AppNotice
+                variant="success"
+                title={flowState === 'mobile_submitting' ? t('payment.mobileSubmitting') : t('payment.mobileReturned')}
+                pulse
+              >
+                <p>{flowState === 'mobile_submitting' ? t('payment.mobileSubmittingDesc') : t('payment.mobileReturnedDesc')}</p>
+              </AppNotice>
             )}
 
             {flowState === 'tx_submitted' && submittedPayment && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-2">{t('payment.statusTxSub')}</div>
-                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">
-                  {t('payment.statusTxSubDesc')}
-                </p>
-                <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 p-4">
-                  <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('payment.lblSignature')}</div>
-                  <p className="text-xs text-zinc-900 dark:text-white font-mono break-all">{submittedPayment.signature}</p>
+              <AppNotice variant="success" title={t('payment.statusTxSub')}>
+                <p>{t('payment.statusTxSubDesc')}</p>
+                <div className="mt-4 border border-white/10 bg-[#050705] p-3">
+                  <div className="mb-1 text-xs font-semibold text-zinc-500">{t('payment.lblSignature')}</div>
+                  <p className="font-mono text-xs break-all text-white">{submittedPayment.signature}</p>
                 </div>
-              </div>
+              </AppNotice>
             )}
 
             {flowState === 'verifying' && submittedPayment && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 flex items-center gap-4">
-                <span className="w-3 h-3 rounded-full bg-brand animate-pulse shrink-0"></span>
-                <div>
-                  <div className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.statusVerifying')}</div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                    {t('payment.statusChecking')}
-                  </p>
-                </div>
-              </div>
+              <AppNotice variant="success" title={t('payment.statusVerifying')} pulse>
+                <p>{t('payment.statusChecking')}</p>
+              </AppNotice>
             )}
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 space-y-4">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-1">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</div>
-                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed">
-                  {t('payment.statusPaidDesc')}
-                </p>
+              <section className="space-y-4 border border-brand/25 bg-brand/8 p-4">
+                <div>
+                  <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
+                  </p>
+                </div>
 
-                <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 overflow-hidden">
-                  <div className="grid grid-cols-[minmax(92px,0.8fr)_minmax(0,1.2fr)] gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
-                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSignature')}</span>
-                    <span className="text-xs text-zinc-900 dark:text-white font-mono text-right break-all" title={verifiedPayment.signature}>{shortSignature(verifiedPayment.signature)}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
-                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblNetwork')}</span>
-                    <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptNetwork')}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
-                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblVerifiedBy')}</span>
-                    <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptVerifier')}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 p-4">
-                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlement')}</span>
-                    <span className={`text-xs font-bold ${settlementResult ? 'text-brand' : 'text-zinc-400'}`}>{settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}</span>
-                  </div>
+                <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                  <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} />
+                  <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
+                  <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
+                  <DetailRow
+                    label={t('payment.lblSettlement')}
+                    value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
+                    tone={settlementResult ? 'success' : 'muted'}
+                  />
                   {settlementResult && (
                     <>
-                      <div className="grid grid-cols-[minmax(110px,0.8fr)_minmax(0,1.2fr)] gap-4 p-4 border-t border-zinc-100 dark:border-white/5">
-                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlementRef')}</span>
-                        <span className="text-xs text-brand font-mono font-bold text-right break-all">{settlementResult.settlementReference}</span>
-                      </div>
-                      <div className="flex justify-between items-center gap-4 p-4 border-t border-zinc-100 dark:border-white/5">
-                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettledAt')}</span>
-                        <span className="text-xs text-zinc-900 dark:text-white font-bold text-right">{formatSettledAt(settlementResult.settledAt)}</span>
-                      </div>
+                      <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" />
+                      <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
                     </>
                   )}
                 </div>
 
                 {settlementResult && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mt-2">
-                    <p className="text-yellow-300 text-xs leading-relaxed">{t('payment.receiptDemoNote')}</p>
-                  </div>
+                  <AppNotice variant="warning">
+                    <p>{t('payment.receiptDemoNote')}</p>
+                  </AppNotice>
                 )}
 
                 {settlementError && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-2">
-                    <div className="text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1">{settlementError.code}</div>
-                    <p className="text-red-300 text-xs">{settlementError.message}</p>
-                  </div>
+                  <AppNotice variant="danger" title={settlementError.code}>
+                    <p>{settlementError.message}</p>
+                  </AppNotice>
                 )}
 
                 {isSettling && (
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></span>
-                    <span className="text-brand text-xs font-bold uppercase tracking-widest">{t('payment.btnSettling')}</span>
+                  <div className="mt-2 flex items-center gap-3">
+                    <span className="h-2.5 w-2.5 rounded-full bg-brand animate-pulse"></span>
+                    <span className="text-sm font-semibold text-brand">{t('payment.btnSettling')}</span>
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
             <div className="space-y-4">
-              <div className="flex justify-between items-start gap-4">
-                <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest transition-colors">{t('payment.lblMerchant')}</span>
-                <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] break-words transition-colors" title={merchantName}>
-                  {merchantName}
-                </span>
-              </div>
+              <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
 
               {!quoteReview && (
                 <Fragment>
-                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 border border-zinc-100 dark:border-white/5 transition-colors">
-                    <div className="flex justify-between items-center gap-4">
-                      <span className="text-zinc-900 dark:text-white font-black uppercase text-xs tracking-widest transition-colors">{t('payment.lblTotalPay')}</span>
+                  <div className="border border-white/10 bg-white/[0.035] p-4 transition-colors">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-semibold text-white transition-colors">{t('payment.lblTotalPay')}</span>
                       <div className="text-right">
-                        <div className="text-3xl font-black text-brand">{amountLabel}</div>
-                        <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">{currencyLabel}</div>
+                        <div className="text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
+                        <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-zinc-100 dark:border-white/5 overflow-hidden">
-                    <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Tag 54</span>
-                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right break-all">{parsedPayment.tags['54'] || t('payment.lblMissing')}</span>
-                    </div>
-                    <div className="flex justify-between items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-950 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Tag 59</span>
-                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right break-all">{parsedPayment.tags['59'] || 'Missing'}</span>
-                    </div>
+                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                    <DetailRow label="Tag 54" value={parsedPayment.tags['54'] || t('payment.lblMissing')} mono />
+                    <DetailRow label="Tag 59" value={parsedPayment.tags['59'] || t('payment.lblMissing')} mono />
                   </div>
                 </Fragment>
               )}
 
               {quoteReview && (
                 <div className="space-y-4">
-                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 border border-zinc-100 dark:border-white/5 transition-colors">
-                    <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-2">{t('payment.lblBackendQuote')}</div>
-                    <div className="text-4xl font-black text-brand leading-none">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
-                    <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-2">SOL</div>
+                  <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
+                    <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
+                    <div className="break-words text-3xl font-semibold leading-none text-brand sm:text-4xl">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                    <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
                   </div>
 
-                  <div className="rounded-3xl border border-zinc-100 dark:border-white/5 overflow-hidden">
-                    <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblIdrAmount')}</span>
-                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right">{quoteReview.idrAmountLabel}</span>
-                    </div>
-                    <div className="flex justify-between items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-950 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblRate')}</span>
-                      <span className="text-sm text-zinc-900 dark:text-white font-bold text-right">{quoteReview.exchangeRateLabel}</span>
-                    </div>
-                    <div className="flex justify-between items-start gap-4 p-4 bg-white dark:bg-zinc-900 transition-colors">
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-600 font-bold uppercase tracking-widest">{t('payment.lblExpires')}</span>
-                      <span className={`text-sm font-bold text-right ${quoteReview.isExpired ? 'text-red-400' : 'text-zinc-900 dark:text-white'}`}>
-                        {quoteReview.expiresAtLabel}
-                      </span>
-                    </div>
+                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                    <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
+                    <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
+                    <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="p-5 sm:p-8 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <button 
+          <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-2 sm:p-6">
+            <RailButton
               onClick={showScanAnother ? onScanAnother : onCancel}
               disabled={isBusy && !showScanAnother}
-              className="min-h-14 py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold uppercase text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
+              variant="secondary"
             >
               {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-            </button>
+            </RailButton>
             
             {(flowState === 'paid_verified' || flowState === 'settled') && primaryExplorerUrl ? (
-              <div className="flex flex-col gap-2 sm:gap-3">
+              <div className="flex flex-col gap-3">
                 {flowState === 'paid_verified' && !settlementResult && !isSettling && (
-                  <button
+                  <RailButton
                     onClick={handleSettleDemo}
-                    className="min-h-14 py-4 rounded-2xl bg-purple-600 text-white font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
+                    variant="wallet"
                   >
                     {t('payment.btnSettleDemo')}
-                  </button>
+                  </RailButton>
                 )}
-                <a
+                <RailButton
+                  as="a"
                   href={primaryExplorerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
                 >
                   {t('payment.btnViewExplorer')}
-                </a>
+                </RailButton>
               </div>
             ) : flowState === 'mobile_expired' ? null : flowState === 'mobile_restored' ? (
-              <button
+              <RailButton
                 onClick={handleContinueToPhantom}
                 disabled={quoteReview?.isExpired || isPaymentSubmitting}
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
               >
                 {t('payment.btnResumePayment')}
-              </button>
+              </RailButton>
             ) : showTryAgain ? (
-              <button
+              <RailButton
                 onClick={handleTryAgain}
                 disabled={isBusy}
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
               >
                 {t('payment.btnTryAgain')}
-              </button>
+              </RailButton>
             ) : submittedPayment && primaryExplorerUrl ? (
-              <a
+              <RailButton
+                as="a"
                 href={primaryExplorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 transition-all flex justify-center items-center text-center px-4"
               >
                 {t('payment.btnViewExplorer')}
-              </a>
+              </RailButton>
             ) : quoteReview ? (
-              <button 
+              <RailButton
                 onClick={handleContinueToPhantom}
                 disabled={quoteReview.isExpired || isPaymentSubmitting}
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs leading-tight shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center text-center px-4"
               >
                 {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
-              </button>
+              </RailButton>
             ) : (
-              <button 
+              <RailButton
                 onClick={handleConfirm}
                 disabled={!parsedPayment.isValid || isQuoteLoading}
-                className="min-h-14 py-4 rounded-2xl bg-brand text-black font-black uppercase text-xs shadow-[0_0_20px_rgba(4,250,58,0.3)] hover:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex justify-center items-center"
               >
                 {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
-              </button>
+              </RailButton>
             )}
           </div>
 
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-950 text-center border-t border-zinc-100 dark:border-white/5 transition-colors">
-            <div className="text-[9px] text-zinc-400 dark:text-zinc-600 font-bold tracking-[0.2em] uppercase transition-colors">
+          <div className="border-t border-white/10 bg-[#050705] p-4 text-center transition-colors">
+            <div className="text-xs font-semibold text-zinc-600 transition-colors">
               {footerLabel}
             </div>
           </div>

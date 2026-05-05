@@ -34,6 +34,29 @@ body {
   clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
 }
 
+.rail-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) rgba(255, 255, 255, 0.04);
+}
+
+.rail-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.rail-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rail-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(8, 11, 8, 0.95);
+}
+
+.rail-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(4, 250, 58, 0.34);
+}
+
 @media (max-width: 420px) {
   .protocol-node {
     clip-path: none;
