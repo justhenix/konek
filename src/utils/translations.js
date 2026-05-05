@@ -96,11 +96,18 @@ export const translations = {
       desc: "Connect Phantom to start paying with Solana.",
       btn: "Connect Phantom",
     },
-    walletNotice: {
-      title: "Phantom is not ready",
-      body: "Install Phantom or open this page in a browser where Phantom is available.",
-      primary: "Got it",
-      secondary: "Open Phantom",
+    walletToast: {
+      connectedTitle: "Wallet connected",
+      connectedBody: "Phantom is ready for payment.",
+      disconnectedTitle: "Wallet disconnected",
+      disconnectedBody: "You can connect again anytime.",
+      phantomNotReadyTitle: "Phantom is not ready",
+      phantomNotReadyBody: "Install Phantom or open this page in a browser that supports Phantom.",
+    },
+    walletDropdown: {
+      label: "Wallet",
+      address: "Address",
+      disconnect: "Disconnect Wallet",
     },
     scanner: {
       title: "Scan QRIS",
@@ -160,7 +167,7 @@ export const translations = {
       statusChecking: "The system is checking the devnet transaction before marking it paid.",
       statusPaid: "Paid",
       statusPaidDesc: "The system has checked the Solana payment to KonekPay.",
-      statusSettledDesc: "The payment has been checked. Rupiah payout is still simulated in this demo.",
+      statusSettledDesc: "The payment has been checked. Rupiah payout is still simulated in this version.",
       lblSignature: "Signature",
       lblMerchant: "Merchant",
       lblTotalPay: "Total Payment",
@@ -291,11 +298,18 @@ export const translations = {
       desc: "Hubungkan Phantom untuk mulai bayar pakai Solana.",
       btn: "Hubungkan Phantom",
     },
-    walletNotice: {
-      title: "Phantom belum siap",
-      body: "Pasang Phantom atau buka halaman ini di browser yang sudah mendukung Phantom.",
-      primary: "Mengerti",
-      secondary: "Buka Phantom",
+    walletToast: {
+      connectedTitle: "Dompet terhubung",
+      connectedBody: "Phantom siap dipakai untuk bayar.",
+      disconnectedTitle: "Dompet terputus",
+      disconnectedBody: "Kamu bisa hubungkan lagi kapan saja.",
+      phantomNotReadyTitle: "Phantom belum siap",
+      phantomNotReadyBody: "Pasang Phantom atau buka halaman ini di browser yang mendukung Phantom.",
+    },
+    walletDropdown: {
+      label: "Dompet",
+      address: "Alamat",
+      disconnect: "Putuskan Dompet",
     },
     scanner: {
       title: "Scan QRIS",
@@ -355,7 +369,7 @@ export const translations = {
       statusChecking: "Sistem sedang mengecek transaksi sebelum lunas.",
       statusPaid: "Lunas",
       statusPaidDesc: "Sistem sudah mengecek pembayaran Solana ke KonekPay.",
-      statusSettledDesc: "Pembayaran sudah dicek. Pencairan rupiah pada demo ini masih simulasi.",
+      statusSettledDesc: "Pembayaran sudah dicek. Pencairan rupiah pada versi ini masih simulasi.",
       lblSignature: "Tanda Tangan",
       lblMerchant: "Toko",
       lblTotalPay: "Total Bayar",
@@ -393,7 +407,7 @@ export const translations = {
 
 /**
  * Create a translator function for a given language.
- * Usage: const t = createT('id'); t('scanner.title') → "SCAN QRIS"
+ * Usage: const t = createT('id'); t('scanner.title') returns "SCAN QRIS"
  * Falls back to English, then to the key name itself.
  */
 export const createT = (lang) => {

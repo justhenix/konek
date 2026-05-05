@@ -7,12 +7,10 @@ import nacl from 'tweetnacl';
 import './App.css';
 import { createT } from './utils/translations';
 
-// --- IMPORT LOGO BARU ---
 import logoPhantom from './assets/LogoPhantom.png';
 
-// --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
-import PaymentPage from './PaymentPage'; // Pastikan file PaymentPage.jsx udah ada di folder src
+import PaymentPage from './PaymentPage';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
   buildDevnetSolTransferTransaction,
@@ -27,15 +25,12 @@ import {
   serializeTransactionForPhantom,
 } from './utils/solanaPayment';
 
-// ─────────────────────────────────────────────────────
 // PYTH NETWORK PRICE CONFIG
-// ─────────────────────────────────────────────────────
 const PYTH_HERMES_LATEST_PRICE_URL = 'https://hermes.pyth.network/v2/updates/price/latest';
 const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d';
 const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
 const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
-const PHANTOM_WEBSITE_URL = 'https://phantom.app/';
 const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
 const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
@@ -353,13 +348,6 @@ const fetchSolIdrRateFromPyth = async () => {
   return solIdrRate;
 };
 
-const hashString = (str) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
-  return Math.abs(hash).toString(16);
-};
-
-
 const navItems = [
   { key: 'navbar.home', target: 'top' },
   { key: 'navbar.usp', target: 'usp-section' },
@@ -436,13 +424,75 @@ const SectionHeader = ({ eyebrow, title, children, className = '' }) => (
   </div>
 );
 
+const toastVariantStyles = {
+  success: {
+    shell: 'border-brand/25 bg-[#08100b]/95',
+    dot: 'bg-brand',
+    title: 'text-brand',
+  },
+  info: {
+    shell: 'border-purple-400/25 bg-[#0b0912]/95',
+    dot: 'bg-purple-300',
+    title: 'text-purple-200',
+  },
+  warning: {
+    shell: 'border-amber-300/25 bg-[#111006]/95',
+    dot: 'bg-amber-300',
+    title: 'text-amber-200',
+  },
+  danger: {
+    shell: 'border-red-400/25 bg-[#120808]/95',
+    dot: 'bg-red-400',
+    title: 'text-red-300',
+  },
+};
+
+const AppToast = ({ toast, onDismiss }) => {
+  const styles = toastVariantStyles[toast.variant] || toastVariantStyles.info;
+  const role = toast.variant === 'danger' || toast.variant === 'warning' ? 'alert' : 'status';
+
+  return (
+    <div
+      className={`pointer-events-auto w-full max-w-[22rem] border px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl ${styles.shell}`}
+      role={role}
+      aria-live={role === 'alert' ? 'assertive' : 'polite'}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${styles.dot}`}></span>
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm font-semibold ${styles.title}`}>{toast.title}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-300">{toast.body}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDismiss(toast.id)}
+          className="grid h-6 w-6 shrink-0 place-items-center border border-white/10 bg-white/4 text-zinc-500 transition hover:border-white/20 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          aria-label="Close notification"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ToastViewport = ({ toasts, onDismiss }) => (
+  <div className="fixed inset-x-3 top-3 z-150 flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
+    {toasts.map((toast) => (
+      <AppToast key={toast.id} toast={toast} onDismiss={onDismiss} />
+    ))}
+  </div>
+);
+
 function App() {
-  // --- STATE UNTUK ANIMASI NAVBAR ---
   const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
   const scope = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+  const toastIdRef = useRef(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState('dark');
   const [lang, setLang] = useState(() => {
@@ -464,9 +514,8 @@ function App() {
   const { connection } = useConnection();
   const { select, wallets, publicKey, connect, disconnect, connected, sendTransaction } = useWallet();
 
-  // --- STATE UNTUK FLOW APLIKASI (LOGIN -> SCAN -> PAY) ---
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [walletNotice, setWalletNotice] = useState(null);
+  const [toasts, setToasts] = useState([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
   const [parsedPaymentData, setParsedPaymentData] = useState(null);
@@ -683,9 +732,23 @@ function App() {
     }
   }, []);
 
-  // ==========================================
-  // USER PROFILE (derived from publicKey — no effect needed)
-  // ==========================================
+  const addToast = useCallback(({ variant = 'info', title, body, duration = 3600 }) => {
+    const id = toastIdRef.current + 1;
+    toastIdRef.current = id;
+    setToasts((currentToasts) => [
+      ...currentToasts.filter((toast) => toast.title !== title || toast.body !== body),
+      { id, variant, title, body },
+    ].slice(-3));
+
+    window.setTimeout(() => {
+      setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== id));
+    }, duration);
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== id));
+  }, []);
+
   const userProfile = useMemo(() => {
     const pKeyStr = publicKey?.toBase58() || mobileWalletPublicKey;
     if (pKeyStr) {
@@ -695,19 +758,16 @@ function App() {
       return {
         isLoggedIn: true,
         name: `${pKeyStr.slice(0, 4)}...${pKeyStr.slice(-4)}`,
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${hashString(pKeyStr)}`
+        address: pKeyStr,
       };
     }
     return {
       isLoggedIn: false,
       name: "Guest",
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=Guest`
+      address: '',
     };
   }, [publicKey, mobileWalletPublicKey]);
 
-  // ==========================================
-  // 🚨 AREA BACKEND DEV: FUNGSI KONEK WALLET 🚨
-  // ==========================================
   const handleConnectWallet = async () => {
     try {
       const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
@@ -744,22 +804,34 @@ function App() {
           select(phantomWallet.adapter.name);
           await connect();
           setIsLoginModalOpen(false);
+          addToast({
+            variant: 'success',
+            title: t('walletToast.connectedTitle'),
+            body: t('walletToast.connectedBody'),
+          });
         } else {
           setIsLoginModalOpen(false);
-          setWalletNotice({
-            title: t('walletNotice.title'),
-            body: t('walletNotice.body'),
+          addToast({
+            variant: 'warning',
+            title: t('walletToast.phantomNotReadyTitle'),
+            body: t('walletToast.phantomNotReadyBody'),
           });
         }
       } else {
         setIsLoginModalOpen(false);
-        setWalletNotice({
-          title: t('walletNotice.title'),
-          body: t('walletNotice.body'),
+        addToast({
+          variant: 'warning',
+          title: t('walletToast.phantomNotReadyTitle'),
+          body: t('walletToast.phantomNotReadyBody'),
         });
       }
     } catch (error) {
       console.error("Failed to connect to wallet:", error);
+      addToast({
+        variant: 'warning',
+        title: t('walletToast.phantomNotReadyTitle'),
+        body: t('walletToast.phantomNotReadyBody'),
+      });
     }
   };
 
@@ -791,8 +863,13 @@ function App() {
       setPaymentVerification(createIdlePaymentVerification());
       setMobilePaymentState(null);
       clearPendingPhantomPayment();
+      addToast({
+        variant: 'info',
+        title: t('walletToast.disconnectedTitle'),
+        body: t('walletToast.disconnectedBody'),
+      });
     }
-  }, [clearPendingPhantomPayment, connected, disconnect, publicKey]);
+  }, [addToast, clearPendingPhantomPayment, connected, disconnect, publicKey, t]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1145,6 +1222,11 @@ function App() {
       queueMicrotask(() => {
         setMobileWalletPublicKey(payload.public_key);
         setIsLoginModalOpen(false);
+        addToast({
+          variant: 'success',
+          title: t('walletToast.connectedTitle'),
+          body: t('walletToast.connectedBody'),
+        });
       });
     } catch (error) {
       console.error('Failed to decrypt Phantom mobile connect response:', error);
@@ -1152,6 +1234,7 @@ function App() {
       cleanCurrentUrlParams();
     }
   }, [
+    addToast,
     clearPendingPhantomPayment,
     getStoredPhantomSharedSecret,
     readPendingPhantomPayment,
@@ -1388,20 +1471,19 @@ function App() {
   }, [isProfileMenuOpen]);
 
   useEffect(() => {
-    if (!isLoginModalOpen && !walletNotice) {
+    if (!isLoginModalOpen) {
       return undefined;
     }
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setIsLoginModalOpen(false);
-        setWalletNotice(null);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isLoginModalOpen, walletNotice]);
+  }, [isLoginModalOpen]);
 
 
 
@@ -1497,32 +1579,36 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                    className="flex items-center gap-2 border border-white/10 bg-white/4 p-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="flex h-9 items-center gap-2 border border-brand/25 bg-brand/5 px-3 text-xs font-semibold text-zinc-200 transition hover:border-brand/45 hover:bg-brand/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     aria-haspopup="menu"
                     aria-expanded={isProfileMenuOpen}
                   >
-                    <span className="hidden xl:block max-w-24 truncate">{userProfile.name}</span>
-                    <img src={userProfile.avatarUrl} alt="User Avatar" className="h-7 w-7 rounded-full object-cover" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-brand"></span>
+                    <span className="max-w-28 truncate font-mono">{userProfile.name}</span>
+                    <svg className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition ${isProfileMenuOpen ? 'rotate-180 text-brand' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m6 9 6 6 6-6"></path>
+                    </svg>
                   </button>
 
                   <div
-                    className={`absolute right-0 top-11 w-64 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#080b08]/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
+                    className={`absolute right-0 top-11 w-72 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#080b08]/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
                     role="menu"
                   >
-                    <div className="mb-2 flex items-center gap-3 border-b border-white/10 px-2 pb-3 pt-1">
-                      <img src={userProfile.avatarUrl} alt="User Avatar" className="h-9 w-9 shrink-0 border border-purple-400/30 object-cover" />
-                      <div className="min-w-0 text-left">
-                        <p className="text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
-                        <p className="mt-1 truncate font-mono text-sm font-semibold text-white">{userProfile.name}</p>
+                    <div className="mb-2 border-b border-white/10 px-2 pb-3 pt-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-brand"></span>
+                        <p className="text-[11px] font-semibold text-brand">{t('walletDropdown.label')}</p>
                       </div>
+                      <p className="mt-3 text-[11px] font-semibold text-zinc-500">{t('walletDropdown.address')}</p>
+                      <p className="mt-1 truncate font-mono text-sm font-semibold text-white" title={userProfile.address}>{userProfile.address}</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleDisconnectWallet}
-                      className="w-full border border-red-500/15 bg-red-500/5 px-3 py-3 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10"
+                      className="w-full border border-red-500/15 bg-red-500/5 px-3 py-2.5 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                       role="menuitem"
                     >
-                      {t('navbar.disconnectWallet')}
+                      {t('walletDropdown.disconnect')}
                     </button>
                   </div>
                 </div>
@@ -1734,46 +1820,7 @@ function App() {
         </div>
       )}
 
-      {walletNotice && (
-        <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
-          <div
-            className="relative w-full max-w-[30rem] border border-purple-400/25 bg-[#080b08] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.42)] sm:p-7"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="wallet-notice-title"
-          >
-            <button
-              onClick={() => setWalletNotice(null)}
-              className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300"
-              aria-label="Close Phantom notice"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <div className="mb-5 flex h-12 w-12 items-center justify-center border border-purple-400/25 bg-purple-500/10">
-              <img src={logoPhantom} alt="Phantom" className="h-7 w-7 object-contain" />
-            </div>
-            <h3 id="wallet-notice-title" className="pr-10 text-2xl font-semibold text-white">{walletNotice.title}</h3>
-            <p className="mt-3 text-sm leading-7 text-zinc-400">{walletNotice.body}</p>
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setWalletNotice(null)}
-                className="min-h-11 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:border-white/20 hover:bg-white/7"
-              >
-                {t('walletNotice.primary')}
-              </button>
-              <a
-                href={PHANTOM_WEBSITE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="flex min-h-11 items-center justify-center bg-[#AB9FF2] px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff]"
-              >
-                {t('walletNotice.secondary')}
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      <ToastViewport toasts={toasts} onDismiss={dismissToast} />
 
       {/* 2. POP-UP SCANNER (Tampil kalau udah login dan pencet QRIS PAY) */}
       {isScannerOpen && (

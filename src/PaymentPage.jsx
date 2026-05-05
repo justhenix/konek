@@ -205,17 +205,22 @@ const RailButton = ({ as = 'button', variant = 'primary', className = '', childr
   );
 };
 
-const DetailRow = ({ label, value, mono = false, tone = 'default', title }) => {
+const DetailRow = ({ label, value, mono = false, tone = 'default', title, truncateValue = false }) => {
   const toneClass = tone === 'success'
     ? 'text-brand'
     : tone === 'muted'
       ? 'text-zinc-500'
       : 'text-white';
+  const valueFlowClass = truncateValue
+    ? 'truncate'
+    : mono
+      ? 'break-all'
+      : 'break-words';
 
   return (
-    <div className="grid grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] gap-4 border-b border-white/10 px-4 py-3 last:border-b-0">
+    <div className="grid gap-1.5 border-b border-white/10 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
       <span className="text-xs font-semibold text-zinc-500">{label}</span>
-      <span className={`min-w-0 text-right text-sm font-semibold ${mono ? 'font-mono break-all' : 'break-words'} ${toneClass}`} title={title}>
+      <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
       </span>
     </div>
@@ -494,19 +499,31 @@ export default function PaymentPage({
     <Fragment>
       <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
-          className="mx-auto my-3 w-full max-w-[35rem] border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-6"
+          className="mx-auto my-3 w-full max-w-[47.5rem] border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-5"
           role="dialog"
           aria-modal="true"
           aria-labelledby="payment-panel-title"
         >
-          <div className="border-b border-white/10 bg-[#0b0f0b] p-5 sm:p-6">
-            <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
-            <h3 id="payment-panel-title" className="text-2xl font-semibold text-white transition-colors">
-              {headerTitle}
-            </h3>
+          <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[#0b0f0b] p-4 sm:p-5">
+            <div className="min-w-0">
+              <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
+              <h3 id="payment-panel-title" className="text-xl font-semibold text-white transition-colors sm:text-2xl">
+                {headerTitle}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="grid h-9 w-9 shrink-0 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label="Close payment modal"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
           
-          <div className="space-y-5 p-4 sm:p-6">
+          <div className="space-y-4 p-4 sm:p-5">
             {!parsedPayment.isValid && (
               <AppNotice variant="danger" title={t('payment.errParser')}>
                 <div className="space-y-1">
@@ -591,27 +608,45 @@ export default function PaymentPage({
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
               <section className="space-y-4 border border-brand/25 bg-brand/8 p-4">
-                <div>
+                <div className="border border-brand/20 bg-[#061108] p-4">
                   <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
                   <p className="mt-2 text-sm leading-6 text-zinc-300">
                     {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
                   </p>
                 </div>
 
-                <div className="overflow-hidden border border-white/10 bg-[#050705]">
-                  <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} />
-                  <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
-                  <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
-                  <DetailRow
-                    label={t('payment.lblSettlement')}
-                    value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
-                    tone={settlementResult ? 'success' : 'muted'}
-                  />
-                  {settlementResult && (
-                    <>
-                      <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" />
-                      <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
-                    </>
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                    <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} truncateValue />
+                    <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
+                    <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
+                    <DetailRow
+                      label={t('payment.lblSettlement')}
+                      value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
+                      tone={settlementResult ? 'success' : 'muted'}
+                    />
+                    {settlementResult && (
+                      <>
+                        <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" title={settlementResult.settlementReference} truncateValue />
+                        <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
+                      </>
+                    )}
+                  </div>
+
+                  {quoteReview && (
+                    <div className="space-y-3">
+                      <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+                      <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
+                        <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
+                        <div className="break-words text-3xl font-semibold leading-none text-brand">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                        <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
+                      </div>
+                      <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                        <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
+                        <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
+                        <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -636,30 +671,33 @@ export default function PaymentPage({
               </section>
             )}
 
+            {!(flowState === 'paid_verified' || flowState === 'settled') && (
             <div className="space-y-4">
               <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
 
               {!quoteReview && (
                 <Fragment>
-                  <div className="border border-white/10 bg-white/[0.035] p-4 transition-colors">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold text-white transition-colors">{t('payment.lblTotalPay')}</span>
-                      <div className="text-right">
-                        <div className="text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
-                        <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                    <div className="border border-white/10 bg-white/[0.035] p-4 transition-colors">
+                      <div className="flex h-full items-center justify-between gap-4">
+                        <span className="text-sm font-semibold text-white transition-colors">{t('payment.lblTotalPay')}</span>
+                        <div className="text-right">
+                          <div className="text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
+                          <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
-                    <DetailRow label="Tag 54" value={parsedPayment.tags['54'] || t('payment.lblMissing')} mono />
-                    <DetailRow label="Tag 59" value={parsedPayment.tags['59'] || t('payment.lblMissing')} mono />
+                    <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                      <DetailRow label="Tag 54" value={parsedPayment.tags['54'] || t('payment.lblMissing')} mono />
+                      <DetailRow label="Tag 59" value={parsedPayment.tags['59'] || t('payment.lblMissing')} mono />
+                    </div>
                   </div>
                 </Fragment>
               )}
 
               {quoteReview && (
-                <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                   <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
                     <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
                     <div className="break-words text-3xl font-semibold leading-none text-brand sm:text-4xl">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
@@ -674,9 +712,10 @@ export default function PaymentPage({
                 </div>
               )}
             </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-2 sm:p-6">
+          <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
             <RailButton
               onClick={showScanAnother ? onScanAnother : onCancel}
               disabled={isBusy && !showScanAnother}
@@ -686,7 +725,7 @@ export default function PaymentPage({
             </RailButton>
             
             {(flowState === 'paid_verified' || flowState === 'settled') && primaryExplorerUrl ? (
-              <div className="flex flex-col gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {flowState === 'paid_verified' && !settlementResult && !isSettling && (
                   <RailButton
                     onClick={handleSettleDemo}

@@ -10,6 +10,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
   const [manualPayload, setManualPayload] = useState('');
   const scannerRef = useRef(null);
   const scannerId = "reader"; 
+  const isCameraActive = permission === 'granted' || permission === 'starting';
 
   const stopCamera = useCallback(async () => {
     if (scannerRef.current && scannerRef.current.isScanning) {
@@ -104,7 +105,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
       <div className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
         <div
-          className="rail-scrollbar relative my-3 flex w-full max-w-[32rem] flex-col overflow-hidden border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)]"
+          className={`rail-scrollbar relative my-3 flex w-full flex-col overflow-hidden border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] ${isCameraActive ? 'max-w-[50rem]' : 'max-w-[32rem]'}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="qris-scanner-title"
@@ -126,6 +127,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </button>
           </div>
 
+          <div className={isCameraActive ? 'md:grid md:grid-cols-[minmax(0,1fr)_20rem]' : ''}>
           {/* SCREEN: PROMPT */}
           {permission === 'prompt' && (
             <div className="flex flex-col items-center p-7 text-center sm:p-8">
@@ -157,7 +159,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
           )}
 
           {/* SCREEN: SCANNING */}
-          {(permission === 'granted' || permission === 'starting') && (
+          {isCameraActive && (
             <div className="relative aspect-square w-full overflow-hidden bg-black">
               <div id={scannerId} className="absolute inset-0 w-full h-full [&_video]:object-cover! [&_video]:w-full! [&_video]:h-full!"></div>
               <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[68%] w-[68%] max-w-72 -translate-x-1/2 -translate-y-1/2 border border-dashed border-brand/50">
@@ -170,12 +172,12 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </div>
           )}
 
-          <form onSubmit={handleManualSubmit} className="border-t border-white/10 bg-[#0b0f0b] p-5 transition-colors">
+          <form onSubmit={handleManualSubmit} className={`${isCameraActive ? 'border-t md:border-l md:border-t-0' : 'border-t'} border-white/10 bg-[#0b0f0b] p-4 transition-colors sm:p-5`}>
             <div className="mb-4">
               <div className="mb-2 text-sm font-semibold text-white">
                 {t('scanner.demoLabel')}
               </div>
-              <p className="text-xs leading-6 text-zinc-400">
+              <p className="text-xs leading-5 text-zinc-400">
                 {t('scanner.demoDesc')}
               </p>
             </div>
@@ -186,30 +188,31 @@ export default function QrisScanner({ onClose, onResult, t }) {
               id="manual-qris-payload"
               value={manualPayload}
               onChange={(event) => setManualPayload(event.target.value)}
-              rows={4}
+              rows={isCameraActive ? 3 : 4}
               placeholder={t('scanner.manualPlaceholder')}
-              className="rail-scrollbar w-full resize-none border border-white/10 bg-[#050705] p-4 font-mono text-xs text-white outline-none placeholder:text-zinc-700 transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
+              className="rail-scrollbar w-full resize-none border border-white/10 bg-[#050705] p-3 font-mono text-xs text-white outline-none placeholder:text-zinc-700 transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
             />
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-1">
               <button
                 type="submit"
                 disabled={!manualPayload.trim()}
-                className="min-h-12 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand/30 hover:text-brand disabled:opacity-50"
+                className="min-h-11 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand/30 hover:text-brand disabled:opacity-50"
               >
                 {t('scanner.submitManualBtn')}
               </button>
               <button
                 type="button"
                 onClick={handleUseDemoQris}
-                className="min-h-12 bg-brand px-4 py-3 text-sm font-bold text-black transition-all hover:bg-brand/90"
+                className="min-h-11 bg-brand px-4 py-3 text-sm font-bold text-black transition-all hover:bg-brand/90"
               >
                 {t('scanner.demoBtn')}
               </button>
             </div>
-            <p className="mt-4 border border-amber-400/20 bg-amber-400/5 p-3 text-xs leading-6 text-amber-200/80">
+            <p className="mt-4 border border-amber-400/20 bg-amber-400/5 p-3 text-xs leading-5 text-amber-200/80">
               {t('scanner.demoDisclaimer')}
             </p>
           </form>
+          </div>
 
           {scanResult && !scanResult.parsedData.isValid && (
             <div className="border-t border-red-500/20 bg-red-500/10 px-5 py-4">
