@@ -1797,7 +1797,7 @@ function App() {
                       src={member.cardImage}
                       alt=""
                       aria-hidden="true"
-                      className="w-[120px] origin-center translate-y-1 rotate-0 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:rotate-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:rotate-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:rotate-0 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:rotate-0 motion-reduce:group-focus-within:scale-[0.96]"
+                      className="w-30 origin-center translate-y-1 rotate-0 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:rotate-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:rotate-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:rotate-0 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:rotate-0 motion-reduce:group-focus-within:scale-[0.96]"
                     />
                   </div>
                 </article>
