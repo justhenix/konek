@@ -180,7 +180,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
               <button
                 type="button"
                 onClick={handleUseDemoQris}
-                className="min-h-11 w-full bg-brand px-4 py-3 text-sm font-bold text-black transition-all hover:bg-brand/90"
+                className="min-h-11 w-full border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-bold text-brand transition-all hover:bg-brand/10"
               >
                 {t('scanner.demoBtn')}
               </button>
