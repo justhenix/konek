@@ -369,9 +369,16 @@ export default function PaymentPage({
         setIsPaymentSubmitting(false);
       }
     } catch (error) {
-      setPaymentError({
-        code: 'PAYMENT_FAILED',
+      const apiError = error.apiError || {
+        code: error.code || 'PAYMENT_FAILED',
         message: error.message || 'Unable to submit payment with Phantom.',
+        status: null,
+        details: null,
+      };
+
+      setPaymentError({
+        ...apiError,
+        code: apiError.code || 'PAYMENT_FAILED',
       });
       setIsPaymentSubmitting(false);
     }
