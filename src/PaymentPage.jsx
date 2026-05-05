@@ -254,6 +254,7 @@ export default function PaymentPage({
   const [settlementResult, setSettlementResult] = useState(null);
   const [settlementError, setSettlementError] = useState(null);
   const [isSettling, setIsSettling] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
     onParsedData?.(parsedPayment);
@@ -499,7 +500,7 @@ export default function PaymentPage({
     <Fragment>
       <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
-          className="mx-auto my-3 w-full max-w-[47.5rem] border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-5"
+          className="mx-auto my-3 w-full max-w-190 border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-5"
           role="dialog"
           aria-modal="true"
           aria-labelledby="payment-panel-title"
@@ -607,29 +608,33 @@ export default function PaymentPage({
             )}
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
-              <section className="space-y-4 border border-brand/25 bg-brand/8 p-4">
-                <div className="border border-brand/20 bg-[#061108] p-4">
-                  <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-300">
-                    {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
-                  </p>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                  <div className="overflow-hidden border border-white/10 bg-[#050705]">
-                    <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} truncateValue />
-                    <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
-                    <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
-                    <DetailRow
-                      label={t('payment.lblSettlement')}
-                      value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
-                      tone={settlementResult ? 'success' : 'muted'}
-                    />
+              <section className="flex w-full flex-col lg:grid lg:grid-cols-2 lg:gap-6">
+                <div className="order-1 flex flex-col space-y-4">
+                  <div className="border border-brand/20 bg-[#061108] p-4">
+                    <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
+                    <p className="mt-2 text-sm leading-6 text-zinc-300">
+                      {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
+                    </p>
+                    
                     {settlementResult && (
-                      <>
-                        <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" title={settlementResult.settlementReference} truncateValue />
-                        <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
-                      </>
+                      <div className="mt-4">
+                        <AppNotice variant="warning">
+                          <p>{t('payment.receiptDemoNote')}</p>
+                        </AppNotice>
+                      </div>
+                    )}
+                    {settlementError && (
+                      <div className="mt-4">
+                        <AppNotice variant="danger" title={settlementError.code}>
+                          <p>{settlementError.message}</p>
+                        </AppNotice>
+                      </div>
+                    )}
+                    {isSettling && (
+                      <div className="mt-4 flex items-center gap-3">
+                        <span className="h-2.5 w-2.5 rounded-full bg-brand animate-pulse"></span>
+                        <span className="text-sm font-semibold text-brand">{t('payment.btnSettling')}</span>
+                      </div>
                     )}
                   </div>
 
@@ -638,36 +643,74 @@ export default function PaymentPage({
                       <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
                       <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
                         <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
-                        <div className="break-words text-3xl font-semibold leading-none text-brand">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                        <div className="wrap-break-word text-3xl font-semibold leading-none text-brand">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                         <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
-                      </div>
-                      <div className="overflow-hidden border border-white/10 bg-[#050705]">
-                        <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
-                        <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
-                        <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
                       </div>
                     </div>
                   )}
                 </div>
 
-                {settlementResult && (
-                  <AppNotice variant="warning">
-                    <p>{t('payment.receiptDemoNote')}</p>
-                  </AppNotice>
-                )}
+                <div className={`order-2 mt-4 grid gap-3 lg:order-3 lg:col-span-2 ${(!settlementResult && !isSettling && primaryExplorerUrl) ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+                  {flowState === 'paid_verified' && !settlementResult && !isSettling && primaryExplorerUrl && (
+                    <RailButton onClick={handleSettleDemo} variant="wallet">
+                      {t('payment.btnSettleDemo')}
+                    </RailButton>
+                  )}
+                  {primaryExplorerUrl && (
+                    <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer">
+                      {t('payment.btnViewExplorer')}
+                    </RailButton>
+                  )}
+                  <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
+                    {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
+                  </RailButton>
+                </div>
 
-                {settlementError && (
-                  <AppNotice variant="danger" title={settlementError.code}>
-                    <p>{settlementError.message}</p>
-                  </AppNotice>
-                )}
-
-                {isSettling && (
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="h-2.5 w-2.5 rounded-full bg-brand animate-pulse"></span>
-                    <span className="text-sm font-semibold text-brand">{t('payment.btnSettling')}</span>
+                <div className="order-3 mt-4 lg:order-2 lg:mt-0">
+                  <div className="border border-white/10 bg-[#050705]">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between p-4 text-sm font-semibold text-zinc-300 transition-colors hover:text-white lg:pointer-events-none lg:p-4 lg:hover:text-zinc-300"
+                      onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+                    >
+                      <span className="lg:hidden">{isDetailsOpen ? t('payment.detailsHide') : t('payment.detailsShow')}</span>
+                      <span className="hidden lg:inline">{t('payment.detailsTitle')}</span>
+                      <svg
+                        className={`h-5 w-5 transition-transform lg:hidden ${isDetailsOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    <div className={`${isDetailsOpen ? 'block' : 'hidden'} lg:block`}>
+                      <div className="border-t border-white/10 lg:border-t-0">
+                        <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} truncateValue />
+                        <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
+                        <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
+                        <DetailRow
+                          label={t('payment.lblSettlement')}
+                          value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
+                          tone={settlementResult ? 'success' : 'muted'}
+                        />
+                        {settlementResult && (
+                          <>
+                            <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" title={settlementResult.settlementReference} truncateValue />
+                            <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
+                          </>
+                        )}
+                        {quoteReview && (
+                          <>
+                            <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
+                            <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </section>
             )}
 
@@ -700,7 +743,7 @@ export default function PaymentPage({
                 <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                   <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
                     <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
-                    <div className="break-words text-3xl font-semibold leading-none text-brand sm:text-4xl">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                    <div className="wrap-break-word text-3xl font-semibold leading-none text-brand sm:text-4xl">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                     <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
                   </div>
 
@@ -715,25 +758,31 @@ export default function PaymentPage({
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
-            <RailButton
-              onClick={showScanAnother ? onScanAnother : onCancel}
-              disabled={isBusy && !showScanAnother}
-              variant="secondary"
-            >
-              {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-            </RailButton>
-            
-            {(flowState === 'paid_verified' || flowState === 'settled') && primaryExplorerUrl ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {flowState === 'paid_verified' && !settlementResult && !isSettling && (
-                  <RailButton
-                    onClick={handleSettleDemo}
-                    variant="wallet"
-                  >
-                    {t('payment.btnSettleDemo')}
-                  </RailButton>
-                )}
+          {!(flowState === 'paid_verified' || flowState === 'settled') && (
+            <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
+              <RailButton
+                onClick={showScanAnother ? onScanAnother : onCancel}
+                disabled={isBusy && !showScanAnother}
+                variant="secondary"
+              >
+                {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
+              </RailButton>
+              
+              {flowState === 'mobile_expired' ? null : flowState === 'mobile_restored' ? (
+                <RailButton
+                  onClick={handleContinueToPhantom}
+                  disabled={quoteReview?.isExpired || isPaymentSubmitting}
+                >
+                  {t('payment.btnResumePayment')}
+                </RailButton>
+              ) : showTryAgain ? (
+                <RailButton
+                  onClick={handleTryAgain}
+                  disabled={isBusy}
+                >
+                  {t('payment.btnTryAgain')}
+                </RailButton>
+              ) : submittedPayment && primaryExplorerUrl ? (
                 <RailButton
                   as="a"
                   href={primaryExplorerUrl}
@@ -742,46 +791,23 @@ export default function PaymentPage({
                 >
                   {t('payment.btnViewExplorer')}
                 </RailButton>
-              </div>
-            ) : flowState === 'mobile_expired' ? null : flowState === 'mobile_restored' ? (
-              <RailButton
-                onClick={handleContinueToPhantom}
-                disabled={quoteReview?.isExpired || isPaymentSubmitting}
-              >
-                {t('payment.btnResumePayment')}
-              </RailButton>
-            ) : showTryAgain ? (
-              <RailButton
-                onClick={handleTryAgain}
-                disabled={isBusy}
-              >
-                {t('payment.btnTryAgain')}
-              </RailButton>
-            ) : submittedPayment && primaryExplorerUrl ? (
-              <RailButton
-                as="a"
-                href={primaryExplorerUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t('payment.btnViewExplorer')}
-              </RailButton>
-            ) : quoteReview ? (
-              <RailButton
-                onClick={handleContinueToPhantom}
-                disabled={quoteReview.isExpired || isPaymentSubmitting}
-              >
-                {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
-              </RailButton>
-            ) : (
-              <RailButton
-                onClick={handleConfirm}
-                disabled={!parsedPayment.isValid || isQuoteLoading}
-              >
-                {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
-              </RailButton>
-            )}
-          </div>
+              ) : quoteReview ? (
+                <RailButton
+                  onClick={handleContinueToPhantom}
+                  disabled={quoteReview.isExpired || isPaymentSubmitting}
+                >
+                  {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
+                </RailButton>
+              ) : (
+                <RailButton
+                  onClick={handleConfirm}
+                  disabled={!parsedPayment.isValid || isQuoteLoading}
+                >
+                  {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
+                </RailButton>
+              )}
+            </div>
+          )}
 
           <div className="border-t border-white/10 bg-[#050705] p-4 text-center transition-colors">
             <div className="text-xs font-semibold text-zinc-600 transition-colors">

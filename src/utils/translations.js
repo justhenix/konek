@@ -199,6 +199,9 @@ export const translations = {
       btnConfirm: "Confirm",
       btnLoading: "Loading...",
       errParser: "Parser Error",
+      detailsTitle: "Transaction details",
+      detailsShow: "Show details",
+      detailsHide: "Hide details",
     },
   },
   id: {
@@ -401,6 +404,9 @@ export const translations = {
       btnConfirm: "Lanjut",
       btnLoading: "Memuat...",
       errParser: "Parser Error",
+      detailsTitle: "Detail transaksi",
+      detailsShow: "Tampilkan detail",
+      detailsHide: "Sembunyikan detail",
     },
   },
 };

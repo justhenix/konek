@@ -387,7 +387,7 @@ const ProtocolDiagram = ({ t }) => {
   }));
 
   return (
-    <div className="relative mx-auto w-full max-w-[34rem] lg:mx-0" data-hero-diagram>
+    <div className="relative mx-auto w-full max-w-136 lg:mx-0" data-hero-diagram>
       <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
       <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
       <div className="relative grid gap-3 sm:gap-4">
@@ -401,7 +401,7 @@ const ProtocolDiagram = ({ t }) => {
             )}
             <div className="flex min-w-0 items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
+                <p className="wrap-break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
                 <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
               </div>
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
@@ -453,7 +453,7 @@ const AppToast = ({ toast, onDismiss }) => {
 
   return (
     <div
-      className={`pointer-events-auto w-full max-w-[22rem] border px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl ${styles.shell}`}
+      className={`pointer-events-auto w-full max-w-88 border px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl ${styles.shell}`}
       role={role}
       aria-live={role === 'alert' ? 'assertive' : 'polite'}
     >
@@ -515,6 +515,7 @@ function App() {
   const { select, wallets, publicKey, connect, disconnect, connected, sendTransaction } = useWallet();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
@@ -768,8 +769,22 @@ function App() {
     };
   }, [publicKey, mobileWalletPublicKey]);
 
+  const getPhantomProvider = () => {
+    if (typeof window !== 'undefined') {
+      if (window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+      }
+      if (window.solana?.isPhantom) {
+        return window.solana;
+      }
+    }
+    return null;
+  };
+
   const handleConnectWallet = async () => {
+    if (isConnecting) return;
     try {
+      setIsConnecting(true);
       const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
 
       if (isMobile) {
@@ -798,24 +813,35 @@ function App() {
         return;
       }
 
-      const phantomWallet = wallets.find((w) => w.adapter.name === 'Phantom');
-      if (phantomWallet) {
-        if (phantomWallet.readyState === 'Installed' || phantomWallet.readyState === 'Loadable') {
+      const provider = getPhantomProvider();
+      if (provider) {
+        const phantomWallet = wallets.find((w) => w.adapter.name === 'Phantom');
+        if (phantomWallet) {
           select(phantomWallet.adapter.name);
-          await connect();
+        }
+        
+        try {
+          await provider.connect({ onlyIfTrusted: false });
+          // Attempt default wallet adapter connect to sync state, ignore if it skips
+          try {
+            await connect();
+          } catch (e) {
+            console.warn('Adapter connect threw, but provider is connected', e);
+          }
+          
           setIsLoginModalOpen(false);
           addToast({
             variant: 'success',
             title: t('walletToast.connectedTitle'),
             body: t('walletToast.connectedBody'),
           });
-        } else {
-          setIsLoginModalOpen(false);
-          addToast({
-            variant: 'warning',
-            title: t('walletToast.phantomNotReadyTitle'),
-            body: t('walletToast.phantomNotReadyBody'),
-          });
+        } catch (connectionError) {
+          if (connectionError?.code === 4001 || connectionError?.message?.toLowerCase().includes('reject')) {
+            // User rejected the connection
+            console.log('User rejected connection');
+            return;
+          }
+          throw connectionError;
         }
       } else {
         setIsLoginModalOpen(false);
@@ -832,6 +858,8 @@ function App() {
         title: t('walletToast.phantomNotReadyTitle'),
         body: t('walletToast.phantomNotReadyBody'),
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -1786,7 +1814,7 @@ function App() {
       {isLoginModalOpen && (
         <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
           <div
-            className="relative w-full max-w-[30rem] border border-purple-400/25 bg-[#080b08] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-7"
+            className="relative w-full max-w-120 border border-purple-400/25 bg-[#080b08] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-7"
             role="dialog"
             aria-modal="true"
             aria-labelledby="wallet-connect-title"
@@ -1812,7 +1840,8 @@ function App() {
             
             <button 
               onClick={handleConnectWallet}
-              className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#AB9FF2] px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              disabled={isConnecting}
+              className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#AB9FF2] px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
             >
               {t('loginModal.btn')}
             </button>
