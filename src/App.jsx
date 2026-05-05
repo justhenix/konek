@@ -21,7 +21,7 @@ import logoSuperteam from './assets/LogoSuperteam.png';
 // --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage'; // Pastikan file PaymentPage.jsx udah ada di folder src
-import { normalizeApiError } from './utils/payment';
+import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
   buildDevnetSolTransferTransaction,
   buildPhantomSignTransactionUrl,
@@ -48,10 +48,91 @@ const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key'
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
 const PHANTOM_SESSION_STORAGE_KEY = 'phantom_session';
 const PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY = 'phantom_wallet_encryption_public_key';
+const PHANTOM_PAYMENT_ACTION_PARAM = 'konek_action';
+const LEGACY_PHANTOM_PAYMENT_ACTION_PARAM = 'phantomAction';
 const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
 const VERIFY_RETRYABLE_ERRORS = new Set(['TX_NOT_FOUND', 'TX_NOT_FINALIZED']);
 const VERIFY_RETRY_DELAY_MS = 2000;
 const VERIFY_MAX_ATTEMPTS = 10;
+
+const logPhantomMobilePayment = (event, details = {}) => {
+  if (import.meta.env.DEV) {
+    console.log(event, details);
+  }
+};
+
+const getQuoteIdLogPrefix = (quoteId) => (
+  typeof quoteId === 'string' && quoteId
+    ? quoteId.slice(0, 16)
+    : null
+);
+
+const getPendingPaymentQrisData = (pendingPayment) => (
+  pendingPayment?.qrisData
+  || pendingPayment?.rawData
+  || pendingPayment?.parsedPayment?.rawData
+  || null
+);
+
+const getPendingPaymentExpiry = (pendingPayment) => (
+  pendingPayment?.expiresAt || pendingPayment?.quote?.expiresAt || null
+);
+
+const isPendingPhantomPaymentExpired = (pendingPayment) => {
+  const expiresAt = getPendingPaymentExpiry(pendingPayment);
+  return expiresAt ? isQuoteExpired(expiresAt) : true;
+};
+
+const getPhantomCallbackAction = (params) => (
+  params.get(PHANTOM_PAYMENT_ACTION_PARAM)
+  || params.get(LEGACY_PHANTOM_PAYMENT_ACTION_PARAM)
+);
+
+const cleanCurrentUrlParams = () => {
+  window.history.replaceState(
+    {},
+    document.title,
+    `${window.location.pathname}${window.location.hash}`
+  );
+};
+
+const createPendingPhantomPayment = ({ parsedPayment, quote }) => {
+  const qrisData = parsedPayment?.rawData || '';
+
+  return {
+    action: PHANTOM_PAYMENT_ACTION,
+    quote: quote
+      ? {
+        quoteId: quote.quoteId,
+        solAmount: quote.solAmount,
+        fiatAmount: quote.fiatAmount,
+        fiatCurrency: quote.fiatCurrency,
+        exchangeRate: quote.exchangeRate,
+        expiresAt: quote.expiresAt,
+        createdAt: quote.createdAt,
+        quoteSource: quote.quoteSource,
+      }
+      : null,
+    parsedPayment: parsedPayment
+      ? {
+        rawData: qrisData,
+        merchantName: parsedPayment.merchantName,
+        amount: parsedPayment.amount,
+        amountText: parsedPayment.amountText,
+        formattedAmount: parsedPayment.formattedAmount,
+        currencyCode: parsedPayment.currencyCode,
+        tags: parsedPayment.tags,
+        isValid: parsedPayment.isValid,
+        errors: parsedPayment.errors,
+      }
+      : null,
+    qrisData,
+    createdAt: new Date().toISOString(),
+    expiresAt: quote?.expiresAt || null,
+    redirectPath: window.location.pathname,
+    status: 'awaiting_mobile_signature',
+  };
+};
 
 const createIdlePaymentVerification = () => ({
   status: 'idle',
@@ -295,9 +376,11 @@ function App() {
   const [paymentSubmission, setPaymentSubmission] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [paymentVerification, setPaymentVerification] = useState(createIdlePaymentVerification);
+  const [mobilePaymentState, setMobilePaymentState] = useState(null);
 
   const readPendingPhantomPayment = useCallback(() => {
-    const pendingPayment = sessionStorage.getItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+    const pendingPayment = localStorage.getItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY)
+      || sessionStorage.getItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
 
     if (!pendingPayment) {
       return null;
@@ -306,19 +389,38 @@ function App() {
     try {
       return JSON.parse(pendingPayment);
     } catch {
+      localStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
       sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
       return null;
     }
   }, []);
 
+  const writePendingPhantomPayment = useCallback((pendingPayment) => {
+    localStorage.setItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY, JSON.stringify(pendingPayment));
+    sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+  }, []);
+
+  const clearPendingPhantomPayment = useCallback(() => {
+    localStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+    sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+  }, []);
+
   const restorePendingPaymentReview = useCallback((pendingPayment) => {
     if (!pendingPayment) {
-      return;
+      return false;
     }
 
-    setScannedData(pendingPayment.rawData || null);
+    const qrisData = getPendingPaymentQrisData(pendingPayment);
+
+    if (!qrisData) {
+      return false;
+    }
+
+    setIsScannerOpen(false);
+    setScannedData(qrisData);
     setParsedPaymentData(pendingPayment.parsedPayment || null);
     setRestoredPaymentQuote(pendingPayment.quote || null);
+    return true;
   }, []);
 
   const getStoredPhantomSharedSecret = useCallback((phantomEncryptionPublicKey) => {
@@ -337,7 +439,12 @@ function App() {
     );
   }, []);
 
-  const verifySubmittedPayment = useCallback(async ({ quote, signature, explorerUrl }) => {
+  const verifySubmittedPayment = useCallback(async ({
+    quote,
+    signature,
+    explorerUrl,
+    debugSource = null,
+  }) => {
     if (!quote?.quoteId || !signature) {
       setPaymentVerification({
         status: 'failed',
@@ -348,6 +455,14 @@ function App() {
         },
       });
       return null;
+    }
+
+    if (debugSource === 'phantom-mobile') {
+      logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_VERIFYING]', {
+        quoteId: getQuoteIdLogPrefix(quote.quoteId),
+        signature,
+        status: 'verifying',
+      });
     }
 
     setPaymentVerification({
@@ -372,6 +487,14 @@ function App() {
         error: null,
       });
 
+      if (debugSource === 'phantom-mobile') {
+        logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_VERIFIED]', {
+          quoteId: getQuoteIdLogPrefix(quote.quoteId),
+          signature,
+          status: 'paid_verified',
+        });
+      }
+
       return verifiedResult;
     } catch (error) {
       const apiError = error.apiError || normalizeApiError(null, error.message);
@@ -381,6 +504,16 @@ function App() {
         result: null,
         error: apiError,
       });
+
+      if (debugSource === 'phantom-mobile') {
+        logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_ERROR]', {
+          quoteId: getQuoteIdLogPrefix(quote.quoteId),
+          signature,
+          status: 'verification_failed',
+          code: apiError.code,
+          message: apiError.message,
+        });
+      }
 
       return null;
     }
@@ -487,51 +620,157 @@ function App() {
       setPaymentSubmission(null);
       setPaymentError(null);
       setPaymentVerification(createIdlePaymentVerification());
-      sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+      setMobilePaymentState(null);
+      clearPendingPhantomPayment();
     }
-  }, [connected, disconnect, publicKey]);
+  }, [clearPendingPhantomPayment, connected, disconnect, publicKey]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const phantomAction = params.get('phantomAction');
+    const phantomAction = getPhantomCallbackAction(params);
     const phantomEncryptionPublicKey = params.get('phantom_encryption_public_key');
     const nonce = params.get('nonce');
     const data = params.get('data');
     const errorCode = params.get('errorCode');
     const errorMessage = params.get('errorMessage');
+    const pendingPayment = readPendingPhantomPayment();
+    const hasPendingPayment = pendingPayment?.action === PHANTOM_PAYMENT_ACTION;
+    const hasCallbackParams = Boolean(
+      phantomAction
+      || phantomEncryptionPublicKey
+      || nonce
+      || data
+      || errorCode
+      || errorMessage
+    );
+    const isPaymentCallback = phantomAction === PHANTOM_PAYMENT_ACTION
+      || (hasPendingPayment && Boolean(nonce || data || errorCode));
+
+    if (isPaymentCallback) {
+      logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_CALLBACK]', {
+        quoteId: getQuoteIdLogPrefix(pendingPayment?.quote?.quoteId),
+        status: errorCode ? 'error' : 'returned',
+        hasData: Boolean(data),
+        hasNonce: Boolean(nonce),
+        hasPhantomEncryptionPublicKey: Boolean(phantomEncryptionPublicKey),
+      });
+    }
 
     if (errorCode) {
-      if (phantomAction === PHANTOM_PAYMENT_ACTION) {
-        const pendingPayment = readPendingPhantomPayment();
+      if (isPaymentCallback) {
+        const isRejected = errorCode === '4001' || /reject|cancel/i.test(errorMessage || '');
 
         queueMicrotask(() => {
           restorePendingPaymentReview(pendingPayment);
           setPaymentSubmission(null);
+          setPaymentVerification(createIdlePaymentVerification());
+          setMobilePaymentState({ status: 'cancelled' });
           setPaymentError({
-            code: errorCode,
-            message: errorMessage || 'Phantom rejected the payment request.',
+            code: isRejected ? 'PHANTOM_MOBILE_REJECTED' : 'PHANTOM_MOBILE_ERROR',
+            message: errorMessage || t('payment.mobileCancelled'),
+            phantomCode: errorCode,
           });
+        });
+
+        logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_ERROR]', {
+          quoteId: getQuoteIdLogPrefix(pendingPayment?.quote?.quoteId),
+          status: isRejected ? 'rejected' : 'error',
+          code: errorCode,
+          message: errorMessage || null,
         });
       } else {
         console.error(`Phantom mobile connect rejected (${errorCode}): ${errorMessage || 'Unknown error'}`);
       }
 
-      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+      cleanCurrentUrlParams();
       return;
     }
 
     if (!phantomEncryptionPublicKey || !nonce || !data) {
-      if (phantomAction !== PHANTOM_PAYMENT_ACTION) {
+      if (!isPaymentCallback) {
+        if (hasPendingPayment && !hasCallbackParams) {
+          queueMicrotask(() => {
+            const didRestore = restorePendingPaymentReview(pendingPayment);
+
+            if (!didRestore) {
+              clearPendingPhantomPayment();
+              return;
+            }
+
+            const quote = pendingPayment.quote || null;
+
+            if (pendingPayment.signature) {
+              const submissionExtra = {
+                quote,
+                submittedBy: 'phantom-mobile',
+              };
+
+              if (pendingPayment.explorerUrl) {
+                submissionExtra.explorerUrl = pendingPayment.explorerUrl;
+              }
+
+              if (pendingPayment.submittedAt) {
+                submissionExtra.submittedAt = pendingPayment.submittedAt;
+              }
+
+              const submission = createPaymentSubmission(pendingPayment.signature, submissionExtra);
+
+              setPaymentSubmission(submission);
+              setPaymentError(null);
+              setMobilePaymentState({ status: 'verifying' });
+              verifySubmittedPayment({
+                quote,
+                signature: submission.signature,
+                explorerUrl: submission.explorerUrl,
+                debugSource: 'phantom-mobile',
+              }).then((result) => {
+                if (result) {
+                  clearPendingPhantomPayment();
+                  setMobilePaymentState(null);
+                } else {
+                  writePendingPhantomPayment({
+                    ...pendingPayment,
+                    status: 'verification_failed',
+                    signature: submission.signature,
+                    explorerUrl: submission.explorerUrl,
+                    submittedAt: submission.submittedAt,
+                  });
+                }
+              });
+              return;
+            }
+
+            setPaymentSubmission(null);
+            setPaymentVerification(createIdlePaymentVerification());
+
+            if (isPendingPhantomPaymentExpired(pendingPayment)) {
+              setMobilePaymentState({ status: 'expired' });
+              setPaymentError(null);
+              return;
+            }
+
+            setMobilePaymentState({ status: 'restored' });
+            setPaymentError(null);
+          });
+        }
+
         return;
       }
     }
 
-    if (phantomAction === PHANTOM_PAYMENT_ACTION) {
+    if (isPaymentCallback) {
       const handlePhantomPaymentReturn = async () => {
-        const pendingPayment = readPendingPhantomPayment();
-
         try {
-          restorePendingPaymentReview(pendingPayment);
+          const didRestore = restorePendingPaymentReview(pendingPayment);
+
+          if (!didRestore || !pendingPayment?.quote) {
+            throw new Error('Missing pending Phantom payment context.');
+          }
+
+          setPaymentSubmission(null);
+          setPaymentError(null);
+          setPaymentVerification(createIdlePaymentVerification());
+          setMobilePaymentState({ status: 'returned' });
 
           if (!nonce || !data) {
             throw new Error('Missing Phantom payment response data.');
@@ -540,49 +779,117 @@ function App() {
           const storedPhantomEncryptionPublicKey = localStorage.getItem(
             PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY
           );
+          const paymentPhantomEncryptionPublicKey = phantomEncryptionPublicKey
+            || storedPhantomEncryptionPublicKey;
 
-          if (!storedPhantomEncryptionPublicKey) {
+          if (!paymentPhantomEncryptionPublicKey) {
             throw new Error('Missing Phantom wallet encryption public key.');
           }
 
-          const sharedSecret = getStoredPhantomSharedSecret(storedPhantomEncryptionPublicKey);
-          const payload = decryptPhantomPayload({ data, nonce, sharedSecret });
-
-          if (!payload.transaction) {
-            throw new Error('Phantom did not return a signed transaction.');
+          if (phantomEncryptionPublicKey) {
+            localStorage.setItem(
+              PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
+              phantomEncryptionPublicKey
+            );
           }
 
-          const paymentConnection = createPaymentConnection();
-          const signature = await paymentConnection.sendRawTransaction(
-            bs58.decode(payload.transaction),
-            {
-              skipPreflight: false,
-              preflightCommitment: 'confirmed',
+          const sharedSecret = getStoredPhantomSharedSecret(paymentPhantomEncryptionPublicKey);
+          const payload = decryptPhantomPayload({ data, nonce, sharedSecret });
+
+          logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_DECRYPTED]', {
+            quoteId: getQuoteIdLogPrefix(pendingPayment.quote.quoteId),
+            status: 'decrypted',
+            hasSignature: Boolean(payload.signature),
+            hasTransaction: Boolean(
+              payload.transaction
+              || payload.signedTransaction
+              || payload.signed_transaction
+            ),
+          });
+
+          let signature = payload.signature;
+
+          if (!signature) {
+            const signedTransaction = payload.transaction
+              || payload.signedTransaction
+              || payload.signed_transaction;
+
+            if (!signedTransaction) {
+              throw new Error('Phantom did not return a signed transaction.');
             }
-          );
+
+            setMobilePaymentState({ status: 'submitting_signed_transaction' });
+
+            const paymentConnection = createPaymentConnection();
+            signature = await paymentConnection.sendRawTransaction(
+              bs58.decode(signedTransaction),
+              {
+                skipPreflight: false,
+                preflightCommitment: 'confirmed',
+              }
+            );
+          }
+
           const submission = createPaymentSubmission(signature, {
             quote: pendingPayment?.quote || null,
             submittedBy: 'phantom-mobile',
           });
+          const submittedPendingPayment = {
+            ...pendingPayment,
+            status: 'signed_transaction_submitted',
+            signature,
+            explorerUrl: submission.explorerUrl,
+            submittedAt: submission.submittedAt,
+          };
 
           setPaymentSubmission(submission);
           setPaymentError(null);
           setPaymentVerification(createIdlePaymentVerification());
-          sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
-          verifySubmittedPayment({
+          writePendingPhantomPayment(submittedPendingPayment);
+          logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_SUBMITTED]', {
+            quoteId: getQuoteIdLogPrefix(pendingPayment.quote.quoteId),
+            signature,
+            status: 'submitted',
+          });
+
+          const verifiedResult = await verifySubmittedPayment({
             quote: pendingPayment?.quote || null,
             signature,
             explorerUrl: submission.explorerUrl,
+            debugSource: 'phantom-mobile',
           });
+
+          if (verifiedResult) {
+            clearPendingPhantomPayment();
+            setMobilePaymentState(null);
+          } else {
+            writePendingPhantomPayment({
+              ...submittedPendingPayment,
+              status: 'verification_failed',
+            });
+          }
         } catch (error) {
+          const canRetry = Boolean(pendingPayment?.quote && getPendingPaymentQrisData(pendingPayment));
+
           setPaymentSubmission(null);
           setPaymentVerification(createIdlePaymentVerification());
+          setMobilePaymentState({ status: 'error' });
           setPaymentError({
-            code: 'PAYMENT_SUBMISSION_FAILED',
+            code: canRetry ? 'PHANTOM_MOBILE_ERROR' : 'PAYMENT_SUBMISSION_FAILED',
             message: error.message || 'Unable to submit signed transaction to devnet.',
           });
+
+          if (!canRetry) {
+            clearPendingPhantomPayment();
+          }
+
+          logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_ERROR]', {
+            quoteId: getQuoteIdLogPrefix(pendingPayment?.quote?.quoteId),
+            status: 'submission_failed',
+            message: error.message,
+          });
         } finally {
-          window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+          cleanCurrentUrlParams();
         }
       };
 
@@ -611,9 +918,17 @@ function App() {
     } catch (error) {
       console.error('Failed to decrypt Phantom mobile connect response:', error);
     } finally {
-      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+      cleanCurrentUrlParams();
     }
-  }, [getStoredPhantomSharedSecret, readPendingPhantomPayment, restorePendingPaymentReview, verifySubmittedPayment]);
+  }, [
+    clearPendingPhantomPayment,
+    getStoredPhantomSharedSecret,
+    readPendingPhantomPayment,
+    restorePendingPaymentReview,
+    t,
+    verifySubmittedPayment,
+    writePendingPhantomPayment,
+  ]);
   // ==========================================
 
   // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
@@ -626,14 +941,16 @@ function App() {
   };
 
   const handleScannerResult = useCallback(({ rawData, parsedData }) => {
+    clearPendingPhantomPayment();
     setScannedData(rawData);
     setParsedPaymentData(parsedData);
     setRestoredPaymentQuote(null);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setMobilePaymentState(null);
     setPaymentVerification(createIdlePaymentVerification());
     setIsScannerOpen(false);
-  }, []);
+  }, [clearPendingPhantomPayment]);
 
   const handleParsedPaymentData = useCallback((parsedData) => {
     setParsedPaymentData(parsedData);
@@ -645,9 +962,10 @@ function App() {
     setRestoredPaymentQuote(null);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setMobilePaymentState(null);
     setPaymentVerification(createIdlePaymentVerification());
-    sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
-  }, []);
+    clearPendingPhantomPayment();
+  }, [clearPendingPhantomPayment]);
 
   const handleScanAnotherPayment = useCallback(() => {
     setScannedData(null);
@@ -655,10 +973,11 @@ function App() {
     setRestoredPaymentQuote(null);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setMobilePaymentState(null);
     setPaymentVerification(createIdlePaymentVerification());
-    sessionStorage.removeItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY);
+    clearPendingPhantomPayment();
     setIsScannerOpen(true);
-  }, []);
+  }, [clearPendingPhantomPayment]);
 
   const startPhantomMobilePayment = useCallback(({ transaction, parsedPayment, quote }) => {
     const dappEncryptionPublicKey = localStorage.getItem(PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY);
@@ -668,6 +987,12 @@ function App() {
     if (!dappEncryptionPublicKey || !phantomEncryptionPublicKey || !session) {
       throw new Error('Reconnect Phantom mobile before paying.');
     }
+
+    logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_START]', {
+      quoteId: getQuoteIdLogPrefix(quote?.quoteId),
+      wallet: transaction.feePayer?.toBase58?.() || null,
+      status: 'starting',
+    });
 
     const nonce = createPhantomNonce();
     const sharedSecret = getStoredPhantomSharedSecret(phantomEncryptionPublicKey);
@@ -683,14 +1008,17 @@ function App() {
 
     redirectUrl.search = '';
     redirectUrl.hash = '';
-    redirectUrl.searchParams.set('phantomAction', PHANTOM_PAYMENT_ACTION);
+    redirectUrl.searchParams.set(PHANTOM_PAYMENT_ACTION_PARAM, PHANTOM_PAYMENT_ACTION);
 
-    sessionStorage.setItem(PENDING_PHANTOM_PAYMENT_STORAGE_KEY, JSON.stringify({
-      rawData: parsedPayment.rawData,
-      parsedPayment,
-      quote,
-      startedAt: new Date().toISOString(),
-    }));
+    const pendingPayment = createPendingPhantomPayment({ parsedPayment, quote });
+
+    writePendingPhantomPayment(pendingPayment);
+    logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_PENDING_SAVED]', {
+      quoteId: getQuoteIdLogPrefix(quote?.quoteId),
+      status: pendingPayment.status,
+      expiresAt: pendingPayment.expiresAt,
+      redirectPath: pendingPayment.redirectPath,
+    });
 
     window.location.href = buildPhantomSignTransactionUrl({
       dappEncryptionPublicKey,
@@ -700,13 +1028,14 @@ function App() {
     });
 
     return { status: 'redirecting' };
-  }, [getStoredPhantomSharedSecret]);
+  }, [getStoredPhantomSharedSecret, writePendingPhantomPayment]);
 
   const handlePaymentConfirm = useCallback(async ({ parsedPayment, quote }) => {
     setParsedPaymentData(parsedPayment);
     setRestoredPaymentQuote(quote);
     setPaymentSubmission(null);
     setPaymentError(null);
+    setMobilePaymentState(null);
     setPaymentVerification(createIdlePaymentVerification());
 
     const payerPublicKey = publicKey || mobileWalletPublicKey;
@@ -1402,6 +1731,7 @@ function App() {
           paymentSubmission={paymentSubmission}
           paymentVerification={paymentVerification}
           externalPaymentError={paymentError}
+          mobilePaymentState={mobilePaymentState}
           onParsedData={handleParsedPaymentData}
           onCancel={handlePaymentCancel}
           onConfirm={handlePaymentConfirm}
