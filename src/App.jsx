@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback, Fragment } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
 import { animate, createScope, stagger } from 'animejs'; 
@@ -7,15 +7,8 @@ import nacl from 'tweetnacl';
 import './App.css';
 import { createT } from './utils/translations';
 
-// --- IMPORT FOTO TIM KREATOR ---
-import fotoAqiel from './assets/AKILRAJAIBLIS.png';
-import fotoSiti from './assets/HENIX.png';
-
 // --- IMPORT LOGO BARU ---
-import logoSolana from './assets/LogoSolana.png';
 import logoPhantom from './assets/LogoPhantom.png';
-
-import logoSuperteam from './assets/LogoSuperteam.png';
 
 // --- IMPORT KOMPONEN TRANSAKSI ---
 import QrisScanner from './QrisScanner';
@@ -368,10 +361,14 @@ const hashString = (str) => {
 
 const navItems = [
   { key: 'navbar.home', target: 'top' },
-  { key: 'navbar.about', target: 'problem-section' },
+  { key: 'navbar.usp', target: 'usp-section' },
   { key: 'navbar.howItWorks', target: 'workflow-section' },
+  { key: 'navbar.proof', target: 'proof-section' },
   { key: 'navbar.team', target: 'team-section' },
 ];
+
+const uspItems = ['wallet', 'price', 'receipt'];
+const teamMembers = ['henix', 'aqiel', 'razan'];
 
 
 
@@ -401,22 +398,22 @@ const ProtocolDiagram = ({ t }) => {
   }));
 
   return (
-    <div className="relative w-full max-w-xl mx-auto lg:mx-0" data-hero-diagram>
+    <div className="relative mx-auto w-full max-w-[34rem] lg:mx-0" data-hero-diagram>
       <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
       <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
       <div className="relative grid gap-3 sm:gap-4">
         {nodes.map((node, index) => (
           <div
             key={index}
-            className={`protocol-node hero-text relative border ${node.accent} bg-[#111411]/85 backdrop-blur-sm px-4 py-4 sm:px-5 sm:py-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]`}
+            className={`protocol-node hero-text relative min-w-0 border ${node.accent} bg-[#111411]/85 px-4 py-3.5 backdrop-blur-sm sm:px-5 sm:py-4`}
           >
             {index < nodes.length - 1 && (
               <div className="absolute left-6 top-full h-3 sm:h-4 w-px bg-brand/35" aria-hidden="true"></div>
             )}
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm sm:text-base font-semibold tracking-tight text-white">{node.label}</p>
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{node.sub}</p>
+            <div className="flex min-w-0 items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
+                <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
               </div>
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
             </div>
@@ -426,12 +423,14 @@ const ProtocolDiagram = ({ t }) => {
     </div>
   );
 };
-const SectionHeader = ({ eyebrow, title, children }) => (
-  <div className="max-w-3xl">
-    <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">{eyebrow}</p>
-    <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white leading-[1.05]">{title}</h2>
+const SectionHeader = ({ eyebrow, title, children, className = '' }) => (
+  <div className={`min-w-0 max-w-3xl ${className}`}>
+    {eyebrow && (
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brand sm:tracking-[0.24em]">{eyebrow}</p>
+    )}
+    <h2 className="text-3xl font-semibold leading-[1.08] text-white sm:text-4xl lg:text-5xl">{title}</h2>
     {children && (
-      <p className="mt-5 text-base md:text-lg leading-8 text-zinc-400">{children}</p>
+      <p className="mt-5 text-base leading-8 text-zinc-400 md:text-lg">{children}</p>
     )}
   </div>
 );
@@ -441,7 +440,6 @@ function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
   const scope = useRef(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [solPrice, setSolPrice] = useState(null);
@@ -777,7 +775,6 @@ function App() {
       setIsProfileMenuOpen(false);
       setIsLoginModalOpen(false);
       setIsScannerOpen(false);
-      setIsMenuOpen(false);
       setScannedData(null);
       setParsedPaymentData(null);
       setRestoredPaymentQuote(null);
@@ -1449,20 +1446,20 @@ function App() {
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_72%_16%,rgba(20,241,149,0.11),transparent_26%),radial-gradient(circle_at_18%_20%,rgba(153,69,255,0.10),transparent_24%),linear-gradient(180deg,rgba(7,9,7,0)_0%,#070907_85%)]"></div>
 
       <div className="relative z-10">
-        <header className={`sticky z-50 flex justify-center px-3 sm:px-5 transition-all duration-500 ${isScrolled ? 'top-3' : 'top-0'}`}>
-          <nav className={`nav-item opacity-0 grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 border backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'mt-3 border-white/10 bg-[#0c100d]/88 px-3 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : 'border-transparent bg-transparent px-0 py-5 sm:px-2'}`}>
-            <button type="button" onClick={() => scrollToSection('top')} className="flex min-w-0 items-center gap-2.5 text-left">
+        <header className={`sticky z-50 flex justify-center px-4 transition-all duration-500 sm:px-6 lg:px-8 ${isScrolled ? 'top-3' : 'top-0'}`}>
+          <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'mt-3 border-white/10 bg-[#0c100d]/88 px-3 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.28)] sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`}>
+            <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
-              <span className="text-base sm:text-lg font-semibold tracking-tight text-white">Konek<span className="text-brand">Pay</span></span>
+              <span className="truncate text-sm font-semibold text-white sm:text-lg">Konek<span className="text-brand">Pay</span></span>
             </button>
 
-            <ul className="hidden lg:flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+            <ul className="col-start-2 hidden min-w-0 items-center justify-center gap-1 text-sm font-semibold text-zinc-400 xl:flex">
               {navItems.map((item) => (
                 <li key={item.key}>
                   <button
                     type="button"
                     onClick={() => scrollToSection(item.target)}
-                    className="px-4 py-2 transition-colors hover:text-brand"
+                    className="px-3 py-2 transition-colors hover:text-brand"
                   >
                     {t(item.key)}
                   </button>
@@ -1470,7 +1467,7 @@ function App() {
               ))}
             </ul>
 
-            <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+            <div className="col-start-3 flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
               {userProfile.isLoggedIn ? (
                 <div ref={profileMenuRef} className="relative">
                   <button
@@ -1509,9 +1506,10 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="hidden sm:inline-flex border border-white/10 bg-white/4 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-brand/40 hover:text-brand"
+                  className="inline-flex h-9 shrink-0 items-center border border-white/10 bg-white/4 px-2.5 text-xs font-semibold text-zinc-300 transition hover:border-brand/40 hover:text-brand sm:px-3"
                 >
-                  {t('navbar.connectWallet')}
+                  <span className="sm:hidden">{t('navbar.wallet')}</span>
+                  <span className="hidden sm:inline">{t('navbar.connectWallet')}</span>
                 </button>
               )}
 
@@ -1523,70 +1521,33 @@ function App() {
                 )}
               </button>
 
-              <button onClick={toggleLang} className="h-9 border border-white/10 bg-white/4 px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
+              <button onClick={toggleLang} className="h-9 shrink-0 border border-white/10 bg-white/4 px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
                 <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
                 <span className="mx-0.5 text-zinc-700">/</span>
                 <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
-              </button>
-
-              <button className="grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-300 transition hover:border-brand/40 hover:text-brand lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-                <div className="relative h-4 w-5">
-                  <span className={`absolute left-0 h-px w-full bg-current transition-all ${isMenuOpen ? 'top-1/2 rotate-45' : 'top-0'}`} />
-                  <span className={`absolute left-0 top-1/2 h-px w-full bg-current transition-all ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
-                  <span className={`absolute left-0 h-px w-full bg-current transition-all ${isMenuOpen ? 'top-1/2 -rotate-45' : 'top-full'}`} />
-                </div>
               </button>
             </div>
           </nav>
         </header>
 
-        <div className={`lg:hidden fixed left-3 right-3 top-20 z-40 border border-white/10 bg-[#0c100d]/95 p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-3 invisible pointer-events-none'}`}>
-          <ul className="grid gap-2 text-sm font-bold uppercase tracking-[0.16em] text-zinc-300">
-            {navItems.map((item) => (
-              <li key={item.key}>
-                <button
-                  type="button"
-                  className="w-full px-3 py-3 text-left transition-colors hover:bg-white/4 hover:text-brand"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    scrollToSection(item.target);
-                  }}
-                >
-                  {t(item.key)}
-                </button>
-              </li>
-            ))}
-            {!userProfile.isLoggedIn && (
-              <li>
-                <button type="button" onClick={() => { setIsMenuOpen(false); setIsLoginModalOpen(true); }} className="w-full border border-brand/40 px-3 py-3 text-left text-brand">
-                  {t('navbar.connectWallet')}
-                </button>
-              </li>
-            )}
-          </ul>
-        </div>
-
-        <main className="mx-auto grid min-h-[calc(100vh-84px)] w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] lg:px-8" data-hero-section>
-          <section className="max-w-3xl">
-            <div className="hero-text mb-5 inline-flex border border-brand/30 bg-brand/6 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand" data-hero-word>
-              {t('hero.badge')}
-            </div>
-            <h1 className="hero-text text-[clamp(2.2rem,8vw,4.2rem)] font-semibold leading-[1.05] tracking-tight text-white" data-hero-word>
+        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-7 sm:px-6 md:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-12" data-hero-section>
+          <section className="min-w-0 max-w-3xl">
+            <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
               {t('hero.headline')}
             </h1>
-            <p className="hero-text mt-6 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
+            <p className="hero-text mt-5 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
               {t('hero.subtitle')}
             </p>
-            <div className="hero-text mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" data-hero-cta>
+            <div className="hero-text mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center" data-hero-cta>
               <button
                 onClick={handleOpenApp}
-                className="inline-flex min-h-12 items-center justify-center bg-brand px-7 py-3 text-sm font-bold uppercase tracking-[0.16em] text-black shadow-[0_0_26px_rgba(20,241,149,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(20,241,149,0.34)]"
+                className="inline-flex min-h-12 w-full items-center justify-center bg-brand px-7 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_22px_rgba(20,241,149,0.18)] transition hover:-translate-y-0.5 sm:w-auto"
               >
                 {t('hero.ctaBtn')}
               </button>
-              <div className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/10 bg-white/[0.035] px-4 py-3 text-sm">
+              <div className="inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/[0.035] px-4 py-3 text-sm sm:justify-start">
                 <span className="h-2 w-2 rounded-full bg-brand"></span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">{t('hero.pythRate')}</span>
+                <span className="text-xs font-semibold text-zinc-500">{t('hero.pythRate')}</span>
                 <span className="font-semibold text-white">1 SOL</span>
                 <span className="text-zinc-600">=</span>
                 <span className="font-semibold text-brand">{solPrice ? `Rp ${Math.round(solPrice).toLocaleString('id-ID')}` : t('hero.loading')}</span>
@@ -1594,71 +1555,42 @@ function App() {
             </div>
           </section>
 
-          <section className="hero-text w-full">
+          <section className="hero-text w-full min-w-0">
             <ProtocolDiagram t={t} />
           </section>
         </main>
 
-        {/* ─── Ecosystem strip ─── */}
-        <section className="border-y border-white/10 bg-[#090c09]/80">
-          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-6 px-4 py-8 sm:px-6 lg:px-8">
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-600">{t('partner.heading')}</p>
-            <div className="flex flex-wrap items-center gap-8 opacity-55 grayscale">
-              <img src={logoSolana} alt="Solana" className="h-7 w-auto object-contain" />
-              <img src={logoPhantom} alt="Phantom" className="h-7 w-auto object-contain" />
-              <img src={logoSuperteam} alt="Superteam" className="h-8 w-auto object-contain" />
-            </div>
-          </div>
-        </section>
-
-        {/* ─── Problem ─── */}
-        <section id="problem-section" className="scroll-mt-28 border-b border-white/10">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[0.92fr_1fr] lg:px-8 lg:py-28">
-            <div className="scroll-animate opacity-0">
-              <SectionHeader eyebrow={t('problem.eyebrow')} title={t('problem.heading')} />
-            </div>
-            <div className="scroll-animate opacity-0 grid gap-5 text-lg leading-8 text-zinc-400">
-              <p>{t('problem.body')}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── Solution ─── */}
-        <section id="about-section" className="scroll-mt-28 border-b border-white/10">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[1fr_0.9fr] lg:px-8 lg:py-28">
-            <div className="scroll-animate opacity-0">
-              <SectionHeader eyebrow={t('solution.eyebrow')} title={t('solution.heading')}>
-                {t('solution.body')}
+        <section id="usp-section" className="scroll-mt-28 border-b border-white/10">
+          <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+            <div className="scroll-animate opacity-0 mb-9">
+              <SectionHeader title={t('usp.heading')}>
+                {t('usp.intro')}
               </SectionHeader>
             </div>
-            <div className="scroll-animate opacity-0 border border-white/10 bg-white/[0.035] p-6">
-              <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-500">{t('solution.eyebrow')}</span>
-                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand">Devnet Demo</span>
-              </div>
-              <div className="grid gap-4">
-                {[t('protocol.node1Label'), t('protocol.node2Sub'), t('protocol.node3Label'), t('protocol.node4Sub')].map((item) => (
-                  <div key={item} className="flex items-center justify-between border-b border-white/10 py-3 last:border-b-0">
-                    <span className="text-sm text-zinc-400">{item}</span>
-                    <span className="h-2 w-2 rounded-full bg-brand"></span>
+            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-3">
+              {uspItems.map((key) => (
+                <article key={key} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6">
+                  <div className="mb-5 flex h-9 w-9 items-center justify-center border border-brand/30 bg-brand/8 text-sm font-semibold text-brand">
+                    {String(uspItems.indexOf(key) + 1).padStart(2, '0')}
                   </div>
-                ))}
-              </div>
+                  <h3 className="text-xl font-semibold text-white">{t(`usp.${key}Title`)}</h3>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`usp.${key}Body`)}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* ─── How it Works ─── */}
         <section id="workflow-section" className="scroll-mt-28 border-b border-white/10" data-how-section>
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-            <div className="scroll-animate opacity-0 mb-12">
-              <SectionHeader eyebrow={t('howItWorks.eyebrow')} title={t('howItWorks.heading')} />
+          <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+            <div className="scroll-animate opacity-0 mb-9">
+              <SectionHeader title={t('howItWorks.heading')} />
             </div>
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5" data-how-track>
               {[1, 2, 3, 4, 5].map((n) => (
-                <article key={n} className="scroll-animate opacity-0 bg-[#080b08] p-5 md:p-6" data-how-card>
+                <article key={n} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6" data-how-card>
                   <p className="text-[11px] font-bold text-brand">{String(n).padStart(2, '0')}</p>
-                  <h3 className="mt-6 min-h-12 text-lg font-semibold leading-6 text-white">{t(`howItWorks.step${n}Title`)}</h3>
+                  <h3 className="mt-5 text-lg font-semibold leading-6 text-white lg:min-h-12">{t(`howItWorks.step${n}Title`)}</h3>
                   <p className="mt-4 text-sm leading-6 text-zinc-500">{t(`howItWorks.step${n}Desc`)}</p>
                 </article>
               ))}
@@ -1666,15 +1598,19 @@ function App() {
           </div>
         </section>
 
-        {/* ─── Tech Proof ─── */}
-        <section className="border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-            <div className="scroll-animate opacity-0 mb-10">
-              <SectionHeader eyebrow={t('techProof.eyebrow')} title={t('techProof.heading')} />
+        <section id="proof-section" className="scroll-mt-28 border-b border-white/10 bg-[#090c09]/70">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.78fr_1fr] lg:px-8 lg:py-16">
+            <div className="scroll-animate min-w-0 opacity-0">
+              <SectionHeader title={t('demoProof.heading')}>
+                {t('demoProof.body')}
+              </SectionHeader>
+              <div className="mt-7 border-l-2 border-brand/70 pl-5">
+                <p className="text-sm leading-7 text-zinc-300">{t('demoProof.note')}</p>
+              </div>
             </div>
-            <div className="scroll-animate opacity-0 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="scroll-animate grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10 opacity-0 sm:grid-cols-2">
               {techProofItems.map((key) => (
-                <div key={key} className="flex items-center gap-3 bg-[#080b08] px-5 py-4">
+                <div key={key} className="flex min-w-0 items-center gap-3 bg-[#080b08] px-5 py-4">
                   <span className="h-2 w-2 shrink-0 rounded-full bg-brand"></span>
                   <span className="text-sm text-zinc-300">{t(`techProof.${key}`)}</span>
                 </div>
@@ -1683,40 +1619,28 @@ function App() {
           </div>
         </section>
 
-        {/* ─── Demo Honesty ─── */}
-        <section className="border-b border-white/10 bg-[#0a0d0a]">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <div className="scroll-animate opacity-0 border-l-2 border-brand/70 pl-6">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">{t('demoHonesty.eyebrow')}</p>
-              <p className="max-w-4xl text-xl leading-9 text-zinc-300">{t('demoHonesty.body')}</p>
+        <section id="team-section" className="creator-section scroll-mt-28 border-b border-white/10 opacity-0">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.78fr_1fr] lg:px-8 lg:py-16">
+            <div className="min-w-0">
+              <SectionHeader title={t('team.heading')}>
+                {t('team.intro')}
+              </SectionHeader>
+              <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
+                <p className="text-sm leading-7 text-zinc-300">{t('team.contactBody')}</p>
+              </div>
             </div>
-          </div>
-        </section>
-
-        {/* ─── Team ─── */}
-        <section id="team-section" className="creator-section scroll-mt-28 opacity-0 border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-            <div className="mb-12">
-              <SectionHeader eyebrow={t('team.badge')} title={t('team.heading')} />
-            </div>
-            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2">
-              {[
-                { name: 'Henix', roleKey: 'team.henixRole', descKey: 'team.henixDesc', tags: ['Full-stack', 'Solana', 'Product'], photo: fotoSiti },
-                { name: 'Aqiel', roleKey: 'team.aqielRole', descKey: 'team.aqielDesc', tags: ['Frontend', 'UI', 'Product'], photo: fotoAqiel },
-              ].map((member) => (
-                <article key={member.name} className="bg-[#080b08] p-6 md:p-8">
-                  <div className="flex items-start gap-5">
-                    <img src={member.photo} alt={member.name} className="h-20 w-20 shrink-0 border border-white/10 object-cover grayscale" />
-                    <div>
-                      <h3 className="text-2xl font-semibold tracking-tight text-white">{member.name}</h3>
-                      <p className="mt-2 text-sm font-semibold text-brand">{t(member.roleKey)}</p>
+            <div className="grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10">
+              {teamMembers.map((member) => (
+                <article key={member} className="min-w-0 bg-[#080b08] p-5">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center border border-brand/30 bg-brand/8 text-sm font-semibold text-brand">
+                      {t(`team.${member}Initials`)}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-white">{t(`team.${member}Name`)}</h3>
+                      <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member}Role`)}</p>
+                      <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member}Desc`)}</p>
                     </div>
-                  </div>
-                  <p className="mt-7 text-base leading-7 text-zinc-400">{t(member.descKey)}</p>
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {member.tags.map((tag) => (
-                      <span key={tag} className="border border-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">{tag}</span>
-                    ))}
                   </div>
                 </article>
               ))}
@@ -1724,7 +1648,7 @@ function App() {
           </div>
         </section>
 
-        <footer className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-12 pb-32 text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 pb-28 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between md:pb-10 lg:px-8">
           <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
             <KonekLogo className="h-6 w-6" />
             <span>Konek<span className="text-brand">Pay</span></span>
@@ -1735,7 +1659,7 @@ function App() {
 
       <button
         onClick={handleOpenApp}
-        className="fixed bottom-8 right-8 z-50 hidden min-h-12 items-center gap-2 bg-brand px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-black shadow-[0_0_24px_rgba(20,241,149,0.25)] transition hover:-translate-y-0.5 md:inline-flex"
+        className="fixed inset-x-4 bottom-4 z-50 inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-5 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_24px_rgba(20,241,149,0.2)] transition hover:-translate-y-0.5 md:hidden"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
@@ -1761,14 +1685,14 @@ function App() {
               <img src={logoPhantom} alt="Phantom" className="w-12 h-12 object-contain" />
             </div>
             
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tight">{t('loginModal.title')}</h3>
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">{t('loginModal.title')}</h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
               {t('loginModal.desc')}
             </p>
             
             <button 
               onClick={handleConnectWallet}
-              className="w-full bg-[#AB9FF2] text-zinc-900 font-black tracking-widest uppercase py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex justify-center items-center gap-3"
+              className="w-full bg-[#AB9FF2] text-zinc-900 font-black py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex justify-center items-center gap-3"
             >
               {t('loginModal.btn')}
             </button>
