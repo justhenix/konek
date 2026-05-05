@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback, Fragment } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
-import { animate, createScope, stagger, utils } from 'animejs'; 
+import { animate, createScope, stagger } from 'animejs'; 
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
 import './App.css';
@@ -9,7 +9,6 @@ import { createT } from './utils/translations';
 
 // --- IMPORT FOTO TIM KREATOR ---
 import fotoAqiel from './assets/AKILRAJAIBLIS.png';
-import fotoBudi from './assets/FRESHIFA.png';
 import fotoSiti from './assets/HENIX.png';
 
 // --- IMPORT LOGO BARU ---
@@ -369,35 +368,110 @@ const hashString = (str) => {
 const teamMembers = [
   {
     id: 1,
-    name: "Aqiel ",
-    role: "ROLE",
-    desc: "Deskripsi",
-    tags: ["ROOLS", "ROOLS", "ROOLS"],
-    bgClass: "bg-brand",
-    shadowClass: "shadow-[0_0_50px_rgba(4,250,58,0.4)]",
-    photo: fotoAqiel, 
+    name: "Henix",
+    role: "Full-stack, Solana, product",
+    desc: "Owns the payment flow across QRIS parsing, Solana transaction handling, backend verification, and product direction.",
+    tags: ["Full-stack", "Solana", "Product"],
+    photo: fotoSiti,
   },
   {
     id: 2,
-    name: "gamma",
-    role: "Role",
-    desc: "Deskripsi",
-    tags: ["ROOLS", "ROOLS", "ROOLS"],
-    bgClass: "bg-purple-600",
-    shadowClass: "shadow-[0_0_50px_rgba(147,51,234,0.4)]",
-    photo: fotoBudi, 
-  },
-  {
-    id: 3,
-    name: "Al G razan",
-    role: "Role",
-    desc: "Deskripsi",
-    tags: ["ROOLS", "ROOLS ROOLS", "ROOLS"],
-    bgClass: "bg-blue-500",
-    shadowClass: "shadow-[0_0_50px_rgba(59,130,246,0.4)]",
-    photo: fotoSiti, 
+    name: "Aqiel",
+    role: "Frontend, UI, product support",
+    desc: "Shapes the landing experience, responsive interface, and demo support around the QRIS-to-Solana checkout journey.",
+    tags: ["Frontend", "UI", "Product"],
+    photo: fotoAqiel,
   }
 ];
+
+const navItems = [
+  { key: 'navbar.home', target: 'top' },
+  { key: 'navbar.about', target: 'problem-section' },
+  { key: 'navbar.howItWorks', target: 'workflow-section' },
+  { key: 'navbar.team', target: 'team-section' },
+];
+
+const railSteps = [
+  { number: '01', title: 'Scan', desc: 'Read QRIS merchant and amount data from EMVCo payloads.' },
+  { number: '02', title: 'Quote', desc: 'Use Pyth SOL/IDR pricing for a time-bound checkout amount.' },
+  { number: '03', title: 'Sign', desc: 'Open Phantom for a non-custodial Solana devnet transfer.' },
+  { number: '04', title: 'Verify', desc: 'Backend checks the submitted transaction before marking paid.' },
+  { number: '05', title: 'Settle Demo', desc: 'Simulate the IDR settlement record for hackathon review.' },
+];
+
+const workCards = [
+  {
+    title: 'Parse EMVCo QRIS',
+    desc: 'Extract merchant, amount, and QRIS tags locally before quote creation.',
+  },
+  {
+    title: 'Fetch Pyth SOL/IDR quote',
+    desc: 'Derive the SOL payment amount from live oracle-backed market data.',
+  },
+  {
+    title: 'Sign with Phantom',
+    desc: 'Keep checkout non-custodial with Phantom approval on web and mobile.',
+  },
+  {
+    title: 'Verify on Solana Devnet',
+    desc: 'Confirm destination, amount, and finality before the receipt state changes.',
+  },
+  {
+    title: 'Simulate settlement',
+    desc: 'Create a demo settlement reference without disbursing real rupiah.',
+  },
+];
+
+const protocolNodes = [
+  { label: 'QRIS Merchant', sub: 'EMVCo payload', accent: 'border-brand/50' },
+  { label: 'KonekPay Quote Engine', sub: 'Pyth SOL/IDR', accent: 'border-brand/70' },
+  { label: 'Phantom Wallet', sub: 'User signature', accent: 'border-purple-400/70' },
+  { label: 'Solana Devnet', sub: 'On-chain transfer', accent: 'border-brand/50' },
+  { label: 'Backend Verification', sub: 'Receipt + settlement demo', accent: 'border-purple-400/50' },
+];
+
+const KonekLogo = ({ className = "w-8 h-8" }) => (
+  <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+    <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
+    <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
+  </svg>
+);
+
+const ProtocolDiagram = () => (
+  <div className="relative w-full max-w-xl mx-auto lg:mx-0">
+    <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
+    <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
+    <div className="relative grid gap-3 sm:gap-4">
+      {protocolNodes.map((node, index) => (
+        <div
+          key={node.label}
+          className={`protocol-node hero-text relative border ${node.accent} bg-[#111411]/85 backdrop-blur-sm px-4 py-4 sm:px-5 sm:py-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]`}
+        >
+          {index < protocolNodes.length - 1 && (
+            <div className="absolute left-6 top-full h-3 sm:h-4 w-px bg-brand/35" aria-hidden="true"></div>
+          )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm sm:text-base font-semibold tracking-tight text-white">{node.label}</p>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{node.sub}</p>
+            </div>
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const SectionHeader = ({ eyebrow, title, children }) => (
+  <div className="max-w-3xl">
+    <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">{eyebrow}</p>
+    <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white leading-[1.05]">{title}</h2>
+    {children && (
+      <p className="mt-5 text-base md:text-lg leading-8 text-zinc-400">{children}</p>
+    )}
+  </div>
+);
 
 function App() {
   // --- STATE UNTUK ANIMASI NAVBAR ---
@@ -407,7 +481,6 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
-  const [activeIdx, setActiveIdx] = useState(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState('dark');
   const [lang, setLang] = useState(() => {
@@ -422,8 +495,6 @@ function App() {
       return next;
     });
   }, []);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
   const [mobileWalletPublicKey, setMobileWalletPublicKey] = useState(() => (
     localStorage.getItem(PHANTOM_PUBLIC_KEY_STORAGE_KEY)
   ));
@@ -1351,39 +1422,6 @@ function App() {
 
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-  const handleNext = () => setActiveIdx((prev) => (prev + 1) % teamMembers.length);
-  const handlePrev = () => setActiveIdx((prev) => (prev - 1 + teamMembers.length) % teamMembers.length);
-
-  useEffect(() => {
-    const timer = setInterval(() => handleNext(), 4000); 
-    return () => clearInterval(timer);
-  }, [activeIdx]);
-
-  const minSwipeDistance = 50;
-  const onTouchStart = (e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); };
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    if (distance > minSwipeDistance) handleNext(); 
-    if (distance < -minSwipeDistance) handlePrev(); 
-  };
-
-  const playCreatorAnimation = () => {
-    animate('.square', { x: 0, y: 0, scale: 1, rotate: 0, borderRadius: '16px', duration: 10 });
-    setTimeout(() => {
-      animate('.square', {
-        x: (el) => parseInt(el.dataset.x || 0), 
-        y: (el, index) => 50 + (-50 * index), 
-        scale: (el, index, length) => (length - index) * 0.65, 
-        rotate: () => utils.random(-360, 360), 
-        borderRadius: () => `${utils.random(10, 40)}%`, 
-        duration: () => utils.random(1200, 1800),
-        delay: () => utils.random(0, 400),
-        ease: 'outElastic(1, .5)', 
-      });
-    }, 30);
-  };
 
   useEffect(() => {
     let observer;
@@ -1408,15 +1446,11 @@ function App() {
 
     scope.current = createScope({ root }).add(() => {
       animate('.nav-item', { translateY: [-30, 0], opacity: [0, 1], duration: 800, delay: stagger(100), ease: 'out(3)' });
-      animate('.hero-text', { translateY: [50, 0], opacity: [0, 1], duration: 1000, delay: stagger(200, { start: 500 }), ease: 'out(4)' });
-      animate('.logo-konek path', { strokeDashoffset: [105, 0], easing: 'easeInOutQuart', duration: 1500, delay: stagger(400, { start: 1000 }) });
-
       observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             if (entry.target.classList.contains('creator-section')) {
               animate(entry.target, { opacity: [0, 1], duration: 800 });
-              playCreatorAnimation();
             } else {
               animate(entry.target, { translateY: [50, 0], opacity: [0, 1], duration: 1200, easing: 'easeOutQuart' });
             }
@@ -1437,453 +1471,300 @@ function App() {
     };
   }, []);
 
+  const scrollToSection = (target) => {
+    if (target === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    document.getElementById(target)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="relative min-h-screen flex flex-col p-4 md:p-8 lg:px-20 bg-zinc-50 dark:bg-[#1c1a17] text-zinc-900 dark:text-white selection:bg-brand selection:text-black transition-colors duration-500" ref={root}>
-      
-      <style>
-        {`
-          @keyframes custom-float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(3deg); }
-          }
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee {
-            animation: marquee 15s linear infinite;
-          }
-        `}
-      </style>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#070907] text-white selection:bg-brand selection:text-black" ref={root}>
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_72%_16%,rgba(20,241,149,0.11),transparent_26%),radial-gradient(circle_at_18%_20%,rgba(153,69,255,0.10),transparent_24%),linear-gradient(180deg,rgba(7,9,7,0)_0%,#070907_85%)]"></div>
 
-      {/* NAVBAR STICKY */}
-      <div className={`sticky z-50 flex justify-center w-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isScrolled ? 'top-6' : 'top-0 md:top-4'}`}>
-        <nav className={`nav-item opacity-0 flex justify-between items-center w-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] 
-          ${isScrolled 
-            ? 'max-w-4xl bg-white/70 dark:bg-zinc-800/70 backdrop-blur-xl border border-zinc-200 dark:border-white/10 shadow-xl dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-2xl md:rounded-full px-6 py-4 md:px-10' 
-            : 'max-w-full bg-transparent border-transparent shadow-none rounded-none px-2 py-6 md:px-4'
-          }
-        `}>
-          
-          {/* LOGO KIRI */}
-          <div className="flex items-center gap-3 relative z-10">
-            <svg viewBox="0 0 100 100" className="w-8 h-8">
-               <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-               <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-            </svg>
-            <h2 className="text-xl font-extrabold tracking-widest uppercase text-black dark:text-white transition-colors duration-500">Konek<span className="text-brand">Pay</span></h2>
-          </div>
+      <div className="relative z-10">
+        <header className={`sticky z-50 flex justify-center px-3 sm:px-5 transition-all duration-500 ${isScrolled ? 'top-3' : 'top-0'}`}>
+          <nav className={`nav-item opacity-0 grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 border backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'mt-3 border-white/10 bg-[#0c100d]/88 px-3 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.28)]' : 'border-transparent bg-transparent px-0 py-5 sm:px-2'}`}>
+            <button type="button" onClick={() => scrollToSection('top')} className="flex min-w-0 items-center gap-2.5 text-left">
+              <KonekLogo className="h-8 w-8 shrink-0" />
+              <span className="text-base sm:text-lg font-semibold tracking-tight text-white">Konek<span className="text-brand">Pay</span></span>
+            </button>
 
-          {/* MENU TENGAH DESKTOP */}
-          <ul className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest text-zinc-500 dark:text-zinc-400 absolute left-1/2 -translate-x-1/2 transition-colors duration-500">
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t('navbar.home')}</li>
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })}>{t('navbar.about')}</li>
-            <li 
-              className="bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-5 py-2 rounded-full cursor-pointer transition-all duration-300 shadow-[0_0_15px_rgba(4,250,58,0.2)] hover:shadow-[0_0_25px_rgba(4,250,58,0.5)]" 
-              onClick={() => document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t('navbar.howItWorks')}
-            </li>
-            <li className="hover:text-brand cursor-pointer transition-colors" onClick={() => document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' })}>{t('navbar.team')}</li>
-          </ul>
-
-          {/* TOMBOL KANAN */}
-          <div className="flex items-center gap-2 md:gap-4 relative z-10">
-            {/* USER PROFILE / LOGIN BUTTON */}
-            {userProfile.isLoggedIn ? (
-              <div ref={profileMenuRef} className="relative mr-1 md:mr-2 border-r border-zinc-200 dark:border-white/10 pr-3 md:pr-4 transition-colors">
-                <button
-                  type="button"
-                  onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                  className="flex items-center gap-2 md:gap-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900"
-                  aria-haspopup="menu"
-                  aria-expanded={isProfileMenuOpen}
-                >
-                  <span className="hidden md:block text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors">
-                    Hi, {userProfile.name}!
-                  </span>
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40 shadow-[0_0_10px_rgba(4,250,58,0.2)] hover:border-brand transition-all">
-                    <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
-                  </div>
-                </button>
-
-                <div
-                  className={`absolute right-0 top-11 md:top-12 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
-                  role="menu"
-                >
-                  <div className="flex items-center gap-3 px-2 py-2 border-b border-zinc-200 dark:border-white/10 mb-2">
-                    <div className="w-9 h-9 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden border border-brand/40">
-                      <img src={userProfile.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="min-w-0 text-left">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{t('navbar.wallet')}</p>
-                      <p className="truncate text-sm font-bold text-zinc-800 dark:text-white">{userProfile.name}</p>
-                    </div>
-                  </div>
+            <ul className="hidden lg:flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+              {navItems.map((item) => (
+                <li key={item.key}>
                   <button
                     type="button"
-                    onClick={handleDisconnectWallet}
-                    className="w-full rounded-xl px-3 py-3 text-left text-sm font-black text-red-500 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
-                    role="menuitem"
+                    onClick={() => scrollToSection(item.target)}
+                    className="px-4 py-2 transition-colors hover:text-brand"
                   >
-                    {t('navbar.disconnectWallet')}
+                    {t(item.key)}
                   </button>
-                </div>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setIsLoginModalOpen(true)}
-                className="mr-2 text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white px-4 py-2 rounded-full transition-colors"
-              >
-                {t('navbar.connectWallet')}
-              </button>
-            )}
+                </li>
+              ))}
+            </ul>
 
-            <button onClick={toggleTheme} className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand transition-all duration-300 focus:outline-none">
-              {theme === 'dark' ? (
-                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+              {userProfile.isLoggedIn ? (
+                <div ref={profileMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
+                    className="flex items-center gap-2 border border-white/10 bg-white/[0.04] p-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    aria-haspopup="menu"
+                    aria-expanded={isProfileMenuOpen}
+                  >
+                    <span className="hidden xl:block max-w-24 truncate">{userProfile.name}</span>
+                    <img src={userProfile.avatarUrl} alt="User Avatar" className="h-7 w-7 rounded-full object-cover" />
+                  </button>
+
+                  <div
+                    className={`absolute right-0 top-11 w-56 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#0c100d]/95 p-3 shadow-2xl backdrop-blur-xl transition-all duration-200 ${isProfileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'}`}
+                    role="menu"
+                  >
+                    <div className="mb-2 flex items-center gap-3 border-b border-white/10 px-2 py-2">
+                      <img src={userProfile.avatarUrl} alt="User Avatar" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                      <div className="min-w-0 text-left">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">{t('navbar.wallet')}</p>
+                        <p className="truncate text-sm font-semibold text-white">{userProfile.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleDisconnectWallet}
+                      className="w-full px-3 py-3 text-left text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                      role="menuitem"
+                    >
+                      {t('navbar.disconnectWallet')}
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <button
+                  type="button"
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="hidden sm:inline-flex border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-brand/40 hover:text-brand"
+                >
+                  {t('navbar.connectWallet')}
+                </button>
               )}
-            </button>
 
-            <button onClick={toggleLang} className="px-2.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-700/50 text-[10px] font-black tracking-widest transition-all duration-300 focus:outline-none border border-transparent hover:border-brand/30" title="Switch language">
-              <span className={lang === 'id' ? 'text-brand' : 'text-zinc-400 dark:text-zinc-500'}>ID</span>
-              <span className="text-zinc-300 dark:text-zinc-600 mx-0.5">/</span>
-              <span className={lang === 'en' ? 'text-brand' : 'text-zinc-400 dark:text-zinc-500'}>EN</span>
-            </button>
+              <button onClick={toggleTheme} className="grid h-9 w-9 place-items-center border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:border-brand/40 hover:text-brand focus:outline-none" aria-label="Toggle theme">
+                {theme === 'dark' ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                )}
+              </button>
 
-            <button className="md:hidden p-2 text-zinc-600 dark:text-zinc-300 hover:text-brand dark:hover:text-brand focus:outline-none transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <div className="relative w-6 h-5">
-                <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-0'}`} />
-                <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'}`} />
-                <span className={`absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'top-full -translate-y-full'}`} />
-              </div>
-            </button>
-          </div>
-        </nav>
-      </div>
+              <button onClick={toggleLang} className="h-9 border border-white/10 bg-white/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
+                <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
+                <span className="mx-0.5 text-zinc-700">/</span>
+                <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
+              </button>
 
-      {/* DROPDOWN MENU MOBILE */}
-      <div className={`md:hidden fixed top-24 left-6 right-6 z-40 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl transition-all duration-500 flex flex-col items-center ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-8 invisible'}`}>
-        <ul className="flex flex-col gap-6 text-center font-bold tracking-widest text-zinc-800 dark:text-white items-center w-full">
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{t('navbar.home')}</li>
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }); }}>{t('navbar.about')}</li>
-          <li 
-            className="cursor-pointer bg-brand/10 border border-brand text-brand hover:bg-brand hover:text-black px-6 py-3 rounded-full w-max shadow-[0_0_15px_rgba(4,250,58,0.2)] transition-colors" 
-            onClick={() => { setIsMenuOpen(false); document.getElementById('workflow-section').scrollIntoView({ behavior: 'smooth' }); }}
-          >
-            {t('navbar.howItWorks')}
-          </li>
-          <li className="cursor-pointer" onClick={() => { setIsMenuOpen(false); document.getElementById('team-section').scrollIntoView({ behavior: 'smooth' }); }}>{t('navbar.team')}</li>
-        </ul>
-      </div>
-
-      {/* HERO SECTION */}
-      <main className="flex flex-col-reverse md:flex-row justify-between items-center mt-12 md:mt-24 gap-10 md:gap-0 z-10 min-h-[60vh]">
-        <div className="flex-1 text-center md:text-left">
-          <div className="hero-text opacity-0 inline-block px-4 py-1.5 bg-brand/10 border border-brand/20 rounded-full text-brand text-[10px] font-bold tracking-[0.3em] mb-6 uppercase">
-            {t('hero.badge')}
-          </div>
-          
-          <h1 className="hero-text opacity-0 text-5xl md:text-7xl font-black tracking-tighter leading-[0.95] mb-6 text-zinc-900 dark:text-white transition-colors duration-500">
-            {t('hero.titleLine1')} <span className="text-purple-600 dark:text-purple-500">{t('hero.titleSolana')}</span><br/>
-            {t('hero.titleLine2')} <span className="text-brand">{t('hero.titleHighlight')}</span>.
-          </h1>
-          
-          <p className="hero-text opacity-0 text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-xl mb-8 leading-relaxed mx-auto md:mx-0 transition-colors duration-500">
-            {t('hero.subtitle')}
-          </p>
-          
-          {/* CTA & Ticker Container */}
-          <div className="hero-text opacity-0 flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-4 mb-4">
-            
-            {/* CTA BUTTON: LAUNCH APP */}
-            <button 
-              onClick={handleOpenApp}
-              className="bg-brand text-black font-black tracking-widest uppercase px-8 py-3 rounded-full shadow-[0_0_20px_rgba(4,250,58,0.4)] hover:shadow-[0_0_30px_rgba(4,250,58,0.6)] hover:scale-105 transition-all duration-300"
-            >
-              {t('hero.ctaBtn')}
-            </button>
-
-            {/* PYTH RATE TICKER */}
-            <div className="inline-flex items-center gap-4 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full p-2 pr-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_0_30px_rgba(4,250,58,0.15)] transition-colors duration-500">
-              <div className="bg-zinc-100 dark:bg-zinc-800 rounded-full p-2.5 flex items-center justify-center border border-zinc-200 dark:border-white/5 transition-colors duration-500">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand"></span>
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <span className="hidden md:inline text-zinc-400 dark:text-zinc-500 font-bold tracking-widest uppercase text-[10px] mr-1">{t('hero.pythRate')}</span>
-                <span className="font-bold text-zinc-800 dark:text-white flex items-center gap-1 transition-colors duration-500">
-                  <span className="w-4 h-4 rounded-full bg-linear-to-tr from-[#9945FF] to-[#14F195] inline-block"></span> 1 SOL
-                </span>
-                <span className="text-zinc-400 dark:text-zinc-600">=</span>
-                <span className="font-black text-brand tracking-wide">
-                  {solPrice ? `Rp ${solPrice.toLocaleString('id-ID')}` : t('hero.loading')}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 flex justify-center md:justify-end w-full">
-          <svg className="logo-konek w-60 md:w-87.5 h-auto drop-shadow-[0_20px_40px_rgba(4,250,58,0.2)] dark:drop-shadow-[0_0_60px_rgba(4,250,58,0.15)]" viewBox="0 0 100 100">
-            <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-            <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-          </svg>
-        </div>
-      </main>
-
-      {/* PARTNER BANNER */}
-      <section className="relative z-10 w-full mt-12 md:mt-24 mb-24 scroll-animate opacity-0">
-        <div className="w-full relative overflow-hidden flex flex-col items-center">
-          
-          <p className="text-center text-[10px] md:text-xs uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-400 font-bold mb-12 md:mb-16 relative z-10 transition-colors duration-500">
-            {t('partner.heading')}
-          </p>
-          
-          {/* 1. Tambahin class "group" dan "py-4" di container bungkusnya yang diem */}
-          <div 
-            className="relative z-10 w-full overflow-hidden group py-4" 
-            style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}
-          >
-            {/* 2. Ganti hover jadi "group-hover" biar berhentinya stabil tanpa getar */}
-            <div className="flex items-center gap-20 md:gap-32 w-max animate-marquee group-hover:[animation-play-state:paused] cursor-default">
-              
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex items-center gap-20 md:gap-32">
-                  
-                  {/* 3. Ganti "transition-all" jadi "transition" biasa di semua item */}
-                  <img src={logoSolana} alt="Solana" className="h-6 md:h-8 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
-                  
-                  <img src={logoPhantom} alt="Phantom" className="h-6 md:h-8 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
-                  
-                  <img src={logoMidtrans} alt="Midtrans" className="h-8 md:h-10 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300" />
-                  
-                  {/* Tambahin "select-none" biar teksnya ga ke-block biru pas ga sengaja ke-klik */}
-                  <div className="flex items-center gap-2.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-300 cursor-pointer select-none">
-                    <img src={logoSuperteam} alt="Superteam Icon" className="h-7 w-7 md:h-9 md:w-9 object-contain drop-shadow-md" />
-                    <span className="font-extrabold text-xl md:text-2xl tracking-tight text-zinc-900 dark:text-white">
-                      Superteam
-                    </span>
-                  </div>
-
+              <button className="grid h-9 w-9 place-items-center border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:border-brand/40 hover:text-brand lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+                <div className="relative h-4 w-5">
+                  <span className={`absolute left-0 h-px w-full bg-current transition-all ${isMenuOpen ? 'top-1/2 rotate-45' : 'top-0'}`} />
+                  <span className={`absolute left-0 top-1/2 h-px w-full bg-current transition-all ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
+                  <span className={`absolute left-0 h-px w-full bg-current transition-all ${isMenuOpen ? 'top-1/2 -rotate-45' : 'top-full'}`} />
                 </div>
-              ))}
-              
+              </button>
             </div>
-          </div>
+          </nav>
+        </header>
+
+        <div className={`lg:hidden fixed left-3 right-3 top-20 z-40 border border-white/10 bg-[#0c100d]/95 p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-3 invisible pointer-events-none'}`}>
+          <ul className="grid gap-2 text-sm font-bold uppercase tracking-[0.16em] text-zinc-300">
+            {navItems.map((item) => (
+              <li key={item.key}>
+                <button
+                  type="button"
+                  className="w-full px-3 py-3 text-left transition-colors hover:bg-white/[0.04] hover:text-brand"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    scrollToSection(item.target);
+                  }}
+                >
+                  {t(item.key)}
+                </button>
+              </li>
+            ))}
+            {!userProfile.isLoggedIn && (
+              <li>
+                <button type="button" onClick={() => { setIsMenuOpen(false); setIsLoginModalOpen(true); }} className="w-full border border-brand/40 px-3 py-3 text-left text-brand">
+                  {t('navbar.connectWallet')}
+                </button>
+              </li>
+            )}
+          </ul>
         </div>
-      </section>
 
-      {/* ABOUT KONEK SECTION  */}
-      <section id="about-section" className="scroll-mt-32 md:scroll-mt-40 pt-10 pb-20 z-10 w-full max-w-5xl mx-auto px-4">
-        <div className="relative group scroll-animate opacity-0">
-          
-          {/* Efek Glow di Belakang Card */}
-          <div className="absolute inset-0 bg-brand/10 dark:bg-brand/5 blur-[80px] rounded-[3rem] transition-all duration-700 group-hover:bg-brand/20 dark:group-hover:bg-brand/10 pointer-events-none"></div>
-          
-          {/* Card Utama */}
-          <div className="relative bg-white/60 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-14 backdrop-blur-md shadow-2xl dark:shadow-none overflow-hidden transition-colors duration-500">
-            
-            {/* Garis Aksen Estetik di Atas */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-linear-to-r from-transparent via-brand to-transparent opacity-70"></div>
-
-            <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-center">
-              
-              {/* Bagian Kiri: Badge & Judul */}
-              <div className="w-full md:w-5/12 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-900/80 rounded-full border border-zinc-200 dark:border-white/5 mb-6 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 dark:text-zinc-400 uppercase">{t('about.badge')}</span>
-                </div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 dark:text-white leading-[1.1] transition-colors duration-500">
-                  {t('about.title')} <br className="hidden md:block"/>
-                  <span className="text-brand">{t('about.titleHighlight')}</span>
-                </h2>
-              </div>
-
-              {/* Bagian Kanan: Teks Penjelasan */}
-              <div className="w-full md:w-7/12">
-                <p className="text-zinc-600 dark:text-zinc-300 text-lg md:text-xl leading-relaxed font-medium mb-6 transition-colors duration-500">
-                  {t('about.desc')} 
-                </p>
-                
-                {/* Kotak Highlight QRIS  */}
-                <div className="relative pl-6 pr-5 py-5 md:pl-8 md:pr-6 md:py-6 bg-white/80 dark:bg-zinc-900/60 rounded-2xl border border-zinc-200 dark:border-white/5 shadow-inner transition-colors duration-500 overflow-hidden">
-                  
-                  {/* Garis Aksen Kiri */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 md:w-2 bg-brand"></div>
-                  
-                  <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-400 leading-relaxed transition-colors duration-500">
-                    {t('about.qrisDesc')} <strong className="text-zinc-900 dark:text-white">{t('about.qrisHighlight')}</strong> {t('about.qrisDesc2')}
-                  </p>
-                  
-                </div>
-              </div>
-
+        <main className="mx-auto grid min-h-[calc(100vh-84px)] w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] lg:px-8">
+          <section className="max-w-3xl">
+            <div className="hero-text mb-5 inline-flex border border-brand/30 bg-brand/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand">
+              {t('hero.badge')}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS SECTION (NEW DESIGN) */}
-      <section id="workflow-section" className="scroll-mt-40 md:scroll-mt-48 mt-20 md:mt-32 z-10 w-full max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
-
-          {/* KIRI: Gambar Placeholder (Logo Konek) & Overlay */}
-          <div className="w-full lg:w-5/12 relative rounded-4xl md:rounded-[3rem] overflow-hidden bg-zinc-200 dark:bg-zinc-800/40 border border-zinc-200 dark:border-white/5 flex flex-col justify-between min-h-112.5 lg:min-h-62.5 scroll-animate opacity-0 shadow-2xl dark:shadow-none">
-            
-            {/* Badge Kiri Atas */}
-            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
-              <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase text-white shadow-lg">
-                <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-                {t('workflow.badge')}
+            <h1 className="hero-text text-[clamp(2.7rem,10vw,4.9rem)] font-semibold leading-[0.98] tracking-tight text-white">
+              {t('hero.titleLine1')} <span className="text-brand">{t('hero.titleSolana')}</span> {t('hero.titleLine2')} <span className="text-white">{t('hero.titleHighlight')}</span>
+            </h1>
+            <p className="hero-text mt-6 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg">
+              {t('hero.subtitle')}
+            </p>
+            <div className="hero-text mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                onClick={handleOpenApp}
+                className="inline-flex min-h-12 items-center justify-center bg-brand px-7 py-3 text-sm font-bold uppercase tracking-[0.16em] text-black shadow-[0_0_26px_rgba(20,241,149,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(20,241,149,0.34)]"
+              >
+                {t('hero.ctaBtn')}
+              </button>
+              <div className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/10 bg-white/[0.035] px-4 py-3 text-sm">
+                <span className="h-2 w-2 rounded-full bg-brand"></span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">{t('hero.pythRate')}</span>
+                <span className="font-semibold text-white">1 SOL</span>
+                <span className="text-zinc-600">=</span>
+                <span className="font-semibold text-brand">{solPrice ? `Rp ${Math.round(solPrice).toLocaleString('id-ID')}` : t('hero.loading')}</span>
               </div>
             </div>
+          </section>
 
-            {/* Logo Konek Tengah (Placeholder) */}
-            <div className="absolute inset-0 flex items-center justify-center p-12 opacity-20 dark:opacity-10 pointer-events-none">
-              <svg viewBox="0 0 100 100" className="w-full h-full max-w-62.5 drop-shadow-2xl">
-                <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-                <path stroke="var(--color-brand)" strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-              </svg>
-            </div>
+          <section className="hero-text w-full">
+            <ProtocolDiagram />
+          </section>
+        </main>
 
-            <div className="flex-1"></div>
-
-            {/* Teks Bawah (Overlay) */}
-            <div className="relative z-20 p-8 md:p-10 bg-linear-to-t from-zinc-900 via-zinc-900/80 to-transparent w-full">
-              <p className="text-brand font-bold text-[10px] tracking-[0.3em] uppercase mb-3 drop-shadow-md">{t('workflow.impactLabel')}</p>
-              <h3 className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow-lg">
-                {t('workflow.impactDesc')}
-              </h3>
-            </div>
-          </div>
-
-          {/* KANAN: Teks Basa-Basi & List Step */}
-          <div className="w-full lg:w-7/12 flex flex-col justify-center scroll-animate opacity-0 py-4">
-            
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6 text-zinc-900 dark:text-white leading-[1.1]">
-              {t('workflow.sectionTitle')} <br className="hidden md:block" />
-              {t('workflow.sectionTitleEnd')} <span className="text-brand">{t('workflow.sectionHighlight')}</span>.
-            </h2>
-
-            <div className="text-zinc-600 dark:text-zinc-400 text-base md:text-lg leading-relaxed space-y-6 mb-12">
-              <p>
-                {t('workflow.paragraph1')}
-              </p>
-              <p>
-                {t('workflow.paragraph2')}
-              </p>
-            </div>
-
-            {/* Vertical Steps (Tanpa Kotak) */}
-            <div className="space-y-8 md:space-y-12 border-t border-zinc-200 dark:border-white/10 pt-10">
-              {[
-                { 
-                  step: "01", 
-                  title: t('workflow.step1Title'), 
-                  desc: t('workflow.step1Desc') 
-                },
-                { 
-                  step: "02", 
-                  title: t('workflow.step2Title'), 
-                  desc: t('workflow.step2Desc') 
-                },
-                { 
-                  step: "03", 
-                  title: t('workflow.step3Title'), 
-                  desc: t('workflow.step3Desc') 
-                }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-6 md:gap-8 group">
-                  <div className="text-brand font-black text-xl md:text-2xl pt-0.5 transition-transform group-hover:-translate-y-1">
-                    {item.step}
-                  </div>
-                  <div>
-                    <h4 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mb-2 tracking-wide transition-colors group-hover:text-brand">
-                      {item.title}
-                    </h4>
-                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-sm md:text-base">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-          </div>
-        </div>
-      </section>
-
-      {/* TEAM SECTION */}
-      <section id="team-section" className="creator-section scroll-mt-32 md:scroll-mt-40 opacity-0 mt-20 mb-32 z-10 w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 bg-white/80 dark:bg-zinc-900/60 p-8 md:p-14 rounded-[3rem] border border-zinc-200 dark:border-white/5 shadow-2xl relative overflow-hidden transition-colors duration-500">
-        <div className="flex-1 relative w-full h-87.5 md:h-112.5 flex items-center justify-center md:justify-start md:pl-16 perspective-1000 cursor-grab active:cursor-grabbing" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-          <div className="relative w-full h-62.5 flex items-center justify-center md:justify-start">
-            {teamMembers.map((member, index) => {
-              const position = (index - activeIdx + teamMembers.length) % teamMembers.length;
-              let transformClass = "", zIndexClass = "", opacityClass = "";
-
-              if (position === 0) { transformClass = "translate-x-0 translate-y-0 scale-100 rotate-0"; zIndexClass = "z-30"; opacityClass = "opacity-100"; }
-              else if (position === 1) { transformClass = "translate-x-[60px] md:translate-x-[110px] translate-y-[30px] md:translate-y-[40px] scale-75 md:scale-90 rotate-12"; zIndexClass = "z-20"; opacityClass = "opacity-60"; }
-              else if (position === 2) { transformClass = "-translate-x-[60px] md:-translate-x-[110px] -translate-y-[20px] md:-translate-y-[30px] scale-75 md:scale-90 -rotate-[15deg]"; zIndexClass = "z-10"; opacityClass = "opacity-40"; }
-
-              return (
-                <div key={member.id} onClick={() => setActiveIdx(index)} className={`absolute w-48 h-70 md:w-64 md:h-95 transition-all duration-800 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${transformClass} ${zIndexClass} ${opacityClass}`}>
-                  <div className={`w-full h-full rounded-2xl md:rounded-4xl flex items-center justify-center border-2 border-white/50 dark:border-white/10 hover:border-white transition-colors ${member.bgClass} ${position === 0 ? member.shadowClass : 'shadow-[0_20px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.8)]'} overflow-hidden`} style={{ animation: 'custom-float 6s ease-in-out infinite', animationDelay: `${index * 1.2}s` }}>
-                    <img src={member.photo} alt={member.name} className="w-full h-full object-cover pointer-events-none" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div key={activeIdx} className="flex-1 text-center md:text-left mt-16 md:mt-0 relative z-40 animate-fade-in">
-          <div className="inline-block px-4 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/10 rounded-full text-zinc-500 dark:text-zinc-400 text-[10px] font-bold tracking-[0.3em] mb-4 uppercase transition-colors duration-500">
-            {t('team.badge')}
-          </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-widest text-zinc-900 dark:text-white mb-2 transition-colors duration-500">
-            {teamMembers[activeIdx].name}
-          </h2>
-          <h3 className="text-xl font-bold text-brand mb-6 tracking-wider">
-            {teamMembers[activeIdx].role}
-          </h3>
-          <p className="text-zinc-600 dark:text-zinc-400 text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0 transition-colors duration-500">
-            {teamMembers[activeIdx].desc}
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-            {teamMembers[activeIdx].tags.map((tag, i) => (
-              <span key={i} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-white/10 rounded-full text-[10px] md:text-xs font-bold tracking-widest text-zinc-600 dark:text-zinc-300 transition-colors duration-500">
-                {tag}
-              </span>
+        <section className="border-y border-white/10 bg-[#090c09]/80">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8">
+            {railSteps.map((step) => (
+              <div key={step.number} className="scroll-animate opacity-0 min-h-36 border-l border-white/10 px-4 py-6 last:border-r">
+                <p className="text-[11px] font-bold text-brand">{step.number}</p>
+                <h3 className="mt-4 text-lg font-semibold tracking-tight text-white">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">{step.desc}</p>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer className="py-12 flex flex-col items-center justify-center gap-4 text-center text-zinc-400 dark:text-zinc-600 text-[10px] tracking-[0.2em] font-bold uppercase border-t border-zinc-200 dark:border-white/5 pb-32 transition-colors duration-500">
-        <div className="flex items-center gap-2 mb-2 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <svg viewBox="0 0 100 100" className="w-6 h-6">
-             <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-             <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-          </svg>
-          <span className="text-sm font-extrabold tracking-widest text-black dark:text-white">Konek<span className="text-brand">Pay</span></span>
-        </div>
-        <p>{t('footer.builtFor')}</p>
-      </footer>
+        <section className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 border-b border-white/10 px-4 py-10 sm:px-6 lg:px-8">
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-600">{t('partner.heading')}</p>
+          <div className="flex flex-wrap items-center gap-8 opacity-55 grayscale">
+            <img src={logoSolana} alt="Solana" className="h-7 w-auto object-contain" />
+            <img src={logoPhantom} alt="Phantom" className="h-7 w-auto object-contain" />
+            <img src={logoMidtrans} alt="Midtrans" className="h-8 w-auto object-contain" />
+            <div className="flex items-center gap-2">
+              <img src={logoSuperteam} alt="Superteam Icon" className="h-8 w-8 object-contain" />
+              <span className="text-xl font-semibold tracking-tight text-white">Superteam</span>
+            </div>
+          </div>
+        </section>
 
-      {/* FLOATING ACTION BUTTON (QRIS PAY) */}
-      <button 
+        <section id="problem-section" className="scroll-mt-28 border-b border-white/10">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[0.92fr_1fr] lg:px-8 lg:py-28">
+            <div className="scroll-animate opacity-0">
+              <SectionHeader eyebrow="Problem" title="Crypto is liquid, but local payments are still fiat-first." />
+            </div>
+            <div className="scroll-animate opacity-0 grid gap-5 text-lg leading-8 text-zinc-400">
+              <p>Indonesian merchants already accept QRIS, but crypto holders still need off-ramps, exchange steps, and manual reconciliation before value reaches a local checkout.</p>
+              <p>KonekPay treats QRIS as the payment intent and Solana as the execution layer, so a local invoice can become a verifiable on-chain payment path.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="about-section" className="scroll-mt-28 border-b border-white/10">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[1fr_0.9fr] lg:px-8 lg:py-28">
+            <div className="scroll-animate opacity-0">
+              <SectionHeader eyebrow="Solution" title="KonekPay turns QRIS into a Solana checkout flow.">
+                Scan QRIS, receive a time-boxed quote, approve the Phantom transaction, and let the backend verify the transfer before the receipt is marked paid.
+              </SectionHeader>
+            </div>
+            <div className="scroll-animate opacity-0 border border-white/10 bg-white/[0.035] p-6">
+              <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-500">Rail state</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand">Devnet Demo</span>
+              </div>
+              <div className="grid gap-4">
+                {['QRIS payment intent', 'Pyth-priced SOL quote', 'Phantom approval', 'Backend verification'].map((item) => (
+                  <div key={item} className="flex items-center justify-between border-b border-white/10 py-3 last:border-b-0">
+                    <span className="text-sm text-zinc-400">{item}</span>
+                    <span className="h-2 w-2 rounded-full bg-brand"></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow-section" className="scroll-mt-28 border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+            <div className="scroll-animate opacity-0 mb-12">
+              <SectionHeader eyebrow="How it works" title="One checkout path from QR code to verified Solana receipt." />
+            </div>
+            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5">
+              {workCards.map((card, index) => (
+                <article key={card.title} className="scroll-animate opacity-0 bg-[#080b08] p-5 md:p-6">
+                  <p className="text-[11px] font-bold text-brand">{String(index + 1).padStart(2, '0')}</p>
+                  <h3 className="mt-6 min-h-12 text-lg font-semibold leading-6 text-white">{card.title}</h3>
+                  <p className="mt-4 text-sm leading-6 text-zinc-500">{card.desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-white/10 bg-[#0a0d0a]">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="scroll-animate opacity-0 border-l-2 border-brand/70 pl-6">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">Demo honesty</p>
+              <p className="max-w-4xl text-xl leading-9 text-zinc-300">This hackathon demo performs real Solana devnet transfers and backend verification. IDR settlement is simulated. No real rupiah is disbursed.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="team-section" className="creator-section scroll-mt-28 opacity-0 border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+            <div className="mb-12">
+              <SectionHeader eyebrow={t('team.badge')} title="Built by a focused payment infrastructure team." />
+            </div>
+            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2">
+              {teamMembers.map((member) => (
+                <article key={member.id} className="bg-[#080b08] p-6 md:p-8">
+                  <div className="flex items-start gap-5">
+                    <img src={member.photo} alt={member.name} className="h-20 w-20 shrink-0 border border-white/10 object-cover grayscale" />
+                    <div>
+                      <h3 className="text-2xl font-semibold tracking-tight text-white">{member.name}</h3>
+                      <p className="mt-2 text-sm font-semibold text-brand">{member.role}</p>
+                    </div>
+                  </div>
+                  <p className="mt-7 text-base leading-7 text-zinc-400">{member.desc}</p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {member.tags.map((tag) => (
+                      <span key={tag} className="border border-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">{tag}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-12 pb-32 text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
+            <KonekLogo className="h-6 w-6" />
+            <span>Konek<span className="text-brand">Pay</span></span>
+          </button>
+          <p>{t('footer.builtFor')}</p>
+        </footer>
+      </div>
+
+      <button
         onClick={handleOpenApp}
-        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 z-50 bg-brand text-black px-6 py-4 md:px-8 md:py-5 rounded-full font-black text-lg md:text-xl shadow-[0_10px_30px_rgba(4,250,58,0.4)] dark:shadow-[0_0_30px_rgba(4,250,58,0.5)] hover:scale-110 hover:shadow-[0_15px_40px_rgba(4,250,58,0.6)] dark:hover:shadow-[0_0_50px_rgba(4,250,58,0.8)] transition-all flex items-center gap-3 group"
+        className="fixed bottom-8 right-8 z-50 hidden min-h-12 items-center gap-2 bg-brand px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-black shadow-[0_0_24px_rgba(20,241,149,0.25)] transition hover:-translate-y-0.5 md:inline-flex"
       >
-        <svg className="w-6 h-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
         </svg>
         {t('fab.qrisPay')}
       </button>

@@ -428,8 +428,8 @@ export default function PaymentPage({
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4 transition-all animate-fade-in">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/30 rounded-4xl sm:rounded-[2.5rem] w-full max-w-md max-h-[calc(100vh-2rem)] overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
+      <div className="fixed inset-0 z-110 flex items-center justify-center bg-black/90 backdrop-blur-lg p-3 sm:p-4 transition-all animate-fade-in">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-brand/25 rounded-3xl sm:rounded-[2rem] w-full max-w-lg max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] overflow-hidden shadow-2xl flex flex-col transition-colors duration-500">
           
           <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900 transition-colors">
             <div className="text-brand text-[10px] font-black tracking-[0.4em] uppercase mb-2">{t('payment.qrisParsed')}</div>
@@ -438,7 +438,7 @@ export default function PaymentPage({
             </h3>
           </div>
           
-          <div className="p-6 sm:p-8 space-y-6 overflow-y-auto">
+          <div className="p-5 sm:p-8 space-y-5 sm:space-y-6 overflow-y-auto">
             {!parsedPayment.isValid && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
                 <div className="text-red-400 text-xs font-bold uppercase tracking-widest mb-2">{t('payment.errParser')}</div>
@@ -551,46 +551,46 @@ export default function PaymentPage({
             )}
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
-              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 space-y-3">
-                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-1">{flowState === 'settled' ? '✅ ' + t('payment.headerSettled') : t('payment.statusPaid')}</div>
+              <div className="bg-brand/10 border border-brand/30 rounded-2xl p-5 space-y-4">
+                <div className="text-brand text-xs font-bold uppercase tracking-widest mb-1">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</div>
                 <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed">
                   {t('payment.statusPaidDesc')}
                 </p>
 
                 <div className="rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-white/5 overflow-hidden">
-                  <div className="flex justify-between items-start gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                  <div className="grid grid-cols-[minmax(92px,0.8fr)_minmax(0,1.2fr)] gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSignature')}</span>
-                    <span className="text-xs text-zinc-900 dark:text-white font-mono text-right" title={verifiedPayment.signature}>{shortSignature(verifiedPayment.signature)}</span>
+                    <span className="text-xs text-zinc-900 dark:text-white font-mono text-right break-all" title={verifiedPayment.signature}>{shortSignature(verifiedPayment.signature)}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                  <div className="flex justify-between items-center gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblNetwork')}</span>
                     <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptNetwork')}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-4 p-3 border-b border-zinc-100 dark:border-white/5">
+                  <div className="flex justify-between items-center gap-4 p-4 border-b border-zinc-100 dark:border-white/5">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblVerifiedBy')}</span>
                     <span className="text-xs text-zinc-900 dark:text-white font-bold">{t('payment.receiptVerifier')}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-4 p-3">
+                  <div className="flex justify-between items-center gap-4 p-4">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlement')}</span>
                     <span className={`text-xs font-bold ${settlementResult ? 'text-brand' : 'text-zinc-400'}`}>{settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}</span>
                   </div>
                   {settlementResult && (
                     <>
-                      <div className="flex justify-between items-center gap-4 p-3 border-t border-zinc-100 dark:border-white/5">
+                      <div className="grid grid-cols-[minmax(110px,0.8fr)_minmax(0,1.2fr)] gap-4 p-4 border-t border-zinc-100 dark:border-white/5">
                         <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettlementRef')}</span>
-                        <span className="text-xs text-brand font-mono font-bold">{settlementResult.settlementReference}</span>
+                        <span className="text-xs text-brand font-mono font-bold text-right break-all">{settlementResult.settlementReference}</span>
                       </div>
-                      <div className="flex justify-between items-center gap-4 p-3 border-t border-zinc-100 dark:border-white/5">
+                      <div className="flex justify-between items-center gap-4 p-4 border-t border-zinc-100 dark:border-white/5">
                         <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('payment.lblSettledAt')}</span>
-                        <span className="text-xs text-zinc-900 dark:text-white font-bold">{formatSettledAt(settlementResult.settledAt)}</span>
+                        <span className="text-xs text-zinc-900 dark:text-white font-bold text-right">{formatSettledAt(settlementResult.settledAt)}</span>
                       </div>
                     </>
                   )}
                 </div>
 
                 {settlementResult && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mt-2">
-                    <p className="text-yellow-400 text-xs leading-relaxed">{t('payment.receiptDemoNote')}</p>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mt-2">
+                    <p className="text-yellow-300 text-xs leading-relaxed">{t('payment.receiptDemoNote')}</p>
                   </div>
                 )}
 
@@ -613,7 +613,7 @@ export default function PaymentPage({
             <div className="space-y-4">
               <div className="flex justify-between items-start gap-4">
                 <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest transition-colors">{t('payment.lblMerchant')}</span>
-                <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] wrap-break-word transition-colors" title={merchantName}>
+                <span className="text-zinc-900 dark:text-white font-black text-right max-w-[62%] break-words transition-colors" title={merchantName}>
                   {merchantName}
                 </span>
               </div>
@@ -672,7 +672,7 @@ export default function PaymentPage({
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-5 sm:p-8 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <button 
               onClick={showScanAnother ? onScanAnother : onCancel}
               disabled={isBusy && !showScanAnother}
@@ -682,7 +682,7 @@ export default function PaymentPage({
             </button>
             
             {(flowState === 'paid_verified' || flowState === 'settled') && primaryExplorerUrl ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 {flowState === 'paid_verified' && !settlementResult && !isSettling && (
                   <button
                     onClick={handleSettleDemo}
