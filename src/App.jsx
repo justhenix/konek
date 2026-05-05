@@ -7,7 +7,13 @@ import nacl from 'tweetnacl';
 import './App.css';
 import { createT } from './utils/translations';
 
-import logoPhantom from './assets/LogoPhantom.png';
+import logoPhantom from './assets/Phantom_SVG_Icon.svg';
+import henixPfp from './assets/henix_UNS_pfp.webp';
+import henixCard from './assets/henix_UNS.webp';
+import aqielPfp from './assets/AkilRajaIblis_UNS_pfp.webp';
+import aqielCard from './assets/frontier-AkilRajaIblis.webp';
+import freshifaPfp from './assets/freshifa_UNS_pfp.webp';
+import freshifaCard from './assets/freshifa_UNS.webp';
 
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage';
@@ -357,7 +363,11 @@ const navItems = [
 ];
 
 const uspItems = ['wallet', 'price', 'receipt'];
-const teamMembers = ['henix', 'aqiel', 'razan'];
+const teamMembers = [
+  { id: 'henix', pfp: henixPfp, cardImage: henixCard, alt: 'Henix profile image' },
+  { id: 'aqiel', pfp: aqielPfp, cardImage: aqielCard, alt: 'Aqiel profile image' },
+  { id: 'freshifa', pfp: freshifaPfp, cardImage: freshifaCard, alt: 'Freshifa profile image' },
+];
 
 
 
@@ -1669,7 +1679,7 @@ function App() {
         </header>
 
         <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-7 sm:px-6 md:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-12" data-hero-section>
-          <section className="min-w-0 max-w-3xl">
+          <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
             <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
               {t('hero.headline')}
             </h1>
@@ -1769,16 +1779,26 @@ function App() {
             </div>
             <div className="grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10">
               {teamMembers.map((member) => (
-                <article key={member} className="min-w-0 bg-[#080b08] p-5">
+                <article key={member.id} className="group relative min-w-0 bg-[#080b08] p-5">
                   <div className="flex min-w-0 items-start gap-4">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center border border-brand/30 bg-brand/8 text-sm font-semibold text-brand">
-                      {t(`team.${member}Initials`)}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold text-white">{t(`team.${member}Name`)}</h3>
-                      <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member}Role`)}</p>
-                      <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member}Desc`)}</p>
+                    <img
+                      src={member.pfp}
+                      alt={member.alt}
+                      className="h-10 w-10 shrink-0 rounded border border-brand/30 object-cover"
+                    />
+                    <div className="min-w-0 lg:pr-32">
+                      <h3 className="text-lg font-semibold text-white">{t(`team.${member.id}Name`)}</h3>
+                      <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member.id}Role`)}</p>
+                      <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member.id}Desc`)}</p>
                     </div>
+                  </div>
+                  <div className="pointer-events-none absolute right-8 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
+                    <img
+                      src={member.cardImage}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-[120px] origin-center translate-y-1 rotate-0 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:rotate-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:rotate-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:rotate-0 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:rotate-0 motion-reduce:group-focus-within:scale-[0.96]"
+                    />
                   </div>
                 </article>
               ))}
@@ -1828,8 +1848,8 @@ function App() {
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            <div className="mb-6 flex h-14 w-14 items-center justify-center border border-purple-400/25 bg-purple-500/10">
-              <img src={logoPhantom} alt="Phantom" className="h-8 w-8 object-contain" />
+            <div className="mb-6 flex h-20 w-20 items-center justify-center border border-purple-400/25 bg-purple-500/10">
+              <img src={logoPhantom} alt="Phantom" className="h-10 w-10 object-contain" />
             </div>
             
             <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
