@@ -36,7 +36,7 @@ export const getRequiredTreasuryWalletPublicKey = () => {
 
   if (!value) {
     throw new Error(
-      'Frontend VITE_TREASURY_WALLET is missing. Configure it in Vercel Environment Variables and redeploy.'
+      'Frontend VITE_TREASURY_WALLET is missing. Configure it in .env.local for local development or in Vercel Environment Variables for deployed environments, then restart or redeploy.'
     );
   }
 
