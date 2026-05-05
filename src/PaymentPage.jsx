@@ -17,6 +17,41 @@ const quoteExpiryFormatter = new Intl.DateTimeFormat('id-ID', {
   second: '2-digit',
 });
 
+const FRONTEND_TREASURY_MISSING_ERROR = 'Frontend VITE_TREASURY_WALLET is missing.';
+const FRONTEND_TREASURY_INVALID_ERROR = 'Frontend VITE_TREASURY_WALLET is not a valid Solana address.';
+const PAYMENT_CONFIG_MISSING_MESSAGE = (
+  'Payment configuration is missing on this deployment. Set VITE_TREASURY_WALLET in Vercel and redeploy.'
+);
+const PAYMENT_CONFIG_INVALID_MESSAGE = (
+  'Payment configuration is invalid on this deployment. Set VITE_TREASURY_WALLET to a valid Solana address in Vercel and redeploy.'
+);
+
+const formatPaymentErrorForDisplay = (error) => {
+  if (!error) {
+    return null;
+  }
+
+  const message = error.message || '';
+
+  if (message.includes(FRONTEND_TREASURY_MISSING_ERROR)) {
+    return {
+      ...error,
+      code: 'PAYMENT_CONFIG_MISSING',
+      message: PAYMENT_CONFIG_MISSING_MESSAGE,
+    };
+  }
+
+  if (message.includes(FRONTEND_TREASURY_INVALID_ERROR)) {
+    return {
+      ...error,
+      code: 'PAYMENT_CONFIG_INVALID',
+      message: PAYMENT_CONFIG_INVALID_MESSAGE,
+    };
+  }
+
+  return error;
+};
+
 const getParsedPayment = (qrisData, initialParsedData) => {
   if (initialParsedData?.rawData === qrisData) {
     return initialParsedData;
@@ -196,7 +231,9 @@ export default function PaymentPage({
   const verificationError = verificationStatus === 'failed'
     ? paymentVerification?.error
     : null;
-  const visiblePaymentError = verificationError || externalPaymentError || paymentError;
+  const visiblePaymentError = formatPaymentErrorForDisplay(
+    verificationError || externalPaymentError || paymentError
+  );
   const flowState = useMemo(() => {
     if (settlementResult) return 'settled';
     if (verificationStatus === 'paid_verified') return 'paid_verified';
