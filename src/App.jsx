@@ -10,8 +10,8 @@ import { createT } from './utils/translations';
 import logoPhantom from './assets/Phantom_SVG_Icon.svg';
 import henixPfp from './assets/henix_UNS_pfp.webp';
 import henixCard from './assets/henix_UNS.webp';
-import aqielPfp from './assets/AkilRajaIblis_UNS_pfp.webp';
-import aqielCard from './assets/frontier-AkilRajaIblis.webp';
+import akilPfp from './assets/AkilRajaIblis_UNS_pfp.webp';
+import akilCard from './assets/frontier-AkilRajaIblis.webp';
 import freshifaPfp from './assets/freshifa_UNS_pfp.webp';
 import freshifaCard from './assets/freshifa_UNS.webp';
 
@@ -365,7 +365,7 @@ const navItems = [
 const uspItems = ['wallet', 'price', 'receipt'];
 const teamMembers = [
   { id: 'henix', pfp: henixPfp, cardImage: henixCard, alt: 'Henix profile image' },
-  { id: 'aqiel', pfp: aqielPfp, cardImage: aqielCard, alt: 'Aqiel profile image' },
+  { id: 'akil', pfp: akilPfp, cardImage: akilCard, alt: 'Akil profile image' },
   { id: 'freshifa', pfp: freshifaPfp, cardImage: freshifaCard, alt: 'Freshifa profile image' },
 ];
 
