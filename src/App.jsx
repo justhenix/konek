@@ -14,7 +14,7 @@ import fotoSiti from './assets/HENIX.png';
 // --- IMPORT LOGO BARU ---
 import logoSolana from './assets/LogoSolana.png';
 import logoPhantom from './assets/LogoPhantom.png';
-import logoMidtrans from './assets/LogoMidtrans.png';
+
 import logoSuperteam from './assets/LogoSuperteam.png';
 
 // --- IMPORT KOMPONEN TRANSAKSI ---
@@ -365,24 +365,6 @@ const hashString = (str) => {
   return Math.abs(hash).toString(16);
 };
 
-const teamMembers = [
-  {
-    id: 1,
-    name: "Henix",
-    role: "Full-stack, Solana, product",
-    desc: "Owns the payment flow across QRIS parsing, Solana transaction handling, backend verification, and product direction.",
-    tags: ["Full-stack", "Solana", "Product"],
-    photo: fotoSiti,
-  },
-  {
-    id: 2,
-    name: "Aqiel",
-    role: "Frontend, UI, product support",
-    desc: "Shapes the landing experience, responsive interface, and demo support around the QRIS-to-Solana checkout journey.",
-    tags: ["Frontend", "UI", "Product"],
-    photo: fotoAqiel,
-  }
-];
 
 const navItems = [
   { key: 'navbar.home', target: 'top' },
@@ -391,44 +373,8 @@ const navItems = [
   { key: 'navbar.team', target: 'team-section' },
 ];
 
-const railSteps = [
-  { number: '01', title: 'Scan', desc: 'Read QRIS merchant and amount data from EMVCo payloads.' },
-  { number: '02', title: 'Quote', desc: 'Use Pyth SOL/IDR pricing for a time-bound checkout amount.' },
-  { number: '03', title: 'Sign', desc: 'Open Phantom for a non-custodial Solana devnet transfer.' },
-  { number: '04', title: 'Verify', desc: 'Backend checks the submitted transaction before marking paid.' },
-  { number: '05', title: 'Settle Demo', desc: 'Simulate the IDR settlement record for hackathon review.' },
-];
 
-const workCards = [
-  {
-    title: 'Parse EMVCo QRIS',
-    desc: 'Extract merchant, amount, and QRIS tags locally before quote creation.',
-  },
-  {
-    title: 'Fetch Pyth SOL/IDR quote',
-    desc: 'Derive the SOL payment amount from live oracle-backed market data.',
-  },
-  {
-    title: 'Sign with Phantom',
-    desc: 'Keep checkout non-custodial with Phantom approval on web and mobile.',
-  },
-  {
-    title: 'Verify on Solana Devnet',
-    desc: 'Confirm destination, amount, and finality before the receipt state changes.',
-  },
-  {
-    title: 'Simulate settlement',
-    desc: 'Create a demo settlement reference without disbursing real rupiah.',
-  },
-];
 
-const protocolNodes = [
-  { label: 'QRIS Merchant', sub: 'EMVCo payload', accent: 'border-brand/50' },
-  { label: 'KonekPay Quote Engine', sub: 'Pyth SOL/IDR', accent: 'border-brand/70' },
-  { label: 'Phantom Wallet', sub: 'User signature', accent: 'border-purple-400/70' },
-  { label: 'Solana Devnet', sub: 'On-chain transfer', accent: 'border-brand/50' },
-  { label: 'Backend Verification', sub: 'Receipt + settlement demo', accent: 'border-purple-400/50' },
-];
 
 const KonekLogo = ({ className = "w-8 h-8" }) => (
   <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
@@ -437,32 +383,49 @@ const KonekLogo = ({ className = "w-8 h-8" }) => (
   </svg>
 );
 
-const ProtocolDiagram = () => (
-  <div className="relative w-full max-w-xl mx-auto lg:mx-0">
-    <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
-    <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
-    <div className="relative grid gap-3 sm:gap-4">
-      {protocolNodes.map((node, index) => (
-        <div
-          key={node.label}
-          className={`protocol-node hero-text relative border ${node.accent} bg-[#111411]/85 backdrop-blur-sm px-4 py-4 sm:px-5 sm:py-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]`}
-        >
-          {index < protocolNodes.length - 1 && (
-            <div className="absolute left-6 top-full h-3 sm:h-4 w-px bg-brand/35" aria-hidden="true"></div>
-          )}
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm sm:text-base font-semibold tracking-tight text-white">{node.label}</p>
-              <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{node.sub}</p>
-            </div>
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+const protocolNodeAccents = [
+  'border-brand/50',
+  'border-brand/70',
+  'border-purple-400/70',
+  'border-brand/50',
+  'border-purple-400/50',
+];
 
+const techProofItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6'];
+
+const ProtocolDiagram = ({ t }) => {
+  const nodes = [1, 2, 3, 4, 5].map((n, i) => ({
+    label: t(`protocol.node${n}Label`),
+    sub: t(`protocol.node${n}Sub`),
+    accent: protocolNodeAccents[i],
+  }));
+
+  return (
+    <div className="relative w-full max-w-xl mx-auto lg:mx-0" data-hero-diagram>
+      <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
+      <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
+      <div className="relative grid gap-3 sm:gap-4">
+        {nodes.map((node, index) => (
+          <div
+            key={index}
+            className={`protocol-node hero-text relative border ${node.accent} bg-[#111411]/85 backdrop-blur-sm px-4 py-4 sm:px-5 sm:py-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]`}
+          >
+            {index < nodes.length - 1 && (
+              <div className="absolute left-6 top-full h-3 sm:h-4 w-px bg-brand/35" aria-hidden="true"></div>
+            )}
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm sm:text-base font-semibold tracking-tight text-white">{node.label}</p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{node.sub}</p>
+              </div>
+              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 const SectionHeader = ({ eyebrow, title, children }) => (
   <div className="max-w-3xl">
     <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">{eyebrow}</p>
@@ -1482,7 +1445,7 @@ function App() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#070907] text-white selection:bg-brand selection:text-black" ref={root}>
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-size-[48px_48px]"></div>
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_72%_16%,rgba(20,241,149,0.11),transparent_26%),radial-gradient(circle_at_18%_20%,rgba(153,69,255,0.10),transparent_24%),linear-gradient(180deg,rgba(7,9,7,0)_0%,#070907_85%)]"></div>
 
       <div className="relative z-10">
@@ -1513,7 +1476,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                    className="flex items-center gap-2 border border-white/10 bg-white/[0.04] p-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="flex items-center gap-2 border border-white/10 bg-white/4 p-1.5 text-xs font-semibold text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     aria-haspopup="menu"
                     aria-expanded={isProfileMenuOpen}
                   >
@@ -1546,13 +1509,13 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="hidden sm:inline-flex border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-brand/40 hover:text-brand"
+                  className="hidden sm:inline-flex border border-white/10 bg-white/4 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-brand/40 hover:text-brand"
                 >
                   {t('navbar.connectWallet')}
                 </button>
               )}
 
-              <button onClick={toggleTheme} className="grid h-9 w-9 place-items-center border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:border-brand/40 hover:text-brand focus:outline-none" aria-label="Toggle theme">
+              <button onClick={toggleTheme} className="grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-300 transition hover:border-brand/40 hover:text-brand focus:outline-none" aria-label="Toggle theme">
                 {theme === 'dark' ? (
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 ) : (
@@ -1560,13 +1523,13 @@ function App() {
                 )}
               </button>
 
-              <button onClick={toggleLang} className="h-9 border border-white/10 bg-white/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
+              <button onClick={toggleLang} className="h-9 border border-white/10 bg-white/4 px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
                 <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
                 <span className="mx-0.5 text-zinc-700">/</span>
                 <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
               </button>
 
-              <button className="grid h-9 w-9 place-items-center border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:border-brand/40 hover:text-brand lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              <button className="grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-300 transition hover:border-brand/40 hover:text-brand lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
                 <div className="relative h-4 w-5">
                   <span className={`absolute left-0 h-px w-full bg-current transition-all ${isMenuOpen ? 'top-1/2 rotate-45' : 'top-0'}`} />
                   <span className={`absolute left-0 top-1/2 h-px w-full bg-current transition-all ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
@@ -1583,7 +1546,7 @@ function App() {
               <li key={item.key}>
                 <button
                   type="button"
-                  className="w-full px-3 py-3 text-left transition-colors hover:bg-white/[0.04] hover:text-brand"
+                  className="w-full px-3 py-3 text-left transition-colors hover:bg-white/4 hover:text-brand"
                   onClick={() => {
                     setIsMenuOpen(false);
                     scrollToSection(item.target);
@@ -1603,18 +1566,18 @@ function App() {
           </ul>
         </div>
 
-        <main className="mx-auto grid min-h-[calc(100vh-84px)] w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] lg:px-8">
+        <main className="mx-auto grid min-h-[calc(100vh-84px)] w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] lg:px-8" data-hero-section>
           <section className="max-w-3xl">
-            <div className="hero-text mb-5 inline-flex border border-brand/30 bg-brand/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand">
+            <div className="hero-text mb-5 inline-flex border border-brand/30 bg-brand/6 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand" data-hero-word>
               {t('hero.badge')}
             </div>
-            <h1 className="hero-text text-[clamp(2.7rem,10vw,4.9rem)] font-semibold leading-[0.98] tracking-tight text-white">
-              {t('hero.titleLine1')} <span className="text-brand">{t('hero.titleSolana')}</span> {t('hero.titleLine2')} <span className="text-white">{t('hero.titleHighlight')}</span>
+            <h1 className="hero-text text-[clamp(2.2rem,8vw,4.2rem)] font-semibold leading-[1.05] tracking-tight text-white" data-hero-word>
+              {t('hero.headline')}
             </h1>
-            <p className="hero-text mt-6 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg">
+            <p className="hero-text mt-6 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
               {t('hero.subtitle')}
             </p>
-            <div className="hero-text mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="hero-text mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" data-hero-cta>
               <button
                 onClick={handleOpenApp}
                 className="inline-flex min-h-12 items-center justify-center bg-brand px-7 py-3 text-sm font-bold uppercase tracking-[0.16em] text-black shadow-[0_0_26px_rgba(20,241,149,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(20,241,149,0.34)]"
@@ -1632,61 +1595,49 @@ function App() {
           </section>
 
           <section className="hero-text w-full">
-            <ProtocolDiagram />
+            <ProtocolDiagram t={t} />
           </section>
         </main>
 
+        {/* ─── Ecosystem strip ─── */}
         <section className="border-y border-white/10 bg-[#090c09]/80">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8">
-            {railSteps.map((step) => (
-              <div key={step.number} className="scroll-animate opacity-0 min-h-36 border-l border-white/10 px-4 py-6 last:border-r">
-                <p className="text-[11px] font-bold text-brand">{step.number}</p>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight text-white">{step.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 border-b border-white/10 px-4 py-10 sm:px-6 lg:px-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-600">{t('partner.heading')}</p>
-          <div className="flex flex-wrap items-center gap-8 opacity-55 grayscale">
-            <img src={logoSolana} alt="Solana" className="h-7 w-auto object-contain" />
-            <img src={logoPhantom} alt="Phantom" className="h-7 w-auto object-contain" />
-            <img src={logoMidtrans} alt="Midtrans" className="h-8 w-auto object-contain" />
-            <div className="flex items-center gap-2">
-              <img src={logoSuperteam} alt="Superteam Icon" className="h-8 w-8 object-contain" />
-              <span className="text-xl font-semibold tracking-tight text-white">Superteam</span>
+          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-6 px-4 py-8 sm:px-6 lg:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-600">{t('partner.heading')}</p>
+            <div className="flex flex-wrap items-center gap-8 opacity-55 grayscale">
+              <img src={logoSolana} alt="Solana" className="h-7 w-auto object-contain" />
+              <img src={logoPhantom} alt="Phantom" className="h-7 w-auto object-contain" />
+              <img src={logoSuperteam} alt="Superteam" className="h-8 w-auto object-contain" />
             </div>
           </div>
         </section>
 
+        {/* ─── Problem ─── */}
         <section id="problem-section" className="scroll-mt-28 border-b border-white/10">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[0.92fr_1fr] lg:px-8 lg:py-28">
             <div className="scroll-animate opacity-0">
-              <SectionHeader eyebrow="Problem" title="Crypto is liquid, but local payments are still fiat-first." />
+              <SectionHeader eyebrow={t('problem.eyebrow')} title={t('problem.heading')} />
             </div>
             <div className="scroll-animate opacity-0 grid gap-5 text-lg leading-8 text-zinc-400">
-              <p>Indonesian merchants already accept QRIS, but crypto holders still need off-ramps, exchange steps, and manual reconciliation before value reaches a local checkout.</p>
-              <p>KonekPay treats QRIS as the payment intent and Solana as the execution layer, so a local invoice can become a verifiable on-chain payment path.</p>
+              <p>{t('problem.body')}</p>
             </div>
           </div>
         </section>
 
+        {/* ─── Solution ─── */}
         <section id="about-section" className="scroll-mt-28 border-b border-white/10">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-[1fr_0.9fr] lg:px-8 lg:py-28">
             <div className="scroll-animate opacity-0">
-              <SectionHeader eyebrow="Solution" title="KonekPay turns QRIS into a Solana checkout flow.">
-                Scan QRIS, receive a time-boxed quote, approve the Phantom transaction, and let the backend verify the transfer before the receipt is marked paid.
+              <SectionHeader eyebrow={t('solution.eyebrow')} title={t('solution.heading')}>
+                {t('solution.body')}
               </SectionHeader>
             </div>
             <div className="scroll-animate opacity-0 border border-white/10 bg-white/[0.035] p-6">
               <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-500">Rail state</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-500">{t('solution.eyebrow')}</span>
                 <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand">Devnet Demo</span>
               </div>
               <div className="grid gap-4">
-                {['QRIS payment intent', 'Pyth-priced SOL quote', 'Phantom approval', 'Backend verification'].map((item) => (
+                {[t('protocol.node1Label'), t('protocol.node2Sub'), t('protocol.node3Label'), t('protocol.node4Sub')].map((item) => (
                   <div key={item} className="flex items-center justify-between border-b border-white/10 py-3 last:border-b-0">
                     <span className="text-sm text-zinc-400">{item}</span>
                     <span className="h-2 w-2 rounded-full bg-brand"></span>
@@ -1697,48 +1648,71 @@ function App() {
           </div>
         </section>
 
-        <section id="workflow-section" className="scroll-mt-28 border-b border-white/10">
+        {/* ─── How it Works ─── */}
+        <section id="workflow-section" className="scroll-mt-28 border-b border-white/10" data-how-section>
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
             <div className="scroll-animate opacity-0 mb-12">
-              <SectionHeader eyebrow="How it works" title="One checkout path from QR code to verified Solana receipt." />
+              <SectionHeader eyebrow={t('howItWorks.eyebrow')} title={t('howItWorks.heading')} />
             </div>
-            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5">
-              {workCards.map((card, index) => (
-                <article key={card.title} className="scroll-animate opacity-0 bg-[#080b08] p-5 md:p-6">
-                  <p className="text-[11px] font-bold text-brand">{String(index + 1).padStart(2, '0')}</p>
-                  <h3 className="mt-6 min-h-12 text-lg font-semibold leading-6 text-white">{card.title}</h3>
-                  <p className="mt-4 text-sm leading-6 text-zinc-500">{card.desc}</p>
+            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5" data-how-track>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <article key={n} className="scroll-animate opacity-0 bg-[#080b08] p-5 md:p-6" data-how-card>
+                  <p className="text-[11px] font-bold text-brand">{String(n).padStart(2, '0')}</p>
+                  <h3 className="mt-6 min-h-12 text-lg font-semibold leading-6 text-white">{t(`howItWorks.step${n}Title`)}</h3>
+                  <p className="mt-4 text-sm leading-6 text-zinc-500">{t(`howItWorks.step${n}Desc`)}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="border-b border-white/10 bg-[#0a0d0a]">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <div className="scroll-animate opacity-0 border-l-2 border-brand/70 pl-6">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">Demo honesty</p>
-              <p className="max-w-4xl text-xl leading-9 text-zinc-300">This hackathon demo performs real Solana devnet transfers and backend verification. IDR settlement is simulated. No real rupiah is disbursed.</p>
+        {/* ─── Tech Proof ─── */}
+        <section className="border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+            <div className="scroll-animate opacity-0 mb-10">
+              <SectionHeader eyebrow={t('techProof.eyebrow')} title={t('techProof.heading')} />
+            </div>
+            <div className="scroll-animate opacity-0 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+              {techProofItems.map((key) => (
+                <div key={key} className="flex items-center gap-3 bg-[#080b08] px-5 py-4">
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-brand"></span>
+                  <span className="text-sm text-zinc-300">{t(`techProof.${key}`)}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
+        {/* ─── Demo Honesty ─── */}
+        <section className="border-b border-white/10 bg-[#0a0d0a]">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="scroll-animate opacity-0 border-l-2 border-brand/70 pl-6">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-brand">{t('demoHonesty.eyebrow')}</p>
+              <p className="max-w-4xl text-xl leading-9 text-zinc-300">{t('demoHonesty.body')}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Team ─── */}
         <section id="team-section" className="creator-section scroll-mt-28 opacity-0 border-b border-white/10">
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
             <div className="mb-12">
-              <SectionHeader eyebrow={t('team.badge')} title="Built by a focused payment infrastructure team." />
+              <SectionHeader eyebrow={t('team.badge')} title={t('team.heading')} />
             </div>
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2">
-              {teamMembers.map((member) => (
-                <article key={member.id} className="bg-[#080b08] p-6 md:p-8">
+              {[
+                { name: 'Henix', roleKey: 'team.henixRole', descKey: 'team.henixDesc', tags: ['Full-stack', 'Solana', 'Product'], photo: fotoSiti },
+                { name: 'Aqiel', roleKey: 'team.aqielRole', descKey: 'team.aqielDesc', tags: ['Frontend', 'UI', 'Product'], photo: fotoAqiel },
+              ].map((member) => (
+                <article key={member.name} className="bg-[#080b08] p-6 md:p-8">
                   <div className="flex items-start gap-5">
                     <img src={member.photo} alt={member.name} className="h-20 w-20 shrink-0 border border-white/10 object-cover grayscale" />
                     <div>
                       <h3 className="text-2xl font-semibold tracking-tight text-white">{member.name}</h3>
-                      <p className="mt-2 text-sm font-semibold text-brand">{member.role}</p>
+                      <p className="mt-2 text-sm font-semibold text-brand">{t(member.roleKey)}</p>
                     </div>
                   </div>
-                  <p className="mt-7 text-base leading-7 text-zinc-400">{member.desc}</p>
+                  <p className="mt-7 text-base leading-7 text-zinc-400">{t(member.descKey)}</p>
                   <div className="mt-6 flex flex-wrap gap-2">
                     {member.tags.map((tag) => (
                       <span key={tag} className="border border-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">{tag}</span>
