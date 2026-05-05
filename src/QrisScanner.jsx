@@ -262,12 +262,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </div>
           )}
 
-          <div className="flex justify-center border-t border-white/10 bg-[#080b08] p-4 transition-colors">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
-              <span className="text-xs font-semibold text-zinc-500 transition-colors">{t('scanner.footer')}</span>
-            </div>
-          </div>
+
         </div>
       </div>
     </Fragment>

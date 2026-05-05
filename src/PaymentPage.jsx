@@ -355,23 +355,7 @@ export default function PaymentPage({
     settled: t('payment.headerSettled'),
     failed: t('payment.headerFailed'),
   }[flowState];
-  const footerLabel = flowState === 'settled'
-    ? t('payment.footerSettled')
-    : flowState === 'paid_verified'
-      ? t('payment.footerPaid')
-      : flowState === 'verifying'
-        ? t('payment.footerVerifying')
-        : flowState === 'tx_submitted'
-          ? t('payment.footerSubmitted')
-          : flowState === 'mobile_restored'
-            ? t('payment.mobileSessionRestored')
-            : flowState === 'mobile_expired'
-              ? t('payment.mobileQuoteExpired')
-              : flowState === 'mobile_returned'
-                ? t('payment.mobileReturned')
-                : flowState === 'mobile_submitting'
-                  ? t('payment.mobileSubmitting')
-                  : null;
+
   const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
   const showScanAnother = flowState === 'failed'
     || flowState === 'paid_verified'
@@ -821,13 +805,7 @@ export default function PaymentPage({
             </div>
           )}
 
-          {footerLabel && (
-            <div className="border-t border-white/10 bg-[#050705] p-4 text-center transition-colors">
-              <div className="text-xs font-semibold text-zinc-600 transition-colors">
-                {footerLabel}
-              </div>
-            </div>
-          )}
+
           
         </div>
       </div>
