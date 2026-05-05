@@ -70,6 +70,7 @@ api/
     payment/
       quote.js            POST /api/v1/payment/quote
       verify.js           POST /api/v1/payment/verify
+      settle-demo.js      POST /api/v1/payment/settle-demo
 
 src/
   components/
@@ -148,6 +149,39 @@ Common failures:
 | `WRONG_AMOUNT` | The transferred lamports do not exactly match the quote. |
 | `QUOTE_EXPIRED` | The quote expired before verification. |
 | `TREASURY_WALLET_NOT_CONFIGURED` | `TREASURY_WALLET` is missing from backend env. |
+
+### `POST /api/v1/payment/settle-demo`
+
+Simulates fiat settlement for hackathon demo purposes. Does **not** call real
+Midtrans or Xendit APIs.
+
+Request:
+
+```json
+{
+  "quoteId": "demo_quote_v1....",
+  "signature": "5zy..."
+}
+```
+
+Successful response:
+
+```json
+{
+  "status": "SETTLEMENT_SIMULATED",
+  "settlementReference": "DEMO-SETTLEMENT-A1B2C3D4",
+  "message": "Settlement simulated for hackathon demo. No real IDR was disbursed.",
+  "settledAt": "2026-05-05T00:00:00.000Z"
+}
+```
+
+Common failures:
+
+| Error | Meaning |
+| ----- | ------- |
+| `MISSING_FIELDS` | `quoteId` or `signature` was not provided. |
+| `INVALID_SIGNATURE` | The signature is not a valid Solana transaction signature. |
+| `SETTLEMENT_NOT_AVAILABLE` | The quote was not found or is invalid. |
 
 ## Getting Started
 
@@ -266,6 +300,19 @@ But `npm run dev:vercel` is the recommended path.
 5. Pay with Phantom on Solana devnet.
 6. Verify the Payment Verified page appears.
 7. Open the Explorer receipt.
+8. Click **Simulate Settlement** and confirm settlement status appears.
+
+### Demo settlement
+
+> **Important:** The Solana payment verification in this prototype is **real**.
+> The settlement step is **simulated** for the hackathon demo. No real IDR is
+> disbursed. Real Midtrans/Xendit integration is on the roadmap.
+
+Demo flow:
+
+```text
+Demo QRIS → Pyth quote → Phantom devnet transfer → backend verification → demo settlement → Explorer receipt
+```
 
 ## Scripts
 
@@ -387,10 +434,11 @@ malformed.
 
 ## Roadmap
 
-- Build the Solana transfer instruction and signature submission flow.
-- Add backend transaction verification against the configured Solana RPC.
+- ~~Build the Solana transfer instruction and signature submission flow.~~
+- ~~Add backend transaction verification against the configured Solana RPC.~~
 - Persist quote, payment, verification, and settlement states in Supabase.
-- Add Midtrans Iris payout execution and settlement reconciliation.
+- Replace demo settlement with real Midtrans Iris payout execution.
+- Add Xendit as an alternative fiat gateway.
 - Add automated parser and quote endpoint tests.
 - Add deployment screenshots and production demo links.
 
