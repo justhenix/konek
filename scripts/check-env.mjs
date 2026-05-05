@@ -76,11 +76,16 @@ function printVar(key, { secret = false } = {}) {
 loadEnvFile(ENV_FILE);
 
 console.log('\n── KonekPay local env check ──────────────────────────\n');
+console.log(`Source: ${ENV_FILE}`);
+console.log('Use the same required values in Vercel Environment Variables for deployed builds.\n');
 
-const required = [
+const frontendRequired = [
   { key: 'VITE_SOLANA_RPC_URL' },
-  { key: 'SOLANA_RPC_URL' },
   { key: 'VITE_TREASURY_WALLET' },
+];
+
+const backendRequired = [
+  { key: 'SOLANA_RPC_URL' },
   { key: 'TREASURY_WALLET' },
   { key: 'PAYMENT_QUOTE_SECRET', secret: true },
 ];
@@ -94,8 +99,13 @@ const optional = [
 
 let missing = 0;
 
-console.log('Required:');
-for (const { key, secret } of required) {
+console.log('Required for frontend build / deployed Vercel:');
+for (const { key, secret } of frontendRequired) {
+  if (!printVar(key, { secret })) missing++;
+}
+
+console.log('\nRequired for backend API / deployed Vercel:');
+for (const { key, secret } of backendRequired) {
   if (!printVar(key, { secret })) missing++;
 }
 
@@ -103,6 +113,11 @@ console.log('\nOptional:');
 for (const { key, secret } of optional) {
   printVar(key, { secret });
 }
+
+console.log('\nDeployment notes:');
+console.log('  - Add required variables in Vercel Dashboard -> Project -> Settings -> Environment Variables.');
+console.log('  - Select Production, Preview, and Development for payment testing.');
+console.log('  - Redeploy after changing VITE_* variables because Vite bakes them into the frontend bundle.');
 
 console.log('');
 

@@ -31,6 +31,22 @@ export const getTreasuryWalletAddress = () => (
   import.meta.env.VITE_TREASURY_WALLET || ''
 );
 
+export const getRequiredTreasuryWalletPublicKey = () => {
+  const value = String(import.meta.env.VITE_TREASURY_WALLET || '').trim();
+
+  if (!value) {
+    throw new Error(
+      'Frontend VITE_TREASURY_WALLET is missing. Configure it in Vercel Environment Variables and redeploy.'
+    );
+  }
+
+  try {
+    return new PublicKey(value);
+  } catch {
+    throw new Error('Frontend VITE_TREASURY_WALLET is not a valid Solana address.');
+  }
+};
+
 export const parsePublicKey = (value, label = 'Wallet address') => {
   try {
     return new PublicKey(value);
@@ -47,7 +63,7 @@ export const buildDevnetSolTransferTransaction = async ({
   const payerPublicKey = fromPublicKey instanceof PublicKey
     ? fromPublicKey
     : parsePublicKey(fromPublicKey, 'Connected wallet');
-  const treasuryPublicKey = parsePublicKey(getTreasuryWalletAddress(), 'Treasury wallet');
+  const treasuryPublicKey = getRequiredTreasuryWalletPublicKey();
   const lamports = solToLamports(solAmount);
 
   if (lamports <= 0n) {

@@ -179,11 +179,13 @@ Fill in the values you need for the parts of the stack you are running.
 | Variable                        | Used by                                  | Required for                      | Visibility |
 | ------------------------------- | ---------------------------------------- | --------------------------------- | ---------- |
 | `VITE_SOLANA_RPC_URL`           | Frontend wallet provider                 | Optional custom Solana devnet RPC | Public     |
-| `VITE_TREASURY_WALLET`          | Frontend payment flow                    | Destination wallet display        | Public     |
+| `VITE_TREASURY_WALLET`          | Frontend payment flow                    | Solana transfer destination       | Public     |
 | `VITE_PUBLIC_SUPABASE_URL`      | Serverless API and future frontend reads | Supabase project URL              | Public     |
 | `VITE_PUBLIC_SUPABASE_ANON_KEY` | Future frontend Supabase reads           | Browser-safe Supabase access      | Public     |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Serverless API only                      | Transaction admin operations      | Secret     |
 | `SOLANA_RPC_URL`                | Serverless payment verification          | Backend Solana devnet reads       | Secret     |
+| `TREASURY_WALLET`               | Serverless payment verification          | Expected payment destination      | Secret     |
+| `PAYMENT_QUOTE_SECRET`          | Serverless quote signing                 | Quote integrity checks            | Secret     |
 | `MIDTRANS_SERVER_KEY`           | Future settlement API                    | Midtrans Iris disbursement        | Secret     |
 
 ### Run the app
@@ -287,6 +289,50 @@ The project is configured for Vercel:
 
 Set the same environment variables in your Vercel project settings before
 deploying any API-backed flow.
+
+### Vercel deployment environment variables
+
+Local `.env.local` is not automatically used by Vercel production. Add payment
+environment variables in:
+
+```text
+Vercel Dashboard -> Project -> Settings -> Environment Variables
+```
+
+Add these for Production, Preview, and Development:
+
+```text
+VITE_SOLANA_RPC_URL
+SOLANA_RPC_URL
+VITE_TREASURY_WALLET
+TREASURY_WALLET
+PAYMENT_QUOTE_SECRET
+```
+
+After changing any `VITE_*` variable, redeploy the Vercel project. Vite bakes
+`VITE_*` values into the frontend bundle during build, so changing the dashboard
+value alone does not update an already deployed site.
+
+If `VITE_TREASURY_WALLET` is missing in the deployed frontend, payment setup
+fails before Phantom opens with:
+
+```text
+Frontend VITE_TREASURY_WALLET is missing. Configure it in Vercel Environment Variables and redeploy.
+```
+
+If backend `TREASURY_WALLET` is missing, the verify endpoint returns a backend
+treasury wallet configuration error.
+
+### Mobile deployed test checklist
+
+1. Open the deployed site on a phone.
+2. Connect Phantom on Solana devnet.
+3. Use Demo QRIS.
+4. Confirm the quote.
+5. Pay with Phantom.
+6. Verify payment.
+7. Simulate settlement.
+8. Open Explorer.
 
 ## QRIS Parser
 
