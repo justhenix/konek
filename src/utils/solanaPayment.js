@@ -32,7 +32,7 @@ export const getTreasuryWalletAddress = () => (
 );
 
 export const getRequiredTreasuryWalletPublicKey = () => {
-  const value = String(import.meta.env.VITE_TREASURY_WALLET || '').trim();
+  const value = getTreasuryWalletAddress().trim();
 
   if (!value) {
     throw new Error(
