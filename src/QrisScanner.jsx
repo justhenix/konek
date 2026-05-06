@@ -26,34 +26,47 @@ const getScannerIssueType = (scanResult) => {
   return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
 };
 
+// Thresholds for progressive scanner guidance
+const SOFT_TIP_DELAY_MS = 4000;
+const UNREADABLE_DELAY_MS = 12000;
+const UNREADABLE_MIN_FAILED_FRAMES = 80;
+const UNSUPPORTED_RESUME_DELAY_MS = 800;
+
 export default function QrisScanner({ onClose, onResult, t }) {
   const [permission, setPermission] = useState('prompt');
   const [scanResult, setScanResult] = useState(null);
   const [showDemoQr, setShowDemoQr] = useState(false);
-  const [showUnreadableHint, setShowUnreadableHint] = useState(false);
+
+  // Progressive hint state: 'idle' | 'scanning' | 'unreadable'
+  const [scanHint, setScanHint] = useState('idle');
+
   const scannerRef = useRef(null);
-  const unreadableHintTimerRef = useRef(null);
+  const scanStartTimeRef = useRef(null);
+  const failedFrameCountRef = useRef(0);
+  const hintTimerRef = useRef(null);
+  const lastAcceptedPayloadRef = useRef(null);
   const scannerId = "reader";
   const isCameraActive = permission === 'granted' || permission === 'starting';
 
-  const clearUnreadableHintTimer = useCallback(() => {
-    if (unreadableHintTimerRef.current) {
-      window.clearTimeout(unreadableHintTimerRef.current);
-      unreadableHintTimerRef.current = null;
+  const clearHintTimer = useCallback(() => {
+    if (hintTimerRef.current) {
+      window.clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
     }
   }, []);
 
+
   const stopCamera = useCallback(async () => {
-    clearUnreadableHintTimer();
+    clearHintTimer();
     if (scannerRef.current && scannerRef.current.isScanning) {
       try {
         await scannerRef.current.stop();
         scannerRef.current = null;
-      } catch (err) {
-        console.error("Gagal stop camera:", err);
+      } catch {
+        // Camera stop can fail if already stopped
       }
     }
-  }, [clearUnreadableHintTimer]);
+  }, [clearHintTimer]);
 
   const handleClose = async () => {
     await stopCamera();
@@ -61,31 +74,58 @@ export default function QrisScanner({ onClose, onResult, t }) {
   };
 
   const processPayment = useCallback((decodedText) => {
-    clearUnreadableHintTimer();
-    setShowUnreadableHint(false);
+    // Ignore if this exact payload was already accepted
+    if (lastAcceptedPayloadRef.current === decodedText) {
+      return false;
+    }
+
+    clearHintTimer();
+    setScanHint('idle');
+    failedFrameCountRef.current = 0;
+
     const parsedData = parseEmvcoQris(decodedText);
     const nextScanResult = { rawData: decodedText, parsedData };
     const issueType = getScannerIssueType(nextScanResult);
 
     if (!parsedData.isValid && issueType !== 'missingAmount') {
+      // Unsupported QR: show banner but allow continued scanning
       setScanResult(nextScanResult);
+
+      // Auto-clear the unsupported banner after a short delay so scanning resumes
+      hintTimerRef.current = window.setTimeout(() => {
+        setScanResult((current) => {
+          // Only clear if it is still the same unsupported result
+          if (current?.rawData === decodedText) {
+            return null;
+          }
+          return current;
+        });
+        hintTimerRef.current = null;
+      }, UNSUPPORTED_RESUME_DELAY_MS);
+
       return false;
     }
+
+    // Successful decode or missing-amount flow
+    lastAcceptedPayloadRef.current = decodedText;
 
     if (onResult) {
       onResult({
         rawData: decodedText,
         parsedData,
-      }); 
+      });
     }
 
     return true;
-  }, [clearUnreadableHintTimer, onResult]);
+  }, [clearHintTimer, onResult]);
 
   const triggerScanner = () => {
-    clearUnreadableHintTimer();
-    setShowUnreadableHint(false);
+    clearHintTimer();
+    setScanHint('idle');
     setScanResult(null);
+    failedFrameCountRef.current = 0;
+    scanStartTimeRef.current = null;
+    lastAcceptedPayloadRef.current = null;
     setPermission('starting');
   };
 
@@ -96,9 +136,12 @@ export default function QrisScanner({ onClose, onResult, t }) {
   };
 
   const handleScanAnother = () => {
-    clearUnreadableHintTimer();
-    setShowUnreadableHint(false);
+    clearHintTimer();
+    setScanHint('idle');
     setScanResult(null);
+    failedFrameCountRef.current = 0;
+    scanStartTimeRef.current = Date.now();
+    lastAcceptedPayloadRef.current = null;
   };
 
   useEffect(() => {
@@ -107,10 +150,17 @@ export default function QrisScanner({ onClose, onResult, t }) {
         try {
           const html5QrCode = new Html5Qrcode(scannerId);
           scannerRef.current = html5QrCode;
-          const config = { fps: 10, aspectRatio: 1.0 };
+
+          const config = {
+            fps: 10,
+            aspectRatio: 1.0,
+          };
+
+          scanStartTimeRef.current = Date.now();
+          failedFrameCountRef.current = 0;
 
           await html5QrCode.start(
-            { facingMode: "environment" },
+            { facingMode: { ideal: "environment" } },
             config,
             (decodedText) => {
               const accepted = processPayment(decodedText);
@@ -119,18 +169,28 @@ export default function QrisScanner({ onClose, onResult, t }) {
               }
             },
             () => {
-              if (!unreadableHintTimerRef.current) {
-                unreadableHintTimerRef.current = window.setTimeout(() => {
-                  setShowUnreadableHint(true);
-                  unreadableHintTimerRef.current = null;
-                }, 10000);
+              // Failed frame decode -- increment counter and update hint progressively
+              failedFrameCountRef.current += 1;
+
+              const elapsed = Date.now() - (scanStartTimeRef.current || Date.now());
+
+              if (
+                elapsed >= UNREADABLE_DELAY_MS
+                && failedFrameCountRef.current >= UNREADABLE_MIN_FAILED_FRAMES
+              ) {
+                setScanHint('unreadable');
+              } else if (elapsed >= SOFT_TIP_DELAY_MS) {
+                setScanHint((current) => {
+                  // Only escalate, never downgrade
+                  if (current === 'unreadable') return current;
+                  return 'scanning';
+                });
               }
             }
           );
-          setPermission('granted'); 
-        } catch (err) {
-          console.error("Akses kamera ditolak:", err);
-          setPermission('denied'); 
+          setPermission('granted');
+        } catch {
+          setPermission('denied');
         }
       };
       initScanner();
@@ -139,10 +199,24 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
   useEffect(() => {
     return () => {
-      clearUnreadableHintTimer();
+      clearHintTimer();
       stopCamera();
     };
-  }, [clearUnreadableHintTimer, stopCamera]);
+  }, [clearHintTimer, stopCamera]);
+
+  // Reset hint state when a successful decode clears scanResult
+  useEffect(() => {
+    if (!scanResult && isCameraActive) {
+      // If the unsupported banner just cleared, reset scan timing
+      if (scanStartTimeRef.current) {
+        const elapsed = Date.now() - scanStartTimeRef.current;
+        // Only reset if less than the soft tip delay has passed since last reset
+        if (elapsed < SOFT_TIP_DELAY_MS) {
+          setScanHint('idle');
+        }
+      }
+    }
+  }, [scanResult, isCameraActive]);
 
   return (
     <Fragment>
@@ -157,7 +231,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
           aria-modal="true"
           aria-labelledby="qris-scanner-title"
         >
-          
+
           <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
             <div className="min-w-0">
               <h3 id="qris-scanner-title" className="kp-text text-xl font-semibold transition-colors">{t('scanner.title')}</h3>
@@ -227,18 +301,29 @@ export default function QrisScanner({ onClose, onResult, t }) {
               <p className={`${isCameraActive ? 'mb-3 text-xs leading-5' : 'mb-4 text-sm leading-6'} kp-muted`}>
                 {isCameraActive ? t('scanner.activeDesc') : t('scanner.demoHint')}
               </p>
-              {isCameraActive && (
+
+              {/* Progressive scanner guidance */}
+              {isCameraActive && !scanResult && scanHint === 'idle' && (
                 <div className="mb-3 w-full border border-brand/15 bg-brand/5 p-3">
                   <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.guidanceTitle')}</p>
                   <p className="kp-muted text-xs leading-5">{t('scanner.guidanceBody')}</p>
                 </div>
               )}
-              {isCameraActive && showUnreadableHint && !scanResult && (
+
+              {isCameraActive && !scanResult && scanHint === 'scanning' && (
+                <div className="mb-3 w-full border border-brand/15 bg-brand/5 p-3">
+                  <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.scanningTitle')}</p>
+                  <p className="kp-muted text-xs leading-5">{t('scanner.scanningBody')}</p>
+                </div>
+              )}
+
+              {isCameraActive && !scanResult && scanHint === 'unreadable' && (
                 <div className="mb-3 w-full border border-amber-400/25 bg-amber-400/10 p-3 text-amber-800 dark:text-amber-100">
                   <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">{t('scanner.errorReady')}</p>
                   <p className="text-xs leading-5 text-current">{t('scanner.errorHelp')}</p>
                 </div>
               )}
+
               <div className={`flex w-full flex-col gap-2 ${isCameraActive ? '' : 'sm:flex-row'}`}>
                 <button
                   type="button"
