@@ -42,6 +42,7 @@ const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key'
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
 const PHANTOM_SESSION_STORAGE_KEY = 'phantom_session';
 const PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY = 'phantom_wallet_encryption_public_key';
+const THEME_STORAGE_KEY = 'konek_theme';
 const PHANTOM_PAYMENT_ACTION_PARAM = 'konek_action';
 const PHANTOM_PAYMENT_ID_PARAM = 'konek_payment_id';
 const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
@@ -389,6 +390,20 @@ const protocolNodeAccents = [
 
 const techProofItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6'];
 
+const getInitialTheme = () => {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+
+  if (stored === 'dark' || stored === 'light') {
+    return stored;
+  }
+
+  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
+    return 'light';
+  }
+
+  return 'dark';
+};
+
 const ProtocolDiagram = ({ t }) => {
   const nodes = [1, 2, 3, 4, 5].map((n, i) => ({
     label: t(`protocol.node${n}Label`),
@@ -436,24 +451,24 @@ const SectionHeader = ({ eyebrow, title, children, className = '' }) => (
 
 const toastVariantStyles = {
   success: {
-    shell: 'border-brand/25 bg-[#08100b]/95',
+    shell: 'border-brand/25 bg-brand/8',
     dot: 'bg-brand',
     title: 'text-brand',
   },
   info: {
-    shell: 'border-purple-400/25 bg-[#0b0912]/95',
+    shell: 'border-purple-400/25 bg-purple-500/10',
     dot: 'bg-purple-300',
-    title: 'text-purple-200',
+    title: 'text-purple-700 dark:text-purple-200',
   },
   warning: {
-    shell: 'border-amber-300/25 bg-[#111006]/95',
+    shell: 'border-amber-300/30 bg-amber-300/10',
     dot: 'bg-amber-300',
-    title: 'text-amber-200',
+    title: 'text-amber-700 dark:text-amber-200',
   },
   danger: {
-    shell: 'border-red-400/25 bg-[#120808]/95',
+    shell: 'border-red-400/30 bg-red-500/10',
     dot: 'bg-red-400',
-    title: 'text-red-300',
+    title: 'text-red-700 dark:text-red-300',
   },
 };
 
@@ -471,12 +486,12 @@ const AppToast = ({ toast, onDismiss }) => {
         <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${styles.dot}`}></span>
         <div className="min-w-0 flex-1">
           <p className={`text-sm font-semibold ${styles.title}`}>{toast.title}</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-300">{toast.body}</p>
+          <p className="kp-muted mt-1 text-xs leading-5">{toast.body}</p>
         </div>
         <button
           type="button"
           onClick={() => onDismiss(toast.id)}
-          className="grid h-6 w-6 shrink-0 place-items-center border border-white/10 bg-white/4 text-zinc-500 transition hover:border-white/20 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="kp-control grid h-6 w-6 shrink-0 place-items-center border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="Close notification"
         >
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -504,7 +519,7 @@ function App() {
   const profileMenuRef = useRef(null);
   const toastIdRef = useRef(0);
   const [solPrice, setSolPrice] = useState(null);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(getInitialTheme);
   const [lang, setLang] = useState(() => {
     const stored = localStorage.getItem('konek_lang');
     return stored === 'en' || stored === 'id' ? stored : 'id';
@@ -1486,11 +1501,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   useEffect(() => {
@@ -1525,7 +1538,11 @@ function App() {
 
 
 
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = useCallback(() => {
+    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const themeToggleLabel = t(theme === 'dark' ? 'theme.switchToLight' : 'theme.switchToDark');
 
   useEffect(() => {
     let observer;
@@ -1585,13 +1602,13 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#070907] text-white selection:bg-brand selection:text-black" ref={root}>
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-size-[48px_48px]"></div>
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_72%_16%,rgba(20,241,149,0.11),transparent_26%),radial-gradient(circle_at_18%_20%,rgba(153,69,255,0.10),transparent_24%),linear-gradient(180deg,rgba(7,9,7,0)_0%,#070907_85%)]"></div>
+    <div className="kp-page relative min-h-screen overflow-x-hidden selection:bg-brand selection:text-black" ref={root}>
+      <div className="kp-grid-bg pointer-events-none fixed inset-0 z-0 bg-size-[48px_48px]"></div>
+      <div className="kp-hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
       <div className="relative z-10">
         <header className={`sticky z-50 flex justify-center px-4 transition-all duration-500 sm:px-6 lg:px-8 ${isScrolled ? 'top-3' : 'top-0'}`}>
-          <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'mt-3 border-white/10 bg-[#0c100d]/88 px-3 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.28)] sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`}>
+          <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'kp-panel-soft mt-3 px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`} style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}>
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
               <span className="truncate text-sm font-semibold text-white sm:text-lg">Konek<span className="text-brand">Pay</span></span>
@@ -1654,14 +1671,14 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="inline-flex h-9 shrink-0 items-center border border-white/10 bg-white/4 px-2.5 text-xs font-semibold text-zinc-300 transition hover:border-brand/40 hover:text-brand sm:px-3"
+                className="kp-control inline-flex h-9 shrink-0 items-center border px-2.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-3"
                 >
                   <span className="sm:hidden">{t('navbar.wallet')}</span>
                   <span className="hidden sm:inline">{t('navbar.connectWallet')}</span>
                 </button>
               )}
 
-              <button onClick={toggleTheme} className="grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-300 transition hover:border-brand/40 hover:text-brand focus:outline-none" aria-label="Toggle theme">
+              <button onClick={toggleTheme} className="kp-control grid h-9 w-9 place-items-center border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={themeToggleLabel} title={themeToggleLabel}>
                 {theme === 'dark' ? (
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 ) : (
@@ -1669,7 +1686,7 @@ function App() {
                 )}
               </button>
 
-              <button onClick={toggleLang} className="h-9 shrink-0 border border-white/10 bg-white/4 px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition hover:border-brand/40" title="Switch language">
+              <button onClick={toggleLang} className="kp-control h-9 shrink-0 border px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" title={t('language.switch')} aria-label={t('language.switch')}>
                 <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
                 <span className="mx-0.5 text-zinc-700">/</span>
                 <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
