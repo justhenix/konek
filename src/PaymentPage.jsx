@@ -159,15 +159,17 @@ const formatQuoteExpiry = (expiresAt) => {
 };
 
 const noticeStyles = {
-  info: 'border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] text-[var(--kp-text-muted)]',
-  success: 'border-brand/25 bg-brand/8 text-[var(--kp-text)]',
+  info: 'border-(--kp-border) bg-(--kp-control-bg) text-(--kp-text-muted)',
+  success: 'border-brand/25 bg-brand/8 text-(--kp-text)',
+  wallet: 'border-purple-400/25 bg-purple-500/10 text-(--kp-text)',
   warning: 'border-amber-400/30 bg-amber-400/10 text-amber-800 dark:text-amber-100',
   danger: 'border-red-500/30 bg-red-500/10 text-red-800 dark:text-red-100',
 };
 
 const noticeTitleStyles = {
-  info: 'text-[var(--kp-text)]',
+  info: 'text-(--kp-text)',
   success: 'text-brand',
+  wallet: 'text-purple-700 dark:text-purple-200',
   warning: 'text-amber-700 dark:text-amber-200',
   danger: 'text-red-700 dark:text-red-300',
 };
@@ -175,7 +177,7 @@ const noticeTitleStyles = {
 const AppNotice = ({ variant = 'info', title, children, pulse = false }) => (
   <div className={`border p-4 ${noticeStyles[variant] || noticeStyles.info}`}>
     <div className="flex items-start gap-3">
-      <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${variant === 'danger' ? 'bg-red-400' : variant === 'warning' ? 'bg-amber-300' : 'bg-brand'} ${pulse ? 'animate-pulse' : ''}`}></span>
+      <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${variant === 'danger' ? 'bg-red-400' : variant === 'warning' ? 'bg-amber-300' : variant === 'wallet' ? 'bg-purple-400' : 'bg-brand'} ${pulse ? 'animate-pulse' : ''}`}></span>
       <div className="min-w-0">
         {title && (
           <p className={`text-sm font-semibold ${noticeTitleStyles[variant] || noticeTitleStyles.info}`}>{title}</p>
@@ -190,7 +192,7 @@ const RailButton = ({ as = 'button', variant = 'primary', className = '', childr
   const ButtonComponent = as;
   const variants = {
     primary: 'bg-brand text-black hover:bg-brand/90 focus-visible:ring-brand',
-    wallet: 'bg-[#AB9FF2] text-zinc-950 hover:bg-[#bdb3ff] focus-visible:ring-purple-300',
+    wallet: 'kp-button-wallet focus-visible:ring-purple-300',
     secondary: 'kp-button-secondary border focus-visible:ring-zinc-500',
     danger: 'border border-red-500/20 bg-red-500/5 text-red-300 hover:border-red-500/40 hover:bg-red-500/10 focus-visible:ring-red-400',
   };
@@ -218,7 +220,7 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
       : 'break-words';
 
   return (
-    <div className="grid gap-1.5 border-b border-[color:var(--kp-border)] px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
+    <div className="grid gap-1.5 border-b border-(--kp-border) px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
       <span className="kp-soft text-xs font-semibold">{label}</span>
       <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
@@ -228,14 +230,14 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
 };
 
 const TechnicalDetails = ({ label, children, className = '' }) => (
-  <details className={`group border border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] ${className}`}>
+  <details className={`group border border-(--kp-border) bg-(--kp-control-bg) ${className}`}>
     <summary className="kp-muted flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
       <span>{label}</span>
       <svg className="h-4 w-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     </summary>
-    <div className="border-t border-[color:var(--kp-border)]">
+    <div className="border-t border-(--kp-border)">
       {children}
     </div>
   </details>
@@ -491,7 +493,7 @@ export default function PaymentPage({
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
+      <div className="fixed inset-0 z-[110] overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
           className="kp-panel mx-auto my-3 w-full max-w-190 border border-brand/20 transition-colors duration-500 sm:my-5"
           role="dialog"
@@ -553,7 +555,7 @@ export default function PaymentPage({
             )}
 
             {isPaymentSubmitting && (
-              <AppNotice variant="success" title={t('payment.mobileWaiting')} pulse>
+              <AppNotice variant="wallet" title={t('payment.mobileWaiting')} pulse>
                 <p>{t('payment.statusApprove')}</p>
               </AppNotice>
             )}
@@ -572,7 +574,7 @@ export default function PaymentPage({
 
             {(flowState === 'mobile_returned' || flowState === 'mobile_submitting') && (
               <AppNotice
-                variant="success"
+                variant="wallet"
                 title={flowState === 'mobile_submitting' ? t('payment.mobileSubmitting') : t('payment.mobileReturned')}
                 pulse
               >
@@ -686,7 +688,7 @@ export default function PaymentPage({
               {!quoteReview && (
                 <Fragment>
                   <div className="grid gap-4">
-                    <div className="border border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] p-4 transition-colors">
+                    <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4 transition-colors">
                       <div className="flex h-full items-center justify-between gap-4">
                         <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
                         <div className="text-right">
@@ -712,7 +714,7 @@ export default function PaymentPage({
                     </AppNotice>
                   )}
                   <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] opacity-60' : 'border-brand/25 bg-brand/8'}`}>
+                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
                       <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
                       <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                       <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
@@ -731,7 +733,7 @@ export default function PaymentPage({
           </div>
 
           {!(flowState === 'paid_verified' || flowState === 'settled') && (
-            <div className="grid grid-cols-1 gap-3 border-t border-[color:var(--kp-border)] p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
+            <div className="grid grid-cols-1 gap-3 border-t border-(--kp-border) p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
               <RailButton
                 onClick={showScanAnother ? onScanAnother : onCancel}
                 disabled={isBusy && !showScanAnother}
@@ -744,6 +746,7 @@ export default function PaymentPage({
                 <RailButton
                   onClick={handleContinueToPhantom}
                   disabled={quoteReview?.isExpired || isPaymentSubmitting}
+                  variant="wallet"
                 >
                   {t('payment.btnResumePayment')}
                 </RailButton>
@@ -775,6 +778,7 @@ export default function PaymentPage({
                   <RailButton
                     onClick={handleContinueToPhantom}
                     disabled={isPaymentSubmitting}
+                    variant="wallet"
                   >
                     {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
                   </RailButton>
