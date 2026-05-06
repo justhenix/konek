@@ -133,7 +133,6 @@ export const translations = {
       showDemoHelper: "Scan this QR from another device to test the camera scanner.",
       showDemoNote: "Show Demo QRIS tests the camera scanner. Use Demo QRIS skips scanning and fills the demo data directly.",
       demoDisclaimer: "Demo QRIS only fills merchant and amount data.",
-      footer: "KonekPay scanner ready",
     },
     payment: {
       qrisParsed: "Payment Data",
@@ -146,12 +145,7 @@ export const translations = {
       headerPaid: "Payment Verified",
       headerSettled: "Payout Simulated",
       headerFailed: "Action Required",
-      footerPaid: "Checked by system",
-      footerVerifying: "Verifying on Solana devnet",
-      footerSubmitted: "Submitted, waiting for system check",
-      footerParsed: "QRIS data read",
-      footerDemo: "Demo signed quote fallback",
-      footerSettled: "Payout simulated",
+
       statusLoading: "Loading Quote",
       statusFetching: "Getting SOL price and quote expiry.",
       statusOpening: "Opening Phantom",
@@ -346,7 +340,6 @@ export const translations = {
       showDemoHelper: "Scan QR ini dari perangkat lain untuk mengetes scanner kamera.",
       showDemoNote: "Tampilkan QRIS Demo untuk mengetes kamera. Pakai QRIS Demo akan langsung mengisi data tanpa scan.",
       demoDisclaimer: "QRIS demo hanya mengisi data merchant dan nominal.",
-      footer: "Scanner KonekPay siap",
     },
     payment: {
       qrisParsed: "Data Pembayaran",
@@ -359,12 +352,7 @@ export const translations = {
       headerPaid: "Pembayaran Terverifikasi",
       headerSettled: "Pencairan Disimulasikan",
       headerFailed: "Butuh Tindakan",
-      footerPaid: "Sudah dicek sistem",
-      footerVerifying: "Sedang dicek di Solana devnet",
-      footerSubmitted: "Sudah dikirim, menunggu pengecekan sistem",
-      footerParsed: "Dibaca langsung dari QRIS",
-      footerDemo: "Demo harga dari Pyth",
-      footerSettled: "Pencairan disimulasikan",
+
       statusLoading: "Memuat Harga",
       statusFetching: "Mengambil harga SOL dan batas waktu.",
       statusOpening: "Buka Phantom",
