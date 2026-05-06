@@ -185,14 +185,39 @@ const fetchPaymentQuote = async ({ qrisPayload, idrAmount }) => {
     requestBody.idrAmount = String(idrAmount);
   }
 
-  const response = await fetch('/api/v1/payment/quote', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
+  let response;
+  try {
+    response = await fetch('/api/v1/payment/quote', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } catch (networkError) {
+    const error = new Error('Payment could not be prepared. Check your connection and try again.');
+    error.apiError = {
+      code: 'NETWORK_ERROR',
+      message: error.message,
+      status: null,
+      details: null,
+    };
+    throw error;
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const error = new Error('Payment could not be prepared. Check your connection and try again.');
+    error.apiError = {
+      code: 'API_UNREACHABLE',
+      message: error.message,
+      status: response.status,
+      details: null,
+    };
+    throw error;
+  }
+
   const responseBody = await readJsonResponse(response);
 
   if (!response.ok) {

@@ -11,4 +11,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      // Proxy API requests to vercel dev when running `npm run dev` (plain Vite).
+      // When running `npm run dev:vercel`, vercel dev handles routing natively
+      // and this proxy is not used.
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 })
