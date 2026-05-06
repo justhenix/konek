@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vercel": "dotenv -e .env.local -- vercel dev",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:vercel": "dotenv -e .env.local -- vercel dev",
     "dev:check-env": "node scripts/check-env.mjs"
   },
   "dependencies": {

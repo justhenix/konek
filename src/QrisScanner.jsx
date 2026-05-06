@@ -26,16 +26,14 @@ const getScannerIssueType = (scanResult) => {
   return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
 };
 
-// Tambahan properti "onResult" untuk ngirim data ke App.jsx
 export default function QrisScanner({ onClose, onResult, t }) {
-  const [permission, setPermission] = useState('prompt'); 
+  const [permission, setPermission] = useState('prompt');
   const [scanResult, setScanResult] = useState(null);
-  const [advancedQrisData, setAdvancedQrisData] = useState('');
   const [showDemoQr, setShowDemoQr] = useState(false);
   const [showUnreadableHint, setShowUnreadableHint] = useState(false);
   const scannerRef = useRef(null);
   const unreadableHintTimerRef = useRef(null);
-  const scannerId = "reader"; 
+  const scannerId = "reader";
   const isCameraActive = permission === 'granted' || permission === 'starting';
 
   const clearUnreadableHintTimer = useCallback(() => {
@@ -91,15 +89,8 @@ export default function QrisScanner({ onClose, onResult, t }) {
     setPermission('starting');
   };
 
-  const handleManualSubmit = async (event) => {
-    event.preventDefault();
-    await stopCamera();
-    processPayment(advancedQrisData);
-  };
-
   const handleUseDemoQris = async () => {
     const demoPayload = getDemoQrisPayload();
-    setAdvancedQrisData(demoPayload);
     await stopCamera();
     processPayment(demoPayload);
   };
@@ -288,35 +279,6 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 {isCameraActive ? t('scanner.activeDemoNote') : t('scanner.showDemoNote')}
               </p>
             </div>
-
-            <details className="group mt-1 border-t border-(--kp-border-soft) pt-4">
-              <summary className="kp-muted flex cursor-pointer list-none items-center justify-between text-sm font-semibold transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-                <span>{t('scanner.manualToggle')}</span>
-                <svg className="h-4 w-4 text-zinc-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              <form onSubmit={handleManualSubmit} className="mt-4 flex flex-col">
-                <label htmlFor="advanced-qris-data" className="kp-soft mb-2 block text-xs font-semibold">
-                  {t('scanner.manualLabel')}
-                </label>
-                <textarea
-                  id="advanced-qris-data"
-                  value={advancedQrisData}
-                  onChange={(event) => setAdvancedQrisData(event.target.value)}
-                  rows={isCameraActive ? 3 : 4}
-                  placeholder={t('scanner.manualPlaceholder')}
-                  className="kp-input rail-scrollbar w-full resize-none border p-3 font-mono text-xs outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
-                />
-                <button
-                  type="submit"
-                  disabled={!advancedQrisData.trim()}
-                  className="kp-button-secondary mt-3 min-h-11 w-full border px-4 py-3 text-sm font-semibold transition-all disabled:opacity-50"
-                >
-                  {t('scanner.submitManualBtn')}
-                </button>
-              </form>
-            </details>
           </div>
           </div>
 
