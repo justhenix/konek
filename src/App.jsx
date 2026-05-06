@@ -38,6 +38,7 @@ const PYTH_SOL_USD_FEED_ID = '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc
 const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433';
 const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
+const PHANTOM_DOWNLOAD_URL = 'https://phantom.com/download';
 const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
 const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
@@ -529,6 +530,57 @@ const ToastViewport = ({ toasts, onDismiss }) => (
   </div>
 );
 
+const MissingWalletModal = ({ onDismiss, t }) => (
+  <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
+    <div
+      className="kp-panel relative w-full max-w-120 border border-purple-400/25 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="missing-wallet-title"
+    >
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-purple-400/40 hover:text-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+        aria-label={t('missingWalletModal.closeLabel')}
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div className="mb-5 flex h-14 w-14 items-center justify-center border border-purple-400/30 bg-purple-500/10">
+        <img src={logoPhantom} alt="Phantom" className="h-8 w-8 object-contain" />
+      </div>
+
+      <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('missingWalletModal.eyebrow')}</p>
+      <h3 id="missing-wallet-title" className="pr-10 text-2xl font-semibold text-(--kp-text)">
+        {t('missingWalletModal.title')}
+      </h3>
+      <p className="kp-muted mt-3 text-sm leading-7">{t('missingWalletModal.body')}</p>
+      <p className="kp-soft mt-3 text-xs leading-5">{t('missingWalletModal.helper')}</p>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <a
+          href={PHANTOM_DOWNLOAD_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+        >
+          {t('missingWalletModal.install')}
+        </a>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+        >
+          {t('missingWalletModal.dismiss')}
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
@@ -558,6 +610,7 @@ function App() {
   const { select, wallets, publicKey, connect, disconnect, connected, sendTransaction } = useWallet();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [missingWalletModalOpen, setMissingWalletModalOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -812,7 +865,7 @@ function App() {
     };
   }, [publicKey, mobileWalletPublicKey]);
 
-  const getPhantomProvider = () => {
+  const getPhantomProvider = useCallback(() => {
     if (typeof window !== 'undefined') {
       if (window.phantom?.solana?.isPhantom) {
         return window.phantom.solana;
@@ -822,7 +875,20 @@ function App() {
       }
     }
     return null;
-  };
+  }, []);
+
+  const showMissingWalletModal = useCallback(({ showToast = true } = {}) => {
+    setIsLoginModalOpen(false);
+    setMissingWalletModalOpen(true);
+
+    if (showToast) {
+      addToast({
+        variant: 'warning',
+        title: t('walletToast.phantomNotReadyTitle'),
+        body: t('walletToast.phantomNotReadyBody'),
+      });
+    }
+  }, [addToast, t]);
 
   const handleConnectWallet = async () => {
     if (isConnecting) return;
@@ -887,20 +953,19 @@ function App() {
           throw connectionError;
         }
       } else {
-        setIsLoginModalOpen(false);
+        showMissingWalletModal();
+      }
+    } catch (error) {
+      console.error("Failed to connect to wallet:", error);
+      if (!getPhantomProvider()) {
+        showMissingWalletModal();
+      } else {
         addToast({
           variant: 'warning',
           title: t('walletToast.phantomNotReadyTitle'),
           body: t('walletToast.phantomNotReadyBody'),
         });
       }
-    } catch (error) {
-      console.error("Failed to connect to wallet:", error);
-      addToast({
-        variant: 'warning',
-        title: t('walletToast.phantomNotReadyTitle'),
-        body: t('walletToast.phantomNotReadyBody'),
-      });
     } finally {
       setIsConnecting(false);
     }
@@ -925,6 +990,7 @@ function App() {
       setMobileWalletPublicKey(null);
       setIsProfileMenuOpen(false);
       setIsLoginModalOpen(false);
+      setMissingWalletModalOpen(false);
       setIsScannerOpen(false);
       setScannedData(null);
       setParsedPaymentData(null);
@@ -1430,8 +1496,14 @@ function App() {
       }
 
       const payerPublicKey = publicKey || mobileWalletPublicKey;
+      const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
 
       if (!payerPublicKey) {
+        if (!isMobile && !getPhantomProvider()) {
+          showMissingWalletModal({ showToast: false });
+          throw createPaymentFlowError('PHANTOM_MISSING', t('missingWalletModal.title'));
+        }
+
         throw new Error('Connect Phantom wallet before paying.');
       }
 
@@ -1441,7 +1513,6 @@ function App() {
         fromPublicKey: payerPublicKey,
         solAmount: quote.solAmount,
       });
-      const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
       const hasPhantomMobileSession = Boolean(
         mobileWalletPublicKey
         && localStorage.getItem(PHANTOM_SESSION_STORAGE_KEY)
@@ -1488,10 +1559,12 @@ function App() {
   }, [
     clearPendingPhantomPayment,
     connection,
+    getPhantomProvider,
     mobileWalletPublicKey,
     publicKey,
     readPendingPhantomPayment,
     sendTransaction,
+    showMissingWalletModal,
     startPhantomMobilePayment,
     t,
     verifySubmittedPayment,
@@ -1553,6 +1626,21 @@ function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isLoginModalOpen]);
+
+  useEffect(() => {
+    if (!missingWalletModalOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMissingWalletModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [missingWalletModalOpen]);
 
 
 
@@ -1902,6 +1990,13 @@ function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {missingWalletModalOpen && (
+        <MissingWalletModal
+          onDismiss={() => setMissingWalletModalOpen(false)}
+          t={t}
+        />
       )}
 
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />

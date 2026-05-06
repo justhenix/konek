@@ -171,31 +171,97 @@ function parseEmvcoTlv(payload) {
   return tags;
 }
 
+// ─────────────────────────────────────────────────────
+// STRICT QRIS AMOUNT PARSER
+// ─────────────────────────────────────────────────────
+
+// Accepts whole integers ("15000") or optional .0/.00 decimal suffix ("15000.00").
+// Rejects trailing characters, currency symbols, commas, exponent/hex notation,
+// negative values, and zero.
+const STRICT_QRIS_AMOUNT_RE = /^\d+(\.0{1,2})?$/;
+
+/**
+ * Parse a raw QRIS amount string with strict validation.
+ *
+ * Accepts:
+ *   "15000"    -> 15000
+ *   "15000.00" -> 15000
+ *   "15000.0"  -> 15000
+ *
+ * Rejects: trailing chars, currency symbols, commas, exponent notation,
+ *          hex notation, negative values, zero, empty/whitespace strings.
+ *
+ * @param {*} rawAmount - Raw amount value (typically string from Tag 54).
+ * @returns {number} Parsed integer IDR amount.
+ * @throws {Error} If the value is not a valid QRIS amount.
+ */
+function parseStrictQrisAmount(rawAmount) {
+  const raw = String(rawAmount ?? '').trim();
+
+  if (raw === '') {
+    throw new Error('QRIS amount is empty');
+  }
+
+  if (!STRICT_QRIS_AMOUNT_RE.test(raw)) {
+    throw new Error(`QRIS amount contains invalid characters: "${raw}"`);
+  }
+
+  const amount = Number(raw);
+
+  if (!Number.isFinite(amount)) {
+    throw new Error(`QRIS amount is not finite: "${raw}"`);
+  }
+
+  if (amount <= 0) {
+    throw new Error(`QRIS amount must be greater than zero: "${raw}"`);
+  }
+
+  // IDR has no decimal subdivision
+  const intAmount = Math.trunc(amount);
+
+  // Sanity bounds: 1 IDR to 1B IDR
+  if (intAmount < 1 || intAmount > 1_000_000_000) {
+    throw new Error(`QRIS amount out of bounds: ${intAmount}`);
+  }
+
+  return intAmount;
+}
+
 /**
  * Extract transaction amount (Tag 54) from QRIS EMVCo payload.
- * Returns integer IDR amount, or null if not found/invalid.
+ * Returns integer IDR amount.
  *
  * Tag 54 = "Transaction Amount" in EMVCo spec.
  * QRIS amounts are in IDR (no decimal subdivision).
+ *
+ * @param {string} payload - Raw EMVCo TLV payload string.
+ * @returns {number} Parsed integer IDR amount.
+ * @throws {Error} If Tag 54 is missing or contains an invalid amount.
  */
 function extractAmountFromQris(payload) {
   const tags = parseEmvcoTlv(payload);
   const rawAmount = tags['54'];
 
-  if (!rawAmount) return null;
+  if (rawAmount === undefined || rawAmount === null || rawAmount === '') {
+    throw new Error('QRIS payload is missing transaction amount (Tag 54)');
+  }
 
-  // Parse as number — QRIS Tag 54 can be "50000" or "50000.00"
-  const parsed = parseFloat(rawAmount);
+  return parseStrictQrisAmount(rawAmount);
+}
 
-  if (isNaN(parsed) || !Number.isFinite(parsed) || parsed <= 0) return null;
+function resolveFiatAmountForQuote({ qrisPayload, idrAmount }) {
+  const tags = parseEmvcoTlv(qrisPayload);
+  const rawQrisAmount = tags['54'];
 
-  // IDR has no decimal subdivision — round to integer
-  const intAmount = Math.round(parsed);
+  if (rawQrisAmount !== undefined && rawQrisAmount !== null && rawQrisAmount !== '') {
+    return parseStrictQrisAmount(rawQrisAmount);
+  }
 
-  // Sanity bounds: 1 IDR to 1B IDR
-  if (intAmount < 1 || intAmount > 1_000_000_000) return null;
+  if (idrAmount !== undefined && idrAmount !== null && String(idrAmount).trim() !== '') {
+    return parseStrictQrisAmount(idrAmount);
+  }
 
-  return intAmount;
+  throw new Error('QRIS payload is missing transaction amount (Tag 54)');
 }
 
 // ─────────────────────────────────────────────────────
@@ -230,7 +296,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { qrisPayload } = req.body;
+    const { qrisPayload, idrAmount } = req.body;
 
     // ── Input Validation ──────────────────────────────
     if (qrisPayload === undefined) {
@@ -247,11 +313,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── Extract Amount from QRIS (zero-trust) ─────────
-    // Server parses Tag 54 directly. Client fiatAmount is IGNORED.
-    const fiatAmount = extractAmountFromQris(qrisPayload);
-
-    if (!fiatAmount) {
+    // ── Resolve Amount ───────────────────────────────
+    // Dynamic QRIS amount wins. Static QRIS can pass a strict IDR amount.
+    let fiatAmount;
+    try {
+      fiatAmount = resolveFiatAmountForQuote({ qrisPayload, idrAmount });
+    } catch (amountErr) {
+      console.warn('[INVALID_QRIS_AMOUNT]', amountErr.message);
       return res.status(400).json({
         error: 'MISSING_AMOUNT',
         message: 'QRIS payload does not contain a valid transaction amount (Tag 54).',
@@ -316,3 +384,6 @@ export default async function handler(req, res) {
     });
   }
 }
+
+// Named exports for unit testing
+export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount, resolveFiatAmountForQuote };

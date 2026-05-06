@@ -25,6 +25,9 @@ const PAYMENT_CONFIG_MISSING_MESSAGE = (
 const PAYMENT_CONFIG_INVALID_MESSAGE = (
   'Payment configuration is invalid on this deployment. Set VITE_TREASURY_WALLET to a valid Solana address in Vercel and redeploy.'
 );
+const MISSING_AMOUNT_ERROR = 'Tag 54 transaction amount is missing.';
+const MAX_IDR_AMOUNT = 1_000_000_000;
+const MANUAL_IDR_AMOUNT_RE = /^\d+$/;
 
 const formatPaymentErrorForDisplay = (error) => {
   if (!error) {
@@ -64,6 +67,45 @@ const getParsedPayment = (qrisData, initialParsedData) => {
   }
 
   return parseEmvcoQris(qrisData);
+};
+
+const getQrisIssueType = (parsedPayment) => {
+  if (!parsedPayment || parsedPayment.isValid) {
+    return null;
+  }
+
+  const errors = parsedPayment.errors || [];
+  const isMissingAmountOnly = parsedPayment.isTlvValid
+    && parsedPayment.merchantName
+    && !parsedPayment.amountText
+    && errors.length === 1
+    && errors[0] === MISSING_AMOUNT_ERROR;
+
+  return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
+};
+
+const validateManualIdrAmount = (value, t) => {
+  const normalizedValue = String(value ?? '').trim();
+
+  if (!normalizedValue) {
+    return { amount: null, error: t('payment.manualAmountRequired') };
+  }
+
+  if (!MANUAL_IDR_AMOUNT_RE.test(normalizedValue)) {
+    return { amount: null, error: t('payment.manualAmountInvalid') };
+  }
+
+  const amount = BigInt(normalizedValue);
+
+  if (amount <= 0n) {
+    return { amount: null, error: t('payment.manualAmountPositive') };
+  }
+
+  if (amount > BigInt(MAX_IDR_AMOUNT)) {
+    return { amount: null, error: t('payment.manualAmountTooHigh') };
+  }
+
+  return { amount: Number(amount), error: '' };
 };
 
 const readJsonResponse = async (response) => {
@@ -109,14 +151,20 @@ const formatSettledAt = (iso) => {
   }
 };
 
-const fetchPaymentQuote = async (qrisPayload) => {
+const fetchPaymentQuote = async ({ qrisPayload, idrAmount }) => {
+  const requestBody = { qrisPayload };
+
+  if (idrAmount !== null && idrAmount !== undefined) {
+    requestBody.idrAmount = String(idrAmount);
+  }
+
   const response = await fetch('/api/v1/payment/quote', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ qrisPayload }),
+    body: JSON.stringify(requestBody),
   });
   const responseBody = await readJsonResponse(response);
 
@@ -270,10 +318,9 @@ export default function PaymentPage({
   const [settlementResult, setSettlementResult] = useState(null);
   const [settlementError, setSettlementError] = useState(null);
   const [isSettling, setIsSettling] = useState(false);
-
-  useEffect(() => {
-    onParsedData?.(parsedPayment);
-  }, [onParsedData, parsedPayment]);
+  const [manualAmountText, setManualAmountText] = useState('');
+  const [manualAmountError, setManualAmountError] = useState('');
+  const [manualAmountIdr, setManualAmountIdr] = useState(null);
 
   useEffect(() => {
     if (!quote) {
@@ -287,13 +334,48 @@ export default function PaymentPage({
     return () => clearInterval(timer);
   }, [quote]);
 
+  const qrisIssueType = getQrisIssueType(parsedPayment);
+  const isMissingAmountFlow = qrisIssueType === 'missingAmount';
+  const manualAmountPreview = useMemo(() => {
+    const result = validateManualIdrAmount(manualAmountText, t);
+    return result.amount ? formatIdrAmount(result.amount) : '';
+  }, [manualAmountText, t]);
+  const paymentAmount = Number.isFinite(manualAmountIdr)
+    ? manualAmountIdr
+    : parsedPayment.amount;
+  const paymentReviewData = useMemo(() => {
+    if (!Number.isFinite(manualAmountIdr)) {
+      return parsedPayment;
+    }
+
+    return {
+      ...parsedPayment,
+      isValid: true,
+      hasRequiredTags: true,
+      amount: manualAmountIdr,
+      amountText: String(manualAmountIdr),
+      formattedAmount: manualAmountIdr.toLocaleString('id-ID'),
+      tags: {
+        ...parsedPayment.tags,
+        54: String(manualAmountIdr),
+      },
+      errors: [],
+    };
+  }, [manualAmountIdr, parsedPayment]);
+  const canReviewPayment = parsedPayment.isValid || (isMissingAmountFlow && Number.isFinite(manualAmountIdr));
+  const showManualAmountForm = isMissingAmountFlow && !Number.isFinite(manualAmountIdr);
   const merchantName = parsedPayment.merchantName || t('payment.lblMissing');
-  const amountLabel = Number.isFinite(parsedPayment.amount)
-    ? `Rp ${parsedPayment.formattedAmount}`
+  const amountLabel = Number.isFinite(paymentAmount)
+    ? formatIdrAmount(paymentAmount)
     : t('payment.lblNotProvided');
   const currencyLabel = parsedPayment.currencyCode === '360'
     ? 'IDR'
     : parsedPayment.currencyCode || t('payment.lblNotProvided');
+
+  useEffect(() => {
+    onParsedData?.(paymentReviewData);
+  }, [onParsedData, paymentReviewData]);
+
   const quoteReview = useMemo(() => {
     if (!quote) {
       return null;
@@ -327,6 +409,10 @@ export default function PaymentPage({
     verificationError || externalPaymentError || paymentError
   );
   const mobileStatus = mobilePaymentState?.status || null;
+  const qrisReadNotice = {
+    title: t('payment.errParser'),
+    body: t('payment.qrisReadErrorBody'),
+  };
   const flowState = useMemo(() => {
     if (settlementResult) return 'settled';
     if (verificationStatus === 'paid_verified') return 'paid_verified';
@@ -340,9 +426,12 @@ export default function PaymentPage({
     if (isPaymentSubmitting) return 'awaiting_signature';
     if (isQuoteLoading) return 'quoting';
     if (quoteReview) return 'quote_ready';
+    if (showManualAmountForm) return 'amount_required';
+    if (!canReviewPayment) return 'unsupported';
     if (parsedPayment) return 'parsed';
     return 'idle';
   }, [
+    canReviewPayment,
     isPaymentSubmitting,
     isQuoteLoading,
     mobileStatus,
@@ -350,12 +439,15 @@ export default function PaymentPage({
     quoteError,
     quoteReview,
     settlementResult,
+    showManualAmountForm,
     submittedPayment,
     verificationStatus,
     visiblePaymentError,
   ]);
   const headerTitle = {
     idle: t('payment.headerIdle'),
+    amount_required: t('payment.manualAmountTitle'),
+    unsupported: t('payment.headerFailed'),
     parsed: t('payment.headerIdle'),
     quoting: t('payment.headerQuoting'),
     quote_ready: t('payment.headerQuoteReady'),
@@ -371,8 +463,10 @@ export default function PaymentPage({
     failed: t('payment.headerFailed'),
   }[flowState];
 
-  const showTryAgain = flowState === 'failed' && parsedPayment.isValid;
-  const showScanAnother = flowState === 'failed'
+  const showTryAgain = flowState === 'failed' && canReviewPayment;
+  const showScanAnother = !canReviewPayment
+    || isMissingAmountFlow
+    || flowState === 'failed'
     || flowState === 'paid_verified'
     || flowState === 'settled'
     || flowState === 'mobile_restored'
@@ -385,8 +479,22 @@ export default function PaymentPage({
     || flowState === 'mobile_submitting'
     || isSettling;
 
+  const handleManualAmountContinue = () => {
+    const result = validateManualIdrAmount(manualAmountText, t);
+
+    if (result.error) {
+      setManualAmountError(result.error);
+      return;
+    }
+
+    setManualAmountError('');
+    setManualAmountIdr(result.amount);
+    setQuoteError(null);
+    setPaymentError(null);
+  };
+
   const handleConfirm = async () => {
-    if (!parsedPayment.isValid || isQuoteLoading) {
+    if (!canReviewPayment || isQuoteLoading) {
       return;
     }
 
@@ -396,7 +504,10 @@ export default function PaymentPage({
     setPaymentError(null);
 
     try {
-      const nextQuote = await fetchPaymentQuote(parsedPayment.rawData);
+      const nextQuote = await fetchPaymentQuote({
+        qrisPayload: parsedPayment.rawData,
+        idrAmount: Number.isFinite(manualAmountIdr) ? manualAmountIdr : null,
+      });
       setQuote(nextQuote);
     } catch (error) {
       const apiError = error.apiError || normalizeApiError(null, error.message);
@@ -417,15 +528,15 @@ export default function PaymentPage({
     try {
       const result = await onConfirm?.({
         parsedPayment: {
-          rawData: parsedPayment.rawData,
-          merchantName: parsedPayment.merchantName,
-          amount: parsedPayment.amount,
-          amountText: parsedPayment.amountText,
-          formattedAmount: parsedPayment.formattedAmount,
-          currencyCode: parsedPayment.currencyCode,
-          tags: parsedPayment.tags,
-          isValid: parsedPayment.isValid,
-          errors: parsedPayment.errors,
+          rawData: paymentReviewData.rawData,
+          merchantName: paymentReviewData.merchantName,
+          amount: paymentReviewData.amount,
+          amountText: paymentReviewData.amountText,
+          formattedAmount: paymentReviewData.formattedAmount,
+          currencyCode: paymentReviewData.currencyCode,
+          tags: paymentReviewData.tags,
+          isValid: paymentReviewData.isValid,
+          errors: paymentReviewData.errors,
         },
         quote,
       });
@@ -493,7 +604,7 @@ export default function PaymentPage({
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-[110] overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
+      <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
           className="kp-panel mx-auto my-3 w-full max-w-190 border border-brand/20 transition-colors duration-500 sm:my-5"
           role="dialog"
@@ -520,9 +631,9 @@ export default function PaymentPage({
           </div>
           
           <div className="space-y-4 p-4 sm:p-5">
-            {!parsedPayment.isValid && (
-              <AppNotice variant="danger" title={t('payment.errParser')}>
-                <p>{t('payment.qrisReadErrorBody')}</p>
+            {!canReviewPayment && !showManualAmountForm && (
+              <AppNotice variant="warning" title={qrisReadNotice.title}>
+                <p>{qrisReadNotice.body}</p>
               </AppNotice>
             )}
 
@@ -598,21 +709,52 @@ export default function PaymentPage({
             )}
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
-              <section className="flex w-full flex-col gap-4">
-                <div className="flex flex-col space-y-4">
-                  <div className="border border-brand/20 bg-brand/8 p-4">
-                    <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
+              <section className="flex w-full flex-col gap-6">
+                
+                {/* 1. Payment Proof Card */}
+                <div className="flex flex-col overflow-hidden border border-brand/20 bg-(--kp-control-bg)">
+                  <div className="border-b border-brand/20 bg-brand/10 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.paymentProofTitle')}</p>
+                    <p className="mt-2 text-xl font-semibold text-(--kp-text)">{t('payment.paymentProofStatus')}</p>
                     <p className="kp-muted mt-2 text-sm leading-6">
-                      {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
+                      {t('payment.paymentProofBody')}
                     </p>
+                  </div>
+
+                  <div className="p-0">
+                    <DetailRow label={t('payment.lblStore')} value={merchantName} title={merchantName} />
+                    <DetailRow label={t('payment.lblTotalPay')} value={quoteReview?.idrAmountLabel || amountLabel} />
+                    <DetailRow label={t('payment.lblSolPaid')} value={quoteReview?.solAmountLabel || t('payment.lblNotProvided')} tone="success" />
+                    <DetailRow label={t('payment.lblSolanaStatus')} value={t('payment.statusPaid')} tone="success" />
+                  </div>
+                  
+                  <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {primaryExplorerUrl && (
+                        <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" variant="secondary" className="border-brand/30 text-brand hover:bg-brand/10">
+                          {t('payment.btnViewExplorer')}
+                        </RailButton>
+                      )}
+                      <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
+                        {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
+                      </RailButton>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Merchant Payout Record Card */}
+                <div className="flex flex-col overflow-hidden border border-amber-500/20 bg-(--kp-control-bg)">
+                  <div className="border-b border-amber-500/20 bg-amber-500/10 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{t('payment.payoutRecordTitle')}</p>
                     
                     {settlementResult && (
-                      <div className="mt-4">
-                        <AppNotice variant="warning">
-                          <p>{t('payment.receiptDemoNote')}</p>
-                        </AppNotice>
-                      </div>
+                      <p className="mt-2 text-xl font-semibold text-(--kp-text)">{t('payment.payoutRecordStatus')}</p>
                     )}
+                    
+                    <p className="kp-muted mt-2 text-sm leading-6">
+                      {t('payment.payoutRecordBody')}
+                    </p>
+
                     {settlementError && (
                       <div className="mt-4">
                         <AppNotice variant="danger" title={t('payment.errorTitle')}>
@@ -620,115 +762,151 @@ export default function PaymentPage({
                         </AppNotice>
                       </div>
                     )}
+                    
                     {isSettling && (
                       <div className="mt-4 flex items-center gap-3">
-                        <span className="h-2.5 w-2.5 rounded-full bg-brand animate-pulse"></span>
-                        <span className="text-sm font-semibold text-brand">{t('payment.btnSettling')}</span>
+                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
+                        <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{t('payment.btnSettling')}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="kp-surface overflow-hidden border">
-                    <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+                  <div className="p-0">
+                    <DetailRow label={t('payment.lblStore')} value={merchantName} title={merchantName} />
                     <DetailRow label={t('payment.lblTotalPay')} value={quoteReview?.idrAmountLabel || amountLabel} />
-                    <DetailRow label={t('payment.lblSolPaid')} value={quoteReview?.solAmountLabel || t('payment.lblNotProvided')} tone="success" />
-                    <DetailRow
-                      label={t('payment.lblStatus')}
-                      value={flowState === 'settled' ? t('payment.receiptSettlementDone') : t('payment.statusPaid')}
-                      tone="success"
+                    <DetailRow 
+                      label={t('payment.lblPayoutStatus')} 
+                      value={settlementResult ? t('payment.payoutStatusSimulated') : t('payment.receiptSettlementNone')} 
+                      tone={settlementResult ? 'success' : 'muted'} 
                     />
+                    
+                    <TechnicalDetails label={t('payment.detailsTitle')} className="border-x-0 border-b-0">
+                      <DetailRow 
+                        label={t('payment.lblDemoRef')} 
+                        value={settlementResult?.settlementReference || `DEMO-PAYOUT-${(verifiedPayment.signature || submittedPayment?.signature || '').slice(-8).toUpperCase()}`} 
+                        mono 
+                        truncateValue
+                      />
+                      <DetailRow 
+                        label={t('payment.lblLinkedSolanaTx')} 
+                        value={shortSignature(verifiedPayment.signature)} 
+                        mono 
+                        title={verifiedPayment.signature} 
+                        truncateValue 
+                      />
+                      <DetailRow 
+                        label={t('payment.lblCreatedAt')} 
+                        value={settlementResult ? formatSettledAt(settlementResult.settledAt) : formatSettledAt(submittedPayment?.submittedAt || quote?.createdAt)} 
+                      />
+                    </TechnicalDetails>
+                  </div>
+
+                  <div className="border-t border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
+                    <p className="mb-4 text-center text-xs font-medium text-amber-700 dark:text-amber-400/80">
+                      {t('payment.payoutDemoNote')}
+                    </p>
+                    
+                    {!settlementResult && !isSettling && (
+                      <RailButton onClick={handleSettleDemo} variant="secondary" className="w-full border-amber-500/30 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300">
+                        {t('payment.btnCreatePayoutRecord')}
+                      </RailButton>
+                    )}
                   </div>
                 </div>
-
-                <div className={`grid gap-3 ${flowState === 'paid_verified' && !settlementResult && !isSettling && primaryExplorerUrl ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                  {primaryExplorerUrl && (
-                    <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer">
-                      {t('payment.btnViewExplorer')}
-                    </RailButton>
-                  )}
-                  <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
-                    {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-                  </RailButton>
-                  {flowState === 'paid_verified' && !settlementResult && !isSettling && primaryExplorerUrl && (
-                    <RailButton onClick={handleSettleDemo} variant="secondary">
-                      {t('payment.btnSettleDemo')}
-                    </RailButton>
-                  )}
-                </div>
-
-                <TechnicalDetails label={t('payment.detailsTitle')}>
-                  <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} truncateValue />
-                  <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
-                  <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
-                  <DetailRow
-                    label={t('payment.lblSettlement')}
-                    value={settlementResult ? t('payment.receiptSettlementDone') : t('payment.receiptSettlementNone')}
-                    tone={settlementResult ? 'success' : 'muted'}
-                  />
-                  {settlementResult && (
-                    <>
-                      <DetailRow label={t('payment.lblSettlementRef')} value={settlementResult.settlementReference} mono tone="success" title={settlementResult.settlementReference} truncateValue />
-                      <DetailRow label={t('payment.lblSettledAt')} value={formatSettledAt(settlementResult.settledAt)} />
-                    </>
-                  )}
-                  {quoteReview && (
-                    <>
-                      <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
-                      <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
-                    </>
-                  )}
-                </TechnicalDetails>
               </section>
             )}
 
-            {!(flowState === 'paid_verified' || flowState === 'settled') && (
-            <div className="space-y-4">
-              <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+            {!(flowState === 'paid_verified' || flowState === 'settled') && showManualAmountForm && (
+              <section className="space-y-5 border border-brand/20 bg-brand/6 p-4 sm:p-5">
+                <div>
+                  <h4 className="kp-text text-xl font-semibold">{t('payment.manualAmountTitle')}</h4>
+                  <p className="kp-muted mt-2 text-sm leading-6">{t('payment.manualAmountBody')}</p>
+                </div>
 
-              {!quoteReview && (
-                <Fragment>
-                  <div className="grid gap-4">
-                    <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4 transition-colors">
-                      <div className="flex h-full items-center justify-between gap-4">
-                        <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
-                        <div className="text-right">
-                          <div className="text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
-                          <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
-                        </div>
+                <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4">
+                  <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
+                  <p className="kp-text mt-1 break-words text-base font-semibold">{merchantName}</p>
+                </div>
+
+                <div>
+                  <label htmlFor="manual-idr-amount" className="kp-text mb-2 block text-sm font-semibold">
+                    {t('payment.manualAmountLabel')}
+                  </label>
+                  <input
+                    id="manual-idr-amount"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={manualAmountText}
+                    onChange={(event) => {
+                      setManualAmountText(event.target.value);
+                      if (manualAmountError) {
+                        setManualAmountError('');
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleManualAmountContinue();
+                      }
+                    }}
+                    placeholder={t('payment.manualAmountPlaceholder')}
+                    aria-invalid={manualAmountError ? 'true' : 'false'}
+                    aria-describedby="manual-idr-amount-helper"
+                    className="kp-input min-h-12 w-full border px-4 py-3 text-base font-semibold outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
+                  />
+                  <div id="manual-idr-amount-helper" className="mt-2 min-h-5 text-xs font-semibold">
+                    {manualAmountError ? (
+                      <p className="text-red-700 dark:text-red-300">{manualAmountError}</p>
+                    ) : manualAmountPreview ? (
+                      <p className="text-brand">{manualAmountPreview}</p>
+                    ) : (
+                      <p className="kp-soft">{t('payment.manualAmountHelper')}</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {!(flowState === 'paid_verified' || flowState === 'settled') && !showManualAmountForm && canReviewPayment && (
+              <div className="space-y-4">
+                <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+
+                {!quoteReview && (
+                  <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4 transition-colors">
+                    <div className="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                      <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
+                      <div className="min-w-0 text-left sm:text-right">
+                        <div className="break-words text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
+                        <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
                       </div>
                     </div>
-
-                    <TechnicalDetails label={t('payment.detailsTitle')}>
-                      <DetailRow label={t('payment.lblTechnicalAmount')} value={parsedPayment.tags['54'] || t('payment.lblMissing')} mono />
-                      <DetailRow label={t('payment.lblTechnicalStore')} value={parsedPayment.tags['59'] || t('payment.lblMissing')} mono />
-                    </TechnicalDetails>
                   </div>
-                </Fragment>
-              )}
+                )}
 
-              {quoteReview && (
-                <>
-                  {quoteReview.isExpired && (
-                    <AppNotice variant="warning" title={t('payment.quoteExpiredTitle')}>
-                      <p>{t('payment.quoteExpiredBody')}</p>
-                    </AppNotice>
-                  )}
-                  <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
-                      <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
-                      <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
-                      <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
-                    </div>
+                {quoteReview && (
+                  <>
+                    {quoteReview.isExpired && (
+                      <AppNotice variant="warning" title={t('payment.quoteExpiredTitle')}>
+                        <p>{t('payment.quoteExpiredBody')}</p>
+                      </AppNotice>
+                    )}
+                    <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                      <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
+                        <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
+                        <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                        <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
+                      </div>
 
-                    <div className="kp-surface overflow-hidden border">
-                      <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
-                      <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
-                      <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                      <div className="kp-surface overflow-hidden border">
+                        <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
+                        <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
+                        <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
@@ -742,7 +920,14 @@ export default function PaymentPage({
                 {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
               </RailButton>
               
-              {flowState === 'mobile_expired' ? null : flowState === 'mobile_restored' ? (
+              {flowState === 'mobile_expired' || flowState === 'unsupported' ? null : flowState === 'amount_required' ? (
+                <RailButton
+                  onClick={handleManualAmountContinue}
+                  disabled={isBusy}
+                >
+                  {t('payment.manualAmountContinue')}
+                </RailButton>
+              ) : flowState === 'mobile_restored' ? (
                 <RailButton
                   onClick={handleContinueToPhantom}
                   disabled={quoteReview?.isExpired || isPaymentSubmitting}
@@ -786,7 +971,7 @@ export default function PaymentPage({
               ) : (
                 <RailButton
                   onClick={handleConfirm}
-                  disabled={!parsedPayment.isValid || isQuoteLoading}
+                  disabled={!canReviewPayment || isQuoteLoading}
                 >
                   {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
                 </RailButton>
