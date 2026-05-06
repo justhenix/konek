@@ -105,9 +105,9 @@ export default function QrisScanner({ onClose, onResult, t }) {
         {`@keyframes scan-laser { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}
       </style>
 
-      <div className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
+      <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
         <div
-          className={`kp-panel rail-scrollbar relative my-3 flex w-full flex-col overflow-hidden border border-brand/20 ${isCameraActive ? 'max-w-200' : 'max-w-lg'}`}
+          className={`kp-panel rail-scrollbar relative my-3 flex w-full flex-col overflow-hidden border ${isCameraActive ? 'max-w-200' : 'max-w-lg'}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="qris-scanner-title"
@@ -186,7 +186,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
-                  className="min-h-11 flex-1 border border-brand/35 bg-transparent px-4 py-3 text-sm font-semibold text-brand transition-all hover:bg-brand/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                  className="kp-button-secondary min-h-11 flex-1 border px-4 py-3 text-sm font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('scanner.showDemoBtn')}
                 </button>
@@ -205,7 +205,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                   <p className="kp-muted mb-3 max-w-xs text-center text-xs leading-5">
                     {t('scanner.showDemoHelper')}
                   </p>
-                  <div className="flex min-h-[244px] w-full max-w-[244px] items-center justify-center rounded bg-white p-3">
+                  <div className="flex min-h-61 w-full max-w-61 items-center justify-center rounded bg-white p-3">
                     <QRCodeSVG
                       value={getDemoQrisPayload()}
                       size={220}
@@ -223,7 +223,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
               </p>
             </div>
 
-            <details className="group mt-1 border-t border-[color:var(--kp-border-soft)] pt-4">
+            <details className="group mt-1 border-t border-(--kp-border-soft) pt-4">
               <summary className="kp-muted flex cursor-pointer list-none items-center justify-between text-sm font-semibold transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
                 <span>{t('scanner.manualToggle')}</span>
                 <svg className="h-4 w-4 text-zinc-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -7,6 +7,7 @@ import nacl from 'tweetnacl';
 import './App.css';
 import { createT } from './utils/translations';
 
+import logoKonekPayColor from './assets/konekpay-color.svg';
 import logoPhantom from './assets/Phantom_SVG_Icon.svg';
 import henixPfp from './assets/henix_UNS_pfp.webp';
 import henixCard from './assets/henix_UNS.webp';
@@ -364,6 +365,26 @@ const navItems = [
 ];
 
 const uspItems = ['wallet', 'price', 'receipt'];
+const uspAccentClasses = {
+  wallet: 'border-purple-400/35 bg-purple-500/10 text-purple-300',
+  price: 'border-brand/30 bg-brand/8 text-brand',
+  receipt: 'border-purple-400/35 bg-purple-500/10 text-purple-300',
+};
+const workflowAccentClasses = [
+  'text-brand',
+  'text-brand',
+  'text-purple-300',
+  'text-brand',
+  'text-purple-300',
+];
+const techProofDotClasses = [
+  'bg-brand',
+  'bg-brand',
+  'bg-purple-400',
+  'bg-brand',
+  'bg-purple-400',
+  'bg-brand',
+];
 const teamMembers = [
   { id: 'henix', pfp: henixPfp, cardImage: henixCard, alt: 'Henix profile image' },
   { id: 'akil', pfp: akilPfp, cardImage: akilCard, alt: 'Akil profile image' },
@@ -374,18 +395,15 @@ const teamMembers = [
 
 
 const KonekLogo = ({ className = "w-8 h-8" }) => (
-  <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-    <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 10 85 L 35 15 L 55 35" />
-    <path stroke="var(--color-brand)" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round" d="M 90 15 L 65 85 L 45 65" />
-  </svg>
+  <img src={logoKonekPayColor} alt="KonekPay" className={`kp-brand-logo ${className}`} />
 );
 
 const protocolNodeAccents = [
-  'border-brand/50',
-  'border-brand/70',
-  'border-purple-400/70',
-  'border-brand/50',
-  'border-purple-400/50',
+  { border: 'border-brand/50', dot: 'bg-brand', connector: 'bg-brand/35' },
+  { border: 'border-brand/70', dot: 'bg-brand', connector: 'bg-linear-to-b from-brand/40 to-purple-400/35' },
+  { border: 'border-purple-400/70', dot: 'bg-purple-400', connector: 'bg-linear-to-b from-purple-400/40 to-brand/35' },
+  { border: 'border-brand/50', dot: 'bg-brand', connector: 'bg-linear-to-b from-brand/35 to-purple-400/35' },
+  { border: 'border-purple-400/50', dot: 'bg-purple-400', connector: '' },
 ];
 
 const techProofItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6'];
@@ -419,17 +437,17 @@ const ProtocolDiagram = ({ t }) => {
         {nodes.map((node, index) => (
           <div
             key={index}
-            className={`protocol-node hero-text relative min-w-0 border ${node.accent} bg-[#111411]/85 px-4 py-3.5 backdrop-blur-sm sm:px-5 sm:py-4`}
+            className={`protocol-node hero-text relative min-w-0 border ${node.accent.border} bg-[#111411]/85 px-4 py-3.5 backdrop-blur-sm sm:px-5 sm:py-4`}
           >
             {index < nodes.length - 1 && (
-              <div className="absolute left-6 top-full h-3 sm:h-4 w-px bg-brand/35" aria-hidden="true"></div>
+              <div className={`absolute left-6 top-full h-3 w-px sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
             )}
             <div className="flex min-w-0 items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="wrap-break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
                 <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
               </div>
-              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${index === 2 || index === 4 ? 'bg-purple-400' : 'bg-brand'}`}></span>
+              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${node.accent.dot}`}></span>
             </div>
           </div>
         ))}
@@ -504,7 +522,7 @@ const AppToast = ({ toast, onDismiss }) => {
 };
 
 const ToastViewport = ({ toasts, onDismiss }) => (
-  <div className="fixed inset-x-3 top-3 z-150 flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
+  <div className="fixed inset-x-3 top-3 z-[150] flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
     {toasts.map((toast) => (
       <AppToast key={toast.id} toast={toast} onDismiss={onDismiss} />
     ))}
@@ -1611,7 +1629,7 @@ function App() {
           <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'kp-panel-soft mt-3 px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`} style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}>
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
-              <span className="truncate text-sm font-semibold text-white sm:text-lg">Konek<span className="text-brand">Pay</span></span>
+              <span className="truncate text-sm font-semibold text-white sm:text-lg" aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
             </button>
 
             <ul className="col-start-2 hidden min-w-0 items-center justify-center gap-1 text-sm font-semibold text-zinc-400 xl:flex">
@@ -1634,13 +1652,13 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                    className="flex h-9 items-center gap-2 border border-brand/25 bg-brand/5 px-3 text-xs font-semibold text-zinc-200 transition hover:border-brand/45 hover:bg-brand/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="flex h-9 items-center gap-2 border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-zinc-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                     aria-haspopup="menu"
                     aria-expanded={isProfileMenuOpen}
                   >
                     <span className="h-2 w-2 shrink-0 rounded-full bg-brand"></span>
                     <span className="max-w-28 truncate font-mono">{userProfile.name}</span>
-                    <svg className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition ${isProfileMenuOpen ? 'rotate-180 text-brand' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition ${isProfileMenuOpen ? 'rotate-180 text-purple-300' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m6 9 6 6 6-6"></path>
                     </svg>
                   </button>
@@ -1652,7 +1670,7 @@ function App() {
                     <div className="mb-2 border-b border-white/10 px-2 pb-3 pt-1 text-left">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-brand"></span>
-                        <p className="text-[11px] font-semibold text-brand">{t('walletDropdown.label')}</p>
+                        <p className="text-[11px] font-semibold text-purple-300">{t('walletDropdown.label')}</p>
                       </div>
                       <p className="mt-3 text-[11px] font-semibold text-zinc-500">{t('walletDropdown.address')}</p>
                       <p className="mt-1 truncate font-mono text-sm font-semibold text-white" title={userProfile.address}>{userProfile.address}</p>
@@ -1671,7 +1689,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                className="kp-control inline-flex h-9 shrink-0 items-center border px-2.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-3"
+                className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-2.5 text-xs font-semibold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 sm:px-3"
                 >
                   <span className="sm:hidden">{t('navbar.wallet')}</span>
                   <span className="hidden sm:inline">{t('navbar.connectWallet')}</span>
@@ -1710,7 +1728,7 @@ function App() {
               >
                 {t('hero.ctaBtn')}
               </button>
-              <div className="inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/[0.035] px-4 py-3 text-sm sm:justify-start">
+              <div className="inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/3.5 px-4 py-3 text-sm sm:justify-start">
                 <span className="h-2 w-2 rounded-full bg-brand"></span>
                 <span className="text-xs font-semibold text-zinc-500">{t('hero.pythRate')}</span>
                 <span className="font-semibold text-white">1 SOL</span>
@@ -1735,7 +1753,7 @@ function App() {
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-3">
               {uspItems.map((key) => (
                 <article key={key} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6">
-                  <div className="mb-5 flex h-9 w-9 items-center justify-center border border-brand/30 bg-brand/8 text-sm font-semibold text-brand">
+                  <div className={`mb-5 flex h-9 w-9 items-center justify-center border text-sm font-semibold ${uspAccentClasses[key]}`}>
                     {String(uspItems.indexOf(key) + 1).padStart(2, '0')}
                   </div>
                   <h3 className="text-xl font-semibold text-white">{t(`usp.${key}Title`)}</h3>
@@ -1752,9 +1770,9 @@ function App() {
               <SectionHeader title={t('howItWorks.heading')} />
             </div>
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5" data-how-track>
-              {[1, 2, 3, 4, 5].map((n) => (
+              {[1, 2, 3, 4, 5].map((n, index) => (
                 <article key={n} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6" data-how-card>
-                  <p className="text-[11px] font-bold text-brand">{String(n).padStart(2, '0')}</p>
+                  <p className={`text-[11px] font-bold ${workflowAccentClasses[index]}`}>{String(n).padStart(2, '0')}</p>
                   <h3 className="mt-5 text-lg font-semibold leading-6 text-white lg:min-h-12">{t(`howItWorks.step${n}Title`)}</h3>
                   <p className="mt-4 text-sm leading-6 text-zinc-500">{t(`howItWorks.step${n}Desc`)}</p>
                 </article>
@@ -1769,14 +1787,14 @@ function App() {
               <SectionHeader title={t('demoProof.heading')}>
                 {t('demoProof.body')}
               </SectionHeader>
-              <div className="mt-7 border-l-2 border-brand/70 pl-5">
+              <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
                 <p className="text-sm leading-7 text-zinc-300">{t('demoProof.note')}</p>
               </div>
             </div>
             <div className="scroll-animate grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10 opacity-0 sm:grid-cols-2">
-              {techProofItems.map((key) => (
+              {techProofItems.map((key, index) => (
                 <div key={key} className="flex min-w-0 items-center gap-3 bg-[#080b08] px-5 py-4">
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-brand"></span>
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${techProofDotClasses[index]}`}></span>
                   <span className="text-sm text-zinc-300">{t(`techProof.${key}`)}</span>
                 </div>
               ))}
@@ -1826,7 +1844,7 @@ function App() {
         <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 pb-28 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between md:pb-10 lg:px-8">
           <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
             <KonekLogo className="h-6 w-6" />
-            <span>Konek<span className="text-brand">Pay</span></span>
+            <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
           </button>
           <p>{t('footer.builtFor')}</p>
         </footer>
@@ -1849,7 +1867,7 @@ function App() {
 
       {/* 1. POP-UP LOGIN (Tampil kalau belum konek dompet) */}
       {isLoginModalOpen && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
           <div
             className="relative w-full max-w-120 border border-purple-400/25 bg-[#080b08] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-7"
             role="dialog"
@@ -1859,7 +1877,7 @@ function App() {
             
             <button
               onClick={() => setIsLoginModalOpen(false)}
-              className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300"
+              className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
               aria-label="Close wallet modal"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -1878,7 +1896,7 @@ function App() {
             <button 
               onClick={handleConnectWallet}
               disabled={isConnecting}
-              className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#AB9FF2] px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-[#bdb3ff] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              className="kp-button-wallet flex min-h-12 w-full items-center justify-center gap-3 px-5 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
             >
               {t('loginModal.btn')}
             </button>
