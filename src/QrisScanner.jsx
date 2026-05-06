@@ -117,7 +117,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
             <div className="min-w-0">
               <h3 id="qris-scanner-title" className="text-xl font-semibold text-white transition-colors">{t('scanner.title')}</h3>
               <p className="mt-1 text-xs font-semibold text-zinc-500">
-                {permission === 'granted' ? t('scanner.cameraReady') : t('scanner.cameraAuth')}
+                {isCameraActive ? t('scanner.cameraReady') : t('scanner.cameraAuth')}
               </p>
             </div>
             <button
@@ -176,47 +176,50 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
           <div className={`${isCameraActive ? 'border-t md:border-l md:border-t-0' : 'border-t'} flex flex-col border-white/10 bg-[#0b0f0b] p-4 transition-colors sm:p-5`}>
             <div className="mb-4 flex flex-col items-start">
-              <p className="mb-3 text-sm font-semibold text-zinc-300">
-                {t('scanner.noQrisLabel')}
+              <p className={`${isCameraActive ? 'text-base' : 'text-sm'} mb-2 font-semibold text-zinc-100`}>
+                {isCameraActive ? t('scanner.activeTitle') : t('scanner.noQrisLabel')}
               </p>
-              <div className="flex w-full gap-2">
-                <button
-                  type="button"
-                  onClick={handleUseDemoQris}
-                  className="min-h-11 flex-1 border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-bold text-brand transition-all hover:bg-brand/10"
-                >
-                  {t('scanner.demoBtn')}
-                </button>
+              <p className="mb-4 text-sm leading-6 text-zinc-400">
+                {isCameraActive ? t('scanner.activeDesc') : t('scanner.noQrisDesc')}
+              </p>
+              <div className={`flex w-full flex-col gap-2 ${isCameraActive ? '' : 'sm:flex-row'}`}>
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
-                  className="min-h-11 flex-1 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand/30 hover:text-brand"
+                  className="min-h-11 flex-1 border border-brand/35 bg-transparent px-4 py-3 text-sm font-semibold text-brand transition-all hover:bg-brand/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
                 >
                   {t('scanner.showDemoBtn')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUseDemoQris}
+                  className="min-h-11 flex-1 border border-white/10 bg-white/4 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-white/20 hover:bg-white/7 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                >
+                  {t('scanner.demoBtn')}
                 </button>
               </div>
 
               {showDemoQr && (
-                <div className="mt-3 flex w-full flex-col items-center border border-white/10 bg-[#0b0f0b] p-4">
-                  <p className="mb-3 text-xs font-semibold text-zinc-300">{t('scanner.showDemoTitle')}</p>
-                  <div className="flex items-center justify-center rounded bg-white p-3" style={{ minWidth: 220, minHeight: 220 }}>
+                <div className="mt-4 flex w-full flex-col items-center border border-white/10 bg-[#080b08] p-4">
+                  <p className="mb-2 text-sm font-semibold text-zinc-100">{t('scanner.showDemoTitle')}</p>
+                  <p className="mb-3 max-w-xs text-center text-xs leading-5 text-zinc-400">
+                    {t('scanner.showDemoHelper')}
+                  </p>
+                  <div className="flex min-h-[244px] w-full max-w-[244px] items-center justify-center rounded bg-white p-3">
                     <QRCodeSVG
                       value={getDemoQrisPayload()}
-                      size={196}
+                      size={220}
                       level="M"
                       bgColor="#ffffff"
                       fgColor="#000000"
                       includeMargin={false}
                     />
                   </div>
-                  <p className="mt-3 max-w-xs text-center text-xs leading-5 text-zinc-400">
-                    {t('scanner.showDemoHelper')}
-                  </p>
                 </div>
               )}
 
-              <p className="mt-2 text-xs text-zinc-500">
-                {t('scanner.showDemoNote')}
+              <p className="mt-3 text-xs leading-5 text-zinc-500">
+                {isCameraActive ? t('scanner.activeDemoNote') : t('scanner.showDemoNote')}
               </p>
             </div>
 
