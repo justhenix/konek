@@ -123,7 +123,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 unreadableHintTimerRef.current = window.setTimeout(() => {
                   setShowUnreadableHint(true);
                   unreadableHintTimerRef.current = null;
-                }, 1200);
+                }, 10000);
               }
             }
           );
@@ -174,7 +174,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </button>
           </div>
 
-          <div className={`min-h-0 flex-1 overflow-y-auto ${isCameraActive ? 'md:grid md:grid-cols-[minmax(0,1fr)_20rem]' : ''}`}>
+          <div className={`min-h-0 flex-1 overflow-y-auto ${isCameraActive ? 'md:grid md:grid-cols-[minmax(0,1fr)_18rem]' : ''}`}>
           {/* SCREEN: PROMPT */}
           {permission === 'prompt' && (
             <div className="flex flex-col items-center p-4 text-center sm:p-6">
@@ -182,7 +182,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 <svg className="h-6 w-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
               </div>
               <h4 className="kp-text mb-2 text-xl font-semibold">{t('scanner.promptTitle')}</h4>
-              <p className="kp-muted mb-5 text-sm leading-6">{t('scanner.promptDesc')}</p>
+              <p className="kp-muted mb-5 max-w-sm text-sm leading-6">{t('scanner.promptDesc')}</p>
               <button onClick={triggerScanner} className="min-h-12 w-full bg-brand px-5 py-3 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.enableBtn')}</button>
             </div>
           )}
@@ -219,53 +219,53 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </div>
           )}
 
-          <div className={`${isCameraActive ? 'border-t md:border-l md:border-t-0' : 'border-t'} kp-panel-soft flex flex-col p-4 transition-colors sm:p-5`}>
-            <div className="mb-4 flex flex-col items-start">
-              <p className={`${isCameraActive ? 'text-base' : 'text-sm'} kp-text mb-2 font-semibold`}>
-                {isCameraActive ? t('scanner.activeTitle') : t('scanner.noQrisLabel')}
+          <div className={`${isCameraActive ? 'border-t md:border-l md:border-t-0' : 'border-t'} kp-panel-soft flex flex-col p-3 transition-colors sm:p-5`}>
+            <div className="flex flex-col items-start">
+              <p className={`${isCameraActive ? 'text-sm' : 'text-base'} kp-text mb-1 font-semibold`}>
+                {isCameraActive ? t('scanner.activeTitle') : t('scanner.demoTitle')}
               </p>
-              <p className="kp-muted mb-4 text-sm leading-6">
-                {isCameraActive ? t('scanner.activeDesc') : t('scanner.noQrisDesc')}
+              <p className={`${isCameraActive ? 'mb-3 text-xs leading-5' : 'mb-4 text-sm leading-6'} kp-muted`}>
+                {isCameraActive ? t('scanner.activeDesc') : t('scanner.demoHint')}
               </p>
               {isCameraActive && (
-                <div className="mb-4 w-full border border-brand/15 bg-brand/5 p-3">
+                <div className="mb-3 w-full border border-brand/15 bg-brand/5 p-3">
                   <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.guidanceTitle')}</p>
                   <p className="kp-muted text-xs leading-5">{t('scanner.guidanceBody')}</p>
                 </div>
               )}
               {isCameraActive && showUnreadableHint && !scanResult && (
-                <div className="mb-4 w-full border border-amber-400/25 bg-amber-400/10 p-3 text-amber-800 dark:text-amber-100">
+                <div className="mb-3 w-full border border-amber-400/25 bg-amber-400/10 p-3 text-amber-800 dark:text-amber-100">
                   <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">{t('scanner.errorReady')}</p>
                   <p className="text-xs leading-5 text-current">{t('scanner.errorHelp')}</p>
                 </div>
               )}
-              <div className={`flex w-full flex-col gap-3 ${isCameraActive ? '' : 'sm:flex-row'}`}>
+              <div className={`flex w-full flex-col gap-2 ${isCameraActive ? '' : 'sm:flex-row'}`}>
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
-                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className={`${isCameraActive ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
                   {t('scanner.showDemoBtn')}
                 </button>
                 <button
                   type="button"
                   onClick={handleUseDemoQris}
-                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className={`${isCameraActive ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
                   {t('scanner.demoBtn')}
                 </button>
               </div>
 
               {showDemoQr && (
-                <div className="mt-4 flex w-full flex-col items-center border-y border-(--kp-border) bg-(--kp-panel) p-3 shadow-none sm:border sm:p-4">
+                <div className="mt-3 flex w-full flex-col items-center border-y border-(--kp-border) bg-(--kp-panel) p-3 shadow-none sm:border sm:p-4">
                   <p className="kp-text mb-2 text-sm font-semibold">{t('scanner.showDemoTitle')}</p>
                   <p className="kp-muted mb-3 max-w-xs text-center text-xs leading-5">
                     {t('scanner.showDemoHelper')}
                   </p>
-                  <div className="flex min-h-61 w-full max-w-61 items-center justify-center rounded bg-white p-3">
+                  <div className={`flex w-full items-center justify-center rounded bg-white p-3 ${isCameraActive ? 'min-h-52 max-w-52' : 'min-h-61 max-w-61'}`}>
                     <QRCodeSVG
                       value={getDemoQrisPayload()}
-                      size={220}
+                      size={isCameraActive ? 184 : 220}
                       level="M"
                       bgColor="#ffffff"
                       fgColor="#000000"
@@ -274,10 +274,6 @@ export default function QrisScanner({ onClose, onResult, t }) {
                   </div>
                 </div>
               )}
-
-              <p className="kp-soft mt-3 text-xs leading-5">
-                {isCameraActive ? t('scanner.activeDemoNote') : t('scanner.showDemoNote')}
-              </p>
             </div>
           </div>
           </div>

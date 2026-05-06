@@ -583,6 +583,7 @@ const MissingWalletModal = ({ onDismiss, t }) => (
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAtStartingPoint, setIsAtStartingPoint] = useState(true);
   const root = useRef(null);
   const scope = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -1586,9 +1587,12 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Track scroll state for navbar surface styling.
       setIsScrolled(window.scrollY > 50);
+      const heroSection = document.querySelector('[data-hero-section]');
+      setIsAtStartingPoint(heroSection ? heroSection.getBoundingClientRect().bottom > 0 : window.scrollY < 80);
     };
+
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -2086,15 +2090,17 @@ function App() {
         </footer>
       </div>
 
-      <button
-        onClick={handleOpenApp}
-        className="fixed inset-x-4 bottom-4 z-50 inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-5 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_24px_rgba(20,241,149,0.2)] transition hover:-translate-y-0.5 md:hidden"
-      >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-        </svg>
-        {t('fab.qrisPay')}
-      </button>
+      {!isAtStartingPoint && (
+        <button
+          onClick={handleOpenApp}
+          className="fixed inset-x-4 bottom-4 z-50 inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-5 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_24px_rgba(20,241,149,0.2)] transition hover:-translate-y-0.5 md:hidden"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+          </svg>
+          {t('fab.qrisPay')}
+        </button>
+      )}
 
 
       {/* ========================================================= */}
