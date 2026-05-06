@@ -587,6 +587,8 @@ function App() {
   const scope = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
   const toastIdRef = useRef(0);
   const [solPrice, setSolPrice] = useState(null);
   const [theme, setTheme] = useState(getInitialTheme);
@@ -1584,7 +1586,7 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Kalau scroll ke bawah lebih dari 50px, navbar bakal mengecil
+      // Track scroll state for navbar surface styling.
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
@@ -1611,6 +1613,31 @@ function App() {
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!mobileMenuRef.current?.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     if (!isLoginModalOpen) {
@@ -1707,14 +1734,33 @@ function App() {
     document.getElementById(target)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleMobileNavClick = (target) => {
+    scrollToSection(target);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleMobileWalletConnect = () => {
+    setIsMobileMenuOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
+  const handleMobileWalletDisconnect = () => {
+    setIsMobileMenuOpen(false);
+    handleDisconnectWallet();
+  };
+
   return (
     <div className="kp-page relative min-h-screen selection:bg-brand selection:text-black" ref={root}>
       <div className="kp-grid-bg pointer-events-none fixed inset-0 z-0 bg-size-[48px_48px]"></div>
       <div className="kp-hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
       <div className="relative z-10">
-        <header className={`fixed inset-x-0 z-50 flex justify-center px-4 transition-all duration-500 sm:px-6 lg:px-8 ${isScrolled ? 'top-3' : 'top-0'}`}>
-          <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'kp-panel-soft mt-3 px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`} style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}>
+        <header className="fixed inset-x-0 top-0 z-80 flex justify-center px-4 sm:px-6 lg:px-8">
+          <nav
+            ref={mobileMenuRef}
+            className={`nav-item relative grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border opacity-0 backdrop-blur-xl transition-colors duration-300 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${isScrolled ? 'kp-panel-soft px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`}
+            style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}
+          >
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
               <span className="truncate text-sm font-semibold text-white sm:text-lg" aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
@@ -1734,13 +1780,116 @@ function App() {
               ))}
             </ul>
 
-            <div className="col-start-3 flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+            <div className="col-start-2 flex justify-end md:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
+                className="kp-control grid h-11 w-11 place-items-center border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                aria-label={isMobileMenuOpen ? t('navbar.closeMenu') : t('navbar.openMenu')}
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobile-navbar-menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7h16M4 12h16M4 17h16"></path>
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <div
+              id="mobile-navbar-menu"
+              className={`absolute left-0 right-0 top-full mt-2 border border-white/10 bg-[#080b08]/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 md:hidden ${isMobileMenuOpen ? 'visible translate-y-0 opacity-100' : 'invisible pointer-events-none -translate-y-2 opacity-0'}`}
+            >
+              <div className="grid gap-2 border-b border-white/10 pb-3">
+                {navItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => handleMobileNavClick(item.target)}
+                    className="flex min-h-11 items-center border border-transparent px-3 text-left text-sm font-semibold text-zinc-300 transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    {t(item.key)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid gap-3 border-b border-white/10 py-3">
+                {userProfile.isLoggedIn ? (
+                  <div className="grid gap-3">
+                    <div className="min-w-0 px-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-brand"></span>
+                        <p className="text-[11px] font-semibold text-purple-300">{t('walletDropdown.label')}</p>
+                      </div>
+                      <p className="mt-2 truncate font-mono text-sm font-semibold text-white" title={userProfile.address}>{userProfile.name}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleMobileWalletDisconnect}
+                      className="min-h-11 w-full border border-red-500/15 bg-red-500/5 px-3 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                    >
+                      {t('walletDropdown.disconnect')}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleMobileWalletConnect}
+                    className="flex min-h-11 w-full items-center border border-purple-400/25 bg-purple-500/10 px-3 text-left text-sm font-semibold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                  >
+                    {t('navbar.connectWallet')}
+                  </button>
+                )}
+              </div>
+
+              <div className="grid gap-3 pt-3">
+                <div className="flex min-h-11 items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-zinc-300">{t('theme.label')}</span>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="kp-control inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    aria-label={themeToggleLabel}
+                    title={themeToggleLabel}
+                  >
+                    {theme === 'dark' ? (
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    )}
+                    <span>{t(theme === 'dark' ? 'theme.dark' : 'theme.light')}</span>
+                  </button>
+                </div>
+
+                <div className="flex min-h-11 items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-zinc-300">{t('language.label')}</span>
+                  <button
+                    type="button"
+                    onClick={toggleLang}
+                    className="kp-control min-h-11 min-w-11 shrink-0 border px-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    title={t('language.switch')}
+                    aria-label={t('language.switch')}
+                  >
+                    <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
+                    <span className="mx-1 text-zinc-700">/</span>
+                    <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-start-3 hidden min-w-0 items-center justify-end gap-2 md:flex">
               {userProfile.isLoggedIn ? (
                 <div ref={profileMenuRef} className="relative">
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                    className="flex h-9 items-center gap-2 border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-zinc-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                    className="flex h-9 items-center gap-2 border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-zinc-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                     aria-haspopup="menu"
                     aria-expanded={isProfileMenuOpen}
                   >
@@ -1777,14 +1926,13 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-2.5 text-xs font-semibold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 sm:px-3"
+                  className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                 >
-                  <span className="sm:hidden">{t('navbar.wallet')}</span>
-                  <span className="hidden sm:inline">{t('navbar.connectWallet')}</span>
+                  {t('navbar.connectWallet')}
                 </button>
               )}
 
-              <button onClick={toggleTheme} className="kp-control grid h-9 w-9 place-items-center border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={themeToggleLabel} title={themeToggleLabel}>
+              <button onClick={toggleTheme} className="kp-control grid h-9 w-9 place-items-center border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={themeToggleLabel} title={themeToggleLabel}>
                 {theme === 'dark' ? (
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 ) : (
@@ -1792,7 +1940,7 @@ function App() {
                 )}
               </button>
 
-              <button onClick={toggleLang} className="kp-control h-9 shrink-0 border px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" title={t('language.switch')} aria-label={t('language.switch')}>
+              <button onClick={toggleLang} className="kp-control h-9 shrink-0 border px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" title={t('language.switch')} aria-label={t('language.switch')}>
                 <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
                 <span className="mx-0.5 text-zinc-700">/</span>
                 <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>

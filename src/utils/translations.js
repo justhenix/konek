@@ -10,6 +10,8 @@ export const translations = {
       howItWorks: "Flow",
       team: "Team",
       wallet: "Wallet",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
     },
     hero: {
       badge: "Colosseum Frontier Hackathon 2026",
@@ -89,6 +91,7 @@ export const translations = {
       builtFor: "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
     },
     language: {
+      label: "Language",
       switch: "Switch language",
     },
     fab: {
@@ -122,6 +125,9 @@ export const translations = {
       disconnect: "Disconnect Wallet",
     },
     theme: {
+      label: "Theme",
+      dark: "Dark",
+      light: "Light",
       switchToLight: "Switch to light mode",
       switchToDark: "Switch to dark mode",
     },
@@ -284,6 +290,8 @@ export const translations = {
       howItWorks: "Alur",
       team: "Tim",
       wallet: "Dompet",
+      openMenu: "Buka menu",
+      closeMenu: "Tutup menu",
     },
     hero: {
       badge: "Colosseum Frontier Hackathon 2026",
@@ -363,6 +371,7 @@ export const translations = {
       builtFor: "Dibuat untuk Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
     },
     language: {
+      label: "Bahasa",
       switch: "Ubah bahasa",
     },
     fab: {
@@ -396,6 +405,9 @@ export const translations = {
       disconnect: "Putuskan Dompet",
     },
     theme: {
+      label: "Tema",
+      dark: "Gelap",
+      light: "Terang",
       switchToLight: "Ubah ke mode terang",
       switchToDark: "Ubah ke mode gelap",
     },
