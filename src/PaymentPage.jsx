@@ -25,11 +25,14 @@ const PAYMENT_CONFIG_MISSING_MESSAGE = (
 const PAYMENT_CONFIG_INVALID_MESSAGE = (
   'Payment configuration is invalid on this deployment. Set VITE_TREASURY_WALLET to a valid Solana address in Vercel and redeploy.'
 );
-const MISSING_AMOUNT_ERROR = 'Tag 54 transaction amount is missing.';
+const isMissingAmountError = (errorMsg) => {
+  const msg = String(errorMsg).toLowerCase();
+  return msg.includes('tag 54') || msg.includes('transaction amount') || msg.includes('amount is missing') || msg.includes('missing amount');
+};
 const MAX_IDR_AMOUNT = 1_000_000_000;
 const MANUAL_IDR_AMOUNT_RE = /^\d+$/;
 
-const formatPaymentErrorForDisplay = (error) => {
+const formatPaymentErrorForDisplay = (error, t) => {
   if (!error) {
     return null;
   }
@@ -49,6 +52,29 @@ const formatPaymentErrorForDisplay = (error) => {
       ...error,
       code: 'PAYMENT_CONFIG_INVALID',
       message: PAYMENT_CONFIG_INVALID_MESSAGE,
+    };
+  }
+
+  const lowerMessage = message.toLowerCase();
+  if (
+    lowerMessage.includes('tag 54') ||
+    lowerMessage.includes('transaction amount') ||
+    lowerMessage.includes('amount is missing') ||
+    lowerMessage.includes('missing amount') ||
+    lowerMessage.includes('tag 59') ||
+    lowerMessage.includes('emvco') ||
+    lowerMessage.includes('payload') ||
+    lowerMessage.includes('parser') ||
+    lowerMessage.includes('backend') ||
+    lowerMessage.includes('settlement') ||
+    lowerMessage.includes('signed quote') ||
+    lowerMessage.includes('raw qris') ||
+    lowerMessage.includes('devnet') ||
+    lowerMessage.includes('qris data not ready')
+  ) {
+    return {
+      ...error,
+      message: t ? t('payment.errorBody') : 'Something went wrong while preparing this payment. Try again or use Demo QRIS.',
     };
   }
 
@@ -75,11 +101,12 @@ const getQrisIssueType = (parsedPayment) => {
   }
 
   const errors = parsedPayment.errors || [];
+  const hasMissingAmountError = errors.some(isMissingAmountError);
   const isMissingAmountOnly = parsedPayment.isTlvValid
     && parsedPayment.merchantName
     && !parsedPayment.amountText
     && errors.length === 1
-    && errors[0] === MISSING_AMOUNT_ERROR;
+    && hasMissingAmountError;
 
   return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
 };
@@ -406,7 +433,8 @@ export default function PaymentPage({
     ? paymentVerification?.error
     : null;
   const visiblePaymentError = formatPaymentErrorForDisplay(
-    verificationError || externalPaymentError || paymentError
+    verificationError || externalPaymentError || paymentError,
+    t
   );
   const mobileStatus = mobilePaymentState?.status || null;
   const qrisReadNotice = {
@@ -825,7 +853,7 @@ export default function PaymentPage({
 
                 <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4">
                   <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
-                  <p className="kp-text mt-1 break-words text-base font-semibold">{merchantName}</p>
+                  <p className="kp-text mt-1 wrap-break-word text-base font-semibold">{merchantName}</p>
                 </div>
 
                 <div>
@@ -877,7 +905,7 @@ export default function PaymentPage({
                     <div className="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                       <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
                       <div className="min-w-0 text-left sm:text-right">
-                        <div className="break-words text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
+                        <div className="wrap-break-word text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
                         <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
                       </div>
                     </div>

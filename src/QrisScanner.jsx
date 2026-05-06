@@ -4,7 +4,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import { getDemoQrisPayload } from './utils/demoQris';
 
-const MISSING_AMOUNT_ERROR = 'Tag 54 transaction amount is missing.';
+const isMissingAmountError = (errorMsg) => {
+  const msg = String(errorMsg).toLowerCase();
+  return msg.includes('tag 54') || msg.includes('transaction amount') || msg.includes('amount is missing') || msg.includes('missing amount');
+};
 
 const getScannerIssueType = (scanResult) => {
   if (!scanResult || scanResult.parsedData?.isValid) {
@@ -13,11 +16,12 @@ const getScannerIssueType = (scanResult) => {
 
   const parsedData = scanResult.parsedData;
   const errors = parsedData?.errors || [];
+  const hasMissingAmountError = errors.some(isMissingAmountError);
   const isMissingAmountOnly = parsedData?.isTlvValid
     && parsedData?.merchantName
     && !parsedData?.amountText
     && errors.length === 1
-    && errors[0] === MISSING_AMOUNT_ERROR;
+    && hasMissingAmountError;
 
   return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
 };
@@ -155,7 +159,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
         {`@keyframes scan-laser { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}
       </style>
 
-      <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
+      <div className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
         <div
           className={`kp-panel rail-scrollbar relative my-3 flex w-full flex-col overflow-hidden border ${isCameraActive ? 'max-w-200' : 'max-w-lg'}`}
           role="dialog"

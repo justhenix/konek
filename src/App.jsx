@@ -523,7 +523,7 @@ const AppToast = ({ toast, onDismiss }) => {
 };
 
 const ToastViewport = ({ toasts, onDismiss }) => (
-  <div className="fixed inset-x-3 top-3 z-[150] flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
+  <div className="fixed inset-x-3 top-3 z-150 flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
     {toasts.map((toast) => (
       <AppToast key={toast.id} toast={toast} onDismiss={onDismiss} />
     ))}
@@ -531,7 +531,7 @@ const ToastViewport = ({ toasts, onDismiss }) => (
 );
 
 const MissingWalletModal = ({ onDismiss, t }) => (
-  <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
+  <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
     <div
       className="kp-panel relative w-full max-w-120 border border-purple-400/25 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
       role="dialog"
@@ -1713,7 +1713,7 @@ function App() {
       <div className="kp-hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
       <div className="relative z-10">
-        <header className={`sticky z-50 flex justify-center px-4 transition-all duration-500 sm:px-6 lg:px-8 ${isScrolled ? 'top-3' : 'top-0'}`}>
+        <header className={`fixed inset-x-0 z-50 flex justify-center px-4 transition-all duration-500 sm:px-6 lg:px-8 ${isScrolled ? 'top-3' : 'top-0'}`}>
           <nav className={`nav-item grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border opacity-0 backdrop-blur-xl transition-all duration-500 ${isScrolled ? 'kp-panel-soft mt-3 px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`} style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}>
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
@@ -1801,7 +1801,7 @@ function App() {
           </nav>
         </header>
 
-        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-7 sm:px-6 md:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-12" data-hero-section>
+        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-24 sm:px-6 md:pt-28 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-32" data-hero-section>
           <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
             <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
               {t('hero.headline')}
@@ -1955,7 +1955,7 @@ function App() {
 
       {/* 1. POP-UP LOGIN (Tampil kalau belum konek dompet) */}
       {isLoginModalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in transition-all">
           <div
             className="relative w-full max-w-120 border border-purple-400/25 bg-[#080b08] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-7"
             role="dialog"
