@@ -260,7 +260,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 {t('scanner.errorReady')}
               </div>
               <p className="text-xs leading-6 text-red-200">
-                {scanResult.parsedData.errors.join(' ')}
+                {t('scanner.errorHelp')}
               </p>
             </div>
           )}
