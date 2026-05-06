@@ -913,7 +913,7 @@ export default function PaymentPage({
                 )}
 
                 {quoteReview && (
-                  <>
+                  <>  
                     {quoteReview.isExpired && (
                       <AppNotice variant="warning" title={t('payment.quoteExpiredTitle')}>
                         <p>{t('payment.quoteExpiredBody')}</p>
