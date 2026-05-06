@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
-import { animate, createScope, stagger } from 'animejs'; 
+import { animate, createScope, stagger } from 'animejs';
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
 import './App.css';
@@ -928,7 +928,7 @@ function App() {
         if (phantomWallet) {
           select(phantomWallet.adapter.name);
         }
-        
+
         try {
           await provider.connect({ onlyIfTrusted: false });
           // Attempt default wallet adapter connect to sync state, ignore if it skips
@@ -937,7 +937,7 @@ function App() {
           } catch (e) {
             console.warn('Adapter connect threw, but provider is connected', e);
           }
-          
+
           setIsLoginModalOpen(false);
           addToast({
             variant: 'success',
@@ -1681,7 +1681,7 @@ function App() {
             } else {
               animate(entry.target, { translateY: [50, 0], opacity: [0, 1], duration: 1200, easing: 'easeOutQuart' });
             }
-            observer.unobserve(entry.target); 
+            observer.unobserve(entry.target);
           }
         });
       }, { threshold: 0.2 });
@@ -1708,7 +1708,7 @@ function App() {
   };
 
   return (
-    <div className="kp-page relative min-h-screen overflow-x-hidden selection:bg-brand selection:text-black" ref={root}>
+    <div className="kp-page relative min-h-screen selection:bg-brand selection:text-black" ref={root}>
       <div className="kp-grid-bg pointer-events-none fixed inset-0 z-0 bg-size-[48px_48px]"></div>
       <div className="kp-hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
@@ -1777,7 +1777,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-2.5 text-xs font-semibold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 sm:px-3"
+                  className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-2.5 text-xs font-semibold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 sm:px-3"
                 >
                   <span className="sm:hidden">{t('navbar.wallet')}</span>
                   <span className="hidden sm:inline">{t('navbar.connectWallet')}</span>
@@ -1962,7 +1962,7 @@ function App() {
             aria-modal="true"
             aria-labelledby="wallet-connect-title"
           >
-            
+
             <button
               onClick={() => setIsLoginModalOpen(false)}
               className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
@@ -1974,14 +1974,14 @@ function App() {
             <div className="mb-6 flex h-20 w-20 items-center justify-center border border-purple-400/25 bg-purple-500/10">
               <img src={logoPhantom} alt="Phantom" className="h-10 w-10 object-contain" />
             </div>
-            
+
             <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
             <h3 id="wallet-connect-title" className="pr-10 text-2xl font-semibold text-white">{t('loginModal.title')}</h3>
             <p className="mb-7 mt-3 text-sm leading-7 text-zinc-400">
               {t('loginModal.desc')}
             </p>
-            
-            <button 
+
+            <button
               onClick={handleConnectWallet}
               disabled={isConnecting}
               className="kp-button-wallet flex min-h-12 w-full items-center justify-center gap-3 px-5 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
@@ -2003,16 +2003,16 @@ function App() {
 
       {/* 2. POP-UP SCANNER (Tampil kalau udah login dan pencet QRIS PAY) */}
       {isScannerOpen && (
-        <QrisScanner 
-          onClose={() => setIsScannerOpen(false)} 
+        <QrisScanner
+          onClose={() => setIsScannerOpen(false)}
           onResult={handleScannerResult}
-          t={t} 
+          t={t}
         />
       )}
 
       {/* 3. POP-UP PAYMENT (Tampil kalau scanner berhasil nangkep QR) */}
       {scannedData && (
-        <PaymentPage 
+        <PaymentPage
           key={scannedData}
           qrisData={scannedData}
           initialParsedData={parsedPaymentData}
