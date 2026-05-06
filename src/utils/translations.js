@@ -88,6 +88,9 @@ export const translations = {
     footer: {
       builtFor: "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia",
     },
+    language: {
+      switch: "Switch language",
+    },
     fab: {
       qrisPay: "Open App",
     },
@@ -108,6 +111,10 @@ export const translations = {
       label: "Wallet",
       address: "Address",
       disconnect: "Disconnect Wallet",
+    },
+    theme: {
+      switchToLight: "Switch to light mode",
+      switchToDark: "Switch to dark mode",
     },
     scanner: {
       title: "Scan QRIS",
@@ -299,6 +306,9 @@ export const translations = {
     footer: {
       builtFor: "Dibuat untuk Colosseum Frontier Hackathon 2026 x Superteam Indonesia",
     },
+    language: {
+      switch: "Ubah bahasa",
+    },
     fab: {
       qrisPay: "Buka App",
     },
@@ -319,6 +329,10 @@ export const translations = {
       label: "Dompet",
       address: "Alamat",
       disconnect: "Putuskan Dompet",
+    },
+    theme: {
+      switchToLight: "Ubah ke mode terang",
+      switchToDark: "Ubah ke mode gelap",
     },
     scanner: {
       title: "Scan QRIS",

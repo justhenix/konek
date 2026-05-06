@@ -159,17 +159,17 @@ const formatQuoteExpiry = (expiresAt) => {
 };
 
 const noticeStyles = {
-  info: 'border-white/10 bg-white/[0.035] text-zinc-300',
-  success: 'border-brand/25 bg-brand/8 text-zinc-200',
-  warning: 'border-amber-400/25 bg-amber-400/8 text-amber-100',
-  danger: 'border-red-500/25 bg-red-500/10 text-red-100',
+  info: 'border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] text-[var(--kp-text-muted)]',
+  success: 'border-brand/25 bg-brand/8 text-[var(--kp-text)]',
+  warning: 'border-amber-400/30 bg-amber-400/10 text-amber-800 dark:text-amber-100',
+  danger: 'border-red-500/30 bg-red-500/10 text-red-800 dark:text-red-100',
 };
 
 const noticeTitleStyles = {
-  info: 'text-zinc-200',
+  info: 'text-[var(--kp-text)]',
   success: 'text-brand',
-  warning: 'text-amber-200',
-  danger: 'text-red-300',
+  warning: 'text-amber-700 dark:text-amber-200',
+  danger: 'text-red-700 dark:text-red-300',
 };
 
 const AppNotice = ({ variant = 'info', title, children, pulse = false }) => (
@@ -191,7 +191,7 @@ const RailButton = ({ as = 'button', variant = 'primary', className = '', childr
   const variants = {
     primary: 'bg-brand text-black hover:bg-brand/90 focus-visible:ring-brand',
     wallet: 'bg-[#AB9FF2] text-zinc-950 hover:bg-[#bdb3ff] focus-visible:ring-purple-300',
-    secondary: 'border border-white/10 bg-white/4 text-zinc-300 hover:border-white/20 hover:bg-white/7 focus-visible:ring-zinc-500',
+    secondary: 'kp-button-secondary border focus-visible:ring-zinc-500',
     danger: 'border border-red-500/20 bg-red-500/5 text-red-300 hover:border-red-500/40 hover:bg-red-500/10 focus-visible:ring-red-400',
   };
 
@@ -209,8 +209,8 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
   const toneClass = tone === 'success'
     ? 'text-brand'
     : tone === 'muted'
-      ? 'text-zinc-500'
-      : 'text-white';
+      ? 'kp-soft'
+      : 'kp-text';
   const valueFlowClass = truncateValue
     ? 'truncate'
     : mono
@@ -218,8 +218,8 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
       : 'break-words';
 
   return (
-    <div className="grid gap-1.5 border-b border-white/10 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
-      <span className="text-xs font-semibold text-zinc-500">{label}</span>
+    <div className="grid gap-1.5 border-b border-[color:var(--kp-border)] px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
+      <span className="kp-soft text-xs font-semibold">{label}</span>
       <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
       </span>
@@ -480,22 +480,22 @@ export default function PaymentPage({
     <Fragment>
       <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
-          className="mx-auto my-3 w-full max-w-190 border border-brand/20 bg-[#080b08] shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors duration-500 sm:my-5"
+          className="kp-panel mx-auto my-3 w-full max-w-190 border border-brand/20 transition-colors duration-500 sm:my-5"
           role="dialog"
           aria-modal="true"
           aria-labelledby="payment-panel-title"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[#0b0f0b] p-4 sm:p-5">
+          <div className="kp-panel-soft flex items-start justify-between gap-4 border-b p-4 sm:p-5">
             <div className="min-w-0">
               <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
-              <h3 id="payment-panel-title" className="text-xl font-semibold text-white transition-colors sm:text-2xl">
+              <h3 id="payment-panel-title" className="kp-text text-xl font-semibold transition-colors sm:text-2xl">
                 {headerTitle}
               </h3>
             </div>
             <button
               type="button"
               onClick={onCancel}
-              className="grid h-9 w-9 shrink-0 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="kp-control grid h-9 w-9 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               aria-label="Close payment modal"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -574,9 +574,9 @@ export default function PaymentPage({
             {flowState === 'tx_submitted' && submittedPayment && (
               <AppNotice variant="success" title={t('payment.statusTxSub')}>
                 <p>{t('payment.statusTxSubDesc')}</p>
-                <div className="mt-4 border border-white/10 bg-[#050705] p-3">
-                  <div className="mb-1 text-xs font-semibold text-zinc-500">{t('payment.lblSignature')}</div>
-                  <p className="font-mono text-xs break-all text-white">{submittedPayment.signature}</p>
+                <div className="kp-surface mt-4 border p-3">
+                  <div className="kp-soft mb-1 text-xs font-semibold">{t('payment.lblSignature')}</div>
+                  <p className="kp-text font-mono text-xs break-all">{submittedPayment.signature}</p>
                 </div>
               </AppNotice>
             )}
@@ -590,9 +590,9 @@ export default function PaymentPage({
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
               <section className="flex w-full flex-col lg:grid lg:grid-cols-2 lg:gap-6">
                 <div className="order-1 flex flex-col space-y-4">
-                  <div className="border border-brand/20 bg-[#061108] p-4">
+                  <div className="border border-brand/20 bg-brand/8 p-4">
                     <p className="text-lg font-semibold text-brand">{flowState === 'settled' ? t('payment.headerSettled') : t('payment.statusPaid')}</p>
-                    <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    <p className="kp-muted mt-2 text-sm leading-6">
                       {flowState === 'settled' ? t('payment.statusSettledDesc') : t('payment.statusPaidDesc')}
                     </p>
                     
@@ -622,7 +622,7 @@ export default function PaymentPage({
                     <div className="space-y-3">
                       <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
                       <div className="border border-brand/25 bg-brand/8 p-4 transition-colors">
-                        <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
+                        <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
                         <div className="wrap-break-word text-3xl font-semibold leading-none text-brand">{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                         <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
                       </div>
@@ -647,10 +647,10 @@ export default function PaymentPage({
                 </div>
 
                 <div className="order-3 mt-4 lg:order-2 lg:mt-0">
-                  <div className="border border-white/10 bg-[#050705]">
+                  <div className="kp-surface border">
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between p-4 text-sm font-semibold text-zinc-300 transition-colors hover:text-white lg:pointer-events-none lg:p-4 lg:hover:text-zinc-300"
+                      className="kp-muted flex w-full items-center justify-between p-4 text-sm font-semibold transition-colors hover:text-brand lg:pointer-events-none lg:p-4 lg:hover:text-[var(--kp-text-muted)]"
                       onClick={() => setIsDetailsOpen(!isDetailsOpen)}
                     >
                       <span className="lg:hidden">{isDetailsOpen ? t('payment.detailsHide') : t('payment.detailsShow')}</span>
@@ -666,7 +666,7 @@ export default function PaymentPage({
                     </button>
                     
                     <div className={`${isDetailsOpen ? 'block' : 'hidden'} lg:block`}>
-                      <div className="border-t border-white/10 lg:border-t-0">
+                      <div className="border-t border-[color:var(--kp-border)] lg:border-t-0">
                         <DetailRow label={t('payment.lblSignature')} value={shortSignature(verifiedPayment.signature)} mono title={verifiedPayment.signature} truncateValue />
                         <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} />
                         <DetailRow label={t('payment.lblVerifiedBy')} value={t('payment.receiptVerifier')} />
@@ -701,9 +701,9 @@ export default function PaymentPage({
               {!quoteReview && (
                 <Fragment>
                   <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                    <div className="border border-white/10 bg-white/[0.035] p-4 transition-colors">
+                    <div className="border border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] p-4 transition-colors">
                       <div className="flex h-full items-center justify-between gap-4">
-                        <span className="text-sm font-semibold text-white transition-colors">{t('payment.lblTotalPay')}</span>
+                        <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
                         <div className="text-right">
                           <div className="text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
                           <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
@@ -711,7 +711,7 @@ export default function PaymentPage({
                       </div>
                     </div>
 
-                    <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                    <div className="kp-surface overflow-hidden border">
                       <DetailRow label="Tag 54" value={parsedPayment.tags['54'] || t('payment.lblMissing')} mono />
                       <DetailRow label="Tag 59" value={parsedPayment.tags['59'] || t('payment.lblMissing')} mono />
                     </div>
@@ -727,13 +727,13 @@ export default function PaymentPage({
                     </AppNotice>
                   )}
                   <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-white/10 bg-white/[0.035] opacity-60' : 'border-brand/25 bg-brand/8'}`}>
-                      <div className="mb-2 text-sm font-semibold text-zinc-300">{t('payment.lblBackendQuote')}</div>
+                    <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-[color:var(--kp-border)] bg-[var(--kp-control-bg)] opacity-60' : 'border-brand/25 bg-brand/8'}`}>
+                      <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
                       <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                       <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
                     </div>
 
-                    <div className="overflow-hidden border border-white/10 bg-[#050705]">
+                    <div className="kp-surface overflow-hidden border">
                       <DetailRow label={t('payment.lblIdrAmount')} value={quoteReview.idrAmountLabel} />
                       <DetailRow label={t('payment.lblRate')} value={quoteReview.exchangeRateLabel} />
                       <DetailRow label={t('payment.lblExpires')} value={quoteReview.expiresAtLabel} tone={quoteReview.isExpired ? 'muted' : 'default'} />
@@ -746,7 +746,7 @@ export default function PaymentPage({
           </div>
 
           {!(flowState === 'paid_verified' || flowState === 'settled') && (
-            <div className="grid grid-cols-1 gap-3 border-t border-white/10 p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
+            <div className="grid grid-cols-1 gap-3 border-t border-[color:var(--kp-border)] p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
               <RailButton
                 onClick={showScanAnother ? onScanAnother : onCancel}
                 disabled={isBusy && !showScanAnother}
