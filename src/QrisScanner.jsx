@@ -4,17 +4,45 @@ import { QRCodeSVG } from 'qrcode.react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import { getDemoQrisPayload } from './utils/demoQris';
 
+const MISSING_AMOUNT_ERROR = 'Tag 54 transaction amount is missing.';
+
+const getScannerIssueType = (scanResult) => {
+  if (!scanResult || scanResult.parsedData?.isValid) {
+    return null;
+  }
+
+  const parsedData = scanResult.parsedData;
+  const errors = parsedData?.errors || [];
+  const isMissingAmountOnly = parsedData?.isTlvValid
+    && parsedData?.merchantName
+    && !parsedData?.amountText
+    && errors.length === 1
+    && errors[0] === MISSING_AMOUNT_ERROR;
+
+  return isMissingAmountOnly ? 'missingAmount' : 'unsupported';
+};
+
 // Tambahan properti "onResult" untuk ngirim data ke App.jsx
 export default function QrisScanner({ onClose, onResult, t }) {
   const [permission, setPermission] = useState('prompt'); 
   const [scanResult, setScanResult] = useState(null);
-  const [manualPayload, setManualPayload] = useState('');
+  const [advancedQrisData, setAdvancedQrisData] = useState('');
   const [showDemoQr, setShowDemoQr] = useState(false);
+  const [showUnreadableHint, setShowUnreadableHint] = useState(false);
   const scannerRef = useRef(null);
+  const unreadableHintTimerRef = useRef(null);
   const scannerId = "reader"; 
   const isCameraActive = permission === 'granted' || permission === 'starting';
 
+  const clearUnreadableHintTimer = useCallback(() => {
+    if (unreadableHintTimerRef.current) {
+      window.clearTimeout(unreadableHintTimerRef.current);
+      unreadableHintTimerRef.current = null;
+    }
+  }, []);
+
   const stopCamera = useCallback(async () => {
+    clearUnreadableHintTimer();
     if (scannerRef.current && scannerRef.current.isScanning) {
       try {
         await scannerRef.current.stop();
@@ -23,7 +51,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
         console.error("Gagal stop camera:", err);
       }
     }
-  }, []);
+  }, [clearUnreadableHintTimer]);
 
   const handleClose = async () => {
     await stopCamera();
@@ -31,10 +59,14 @@ export default function QrisScanner({ onClose, onResult, t }) {
   };
 
   const processPayment = useCallback((decodedText) => {
+    clearUnreadableHintTimer();
+    setShowUnreadableHint(false);
     const parsedData = parseEmvcoQris(decodedText);
-    setScanResult({ rawData: decodedText, parsedData });
+    const nextScanResult = { rawData: decodedText, parsedData };
+    const issueType = getScannerIssueType(nextScanResult);
 
-    if (!parsedData.isValid) {
+    if (!parsedData.isValid && issueType !== 'missingAmount') {
+      setScanResult(nextScanResult);
       return false;
     }
 
@@ -46,9 +78,11 @@ export default function QrisScanner({ onClose, onResult, t }) {
     }
 
     return true;
-  }, [onResult]);
+  }, [clearUnreadableHintTimer, onResult]);
 
   const triggerScanner = () => {
+    clearUnreadableHintTimer();
+    setShowUnreadableHint(false);
     setScanResult(null);
     setPermission('starting');
   };
@@ -56,14 +90,20 @@ export default function QrisScanner({ onClose, onResult, t }) {
   const handleManualSubmit = async (event) => {
     event.preventDefault();
     await stopCamera();
-    processPayment(manualPayload);
+    processPayment(advancedQrisData);
   };
 
   const handleUseDemoQris = async () => {
     const demoPayload = getDemoQrisPayload();
-    setManualPayload(demoPayload);
+    setAdvancedQrisData(demoPayload);
     await stopCamera();
     processPayment(demoPayload);
+  };
+
+  const handleScanAnother = () => {
+    clearUnreadableHintTimer();
+    setShowUnreadableHint(false);
+    setScanResult(null);
   };
 
   useEffect(() => {
@@ -83,7 +123,14 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 stopCamera();
               }
             },
-            () => {} // remove error message unused
+            () => {
+              if (!unreadableHintTimerRef.current) {
+                unreadableHintTimerRef.current = window.setTimeout(() => {
+                  setShowUnreadableHint(true);
+                  unreadableHintTimerRef.current = null;
+                }, 1200);
+              }
+            }
           );
           setPermission('granted'); 
         } catch (err) {
@@ -96,8 +143,11 @@ export default function QrisScanner({ onClose, onResult, t }) {
   }, [permission, processPayment, stopCamera]);
 
   useEffect(() => {
-    return () => { stopCamera(); };
-  }, [stopCamera]);
+    return () => {
+      clearUnreadableHintTimer();
+      stopCamera();
+    };
+  }, [clearUnreadableHintTimer, stopCamera]);
 
   return (
     <Fragment>
@@ -182,6 +232,18 @@ export default function QrisScanner({ onClose, onResult, t }) {
               <p className="kp-muted mb-4 text-sm leading-6">
                 {isCameraActive ? t('scanner.activeDesc') : t('scanner.noQrisDesc')}
               </p>
+              {isCameraActive && (
+                <div className="mb-4 w-full border border-brand/15 bg-brand/5 p-3">
+                  <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.guidanceTitle')}</p>
+                  <p className="kp-muted text-xs leading-5">{t('scanner.guidanceBody')}</p>
+                </div>
+              )}
+              {isCameraActive && showUnreadableHint && !scanResult && (
+                <div className="mb-4 w-full border border-amber-400/25 bg-amber-400/10 p-3 text-amber-800 dark:text-amber-100">
+                  <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">{t('scanner.errorReady')}</p>
+                  <p className="text-xs leading-5 text-current">{t('scanner.errorHelp')}</p>
+                </div>
+              )}
               <div className={`flex w-full flex-col gap-2 ${isCameraActive ? '' : 'sm:flex-row'}`}>
                 <button
                   type="button"
@@ -231,20 +293,20 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 </svg>
               </summary>
               <form onSubmit={handleManualSubmit} className="mt-4 flex flex-col">
-                <label htmlFor="manual-qris-payload" className="kp-soft mb-2 block text-xs font-semibold">
+                <label htmlFor="advanced-qris-data" className="kp-soft mb-2 block text-xs font-semibold">
                   {t('scanner.manualLabel')}
                 </label>
                 <textarea
-                  id="manual-qris-payload"
-                  value={manualPayload}
-                  onChange={(event) => setManualPayload(event.target.value)}
+                  id="advanced-qris-data"
+                  value={advancedQrisData}
+                  onChange={(event) => setAdvancedQrisData(event.target.value)}
                   rows={isCameraActive ? 3 : 4}
                   placeholder={t('scanner.manualPlaceholder')}
                   className="kp-input rail-scrollbar w-full resize-none border p-3 font-mono text-xs outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
                 />
                 <button
                   type="submit"
-                  disabled={!manualPayload.trim()}
+                  disabled={!advancedQrisData.trim()}
                   className="kp-button-secondary mt-3 min-h-11 w-full border px-4 py-3 text-sm font-semibold transition-all disabled:opacity-50"
                 >
                   {t('scanner.submitManualBtn')}
@@ -255,13 +317,29 @@ export default function QrisScanner({ onClose, onResult, t }) {
           </div>
 
           {scanResult && !scanResult.parsedData.isValid && (
-            <div className="border-t border-red-500/20 bg-red-500/10 px-5 py-4">
-              <div className="mb-1 text-xs font-semibold text-red-300">
-                {t('scanner.errorReady')}
+            <div className="border-t border-amber-400/25 bg-amber-400/10 px-5 py-4 text-amber-800 dark:text-amber-100">
+              <div className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">
+                {t('scanner.unsupportedTitle')}
               </div>
-              <p className="text-xs leading-6 text-red-200">
-                {t('scanner.errorHelp')}
+              <p className="text-xs leading-6 text-current">
+                {t('scanner.unsupportedBody')}
               </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleScanAnother}
+                  className="kp-button-secondary min-h-10 flex-1 border px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {t('scanner.scanAnotherBtn')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUseDemoQris}
+                  className="kp-button-secondary min-h-10 flex-1 border px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {t('scanner.demoBtn')}
+                </button>
+              </div>
             </div>
           )}
 

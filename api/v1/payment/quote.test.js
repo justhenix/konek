@@ -4,6 +4,7 @@ import {
   parseStrictQrisAmount,
   extractAmountFromQris,
   parseEmvcoTlv,
+  resolveFiatAmountForQuote,
 } from './quote.js';
 
 // ─────────────────────────────────────────────────────
@@ -224,5 +225,37 @@ describe('extractAmountFromQris', () => {
 
   it('throws on empty payload', () => {
     assert.throws(() => extractAmountFromQris(''), /missing transaction amount/i);
+  });
+});
+
+// ─────────────────────────────────────────────────────
+// resolveFiatAmountForQuote
+// ─────────────────────────────────────────────────────
+
+describe('resolveFiatAmountForQuote', () => {
+  it('uses the QRIS amount when Tag 54 is present', () => {
+    const payload = buildQrisPayload('15000');
+    assert.equal(resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }), 15000);
+  });
+
+  it('uses a strict manual IDR amount when Tag 54 is missing', () => {
+    const payload = buildQrisPayloadWithoutAmount();
+    assert.equal(resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }), 25000);
+  });
+
+  it('rejects formatted manual IDR amount text', () => {
+    const payload = buildQrisPayloadWithoutAmount();
+    assert.throws(
+      () => resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: 'Rp 25.000' }),
+      /invalid characters/
+    );
+  });
+
+  it('rejects zero manual IDR amount', () => {
+    const payload = buildQrisPayloadWithoutAmount();
+    assert.throws(
+      () => resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '0' }),
+      /greater than zero/
+    );
   });
 });

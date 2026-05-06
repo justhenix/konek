@@ -249,6 +249,21 @@ function extractAmountFromQris(payload) {
   return parseStrictQrisAmount(rawAmount);
 }
 
+function resolveFiatAmountForQuote({ qrisPayload, idrAmount }) {
+  const tags = parseEmvcoTlv(qrisPayload);
+  const rawQrisAmount = tags['54'];
+
+  if (rawQrisAmount !== undefined && rawQrisAmount !== null && rawQrisAmount !== '') {
+    return parseStrictQrisAmount(rawQrisAmount);
+  }
+
+  if (idrAmount !== undefined && idrAmount !== null && String(idrAmount).trim() !== '') {
+    return parseStrictQrisAmount(idrAmount);
+  }
+
+  throw new Error('QRIS payload is missing transaction amount (Tag 54)');
+}
+
 // ─────────────────────────────────────────────────────
 // VALIDATION
 // ─────────────────────────────────────────────────────
@@ -281,7 +296,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { qrisPayload } = req.body;
+    const { qrisPayload, idrAmount } = req.body;
 
     // ── Input Validation ──────────────────────────────
     if (qrisPayload === undefined) {
@@ -298,11 +313,11 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── Extract Amount from QRIS (zero-trust) ─────────
-    // Server parses Tag 54 directly. Client fiatAmount is IGNORED.
+    // ── Resolve Amount ───────────────────────────────
+    // Dynamic QRIS amount wins. Static QRIS can pass a strict IDR amount.
     let fiatAmount;
     try {
-      fiatAmount = extractAmountFromQris(qrisPayload);
+      fiatAmount = resolveFiatAmountForQuote({ qrisPayload, idrAmount });
     } catch (amountErr) {
       console.warn('[INVALID_QRIS_AMOUNT]', amountErr.message);
       return res.status(400).json({
@@ -371,4 +386,4 @@ export default async function handler(req, res) {
 }
 
 // Named exports for unit testing
-export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount };
+export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount, resolveFiatAmountForQuote };
