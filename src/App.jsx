@@ -361,8 +361,8 @@ const navItems = [
   { key: 'navbar.home', target: 'top' },
   { key: 'navbar.usp', target: 'usp-section' },
   { key: 'navbar.howItWorks', target: 'workflow-section' },
-  { key: 'navbar.proof', target: 'proof-section' },
-  { key: 'navbar.team', target: 'team-section' },
+  { key: 'navbar.faq', target: 'proof-section' },
+  { key: 'navbar.team', target: 'team-page' },
 ];
 
 const uspItems = ['wallet', 'price', 'receipt'];
@@ -377,14 +377,6 @@ const workflowAccentClasses = [
   'text-purple-300',
   'text-brand',
   'text-purple-300',
-];
-const techProofDotClasses = [
-  'bg-brand',
-  'bg-brand',
-  'bg-purple-400',
-  'bg-brand',
-  'bg-purple-400',
-  'bg-brand',
 ];
 const teamMembers = [
   { id: 'henix', pfp: henixPfp, cardImage: henixCard, alt: 'Henix profile image' },
@@ -407,7 +399,17 @@ const protocolNodeAccents = [
   { border: 'border-purple-400/50', dot: 'bg-purple-400', connector: '' },
 ];
 
-const techProofItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6'];
+const faqItems = ['realQris', 'merchantRupiah', 'simulatedPayout', 'afterPayment', 'staticQris', 'whyDevnet'];
+
+const getCurrentPage = () => (
+  window.location.pathname.replace(/\/+$/, '') === '/team' ? 'team' : 'home'
+);
+
+const getInitialScrollTarget = () => (
+  getCurrentPage() === 'home'
+    ? window.location.hash.replace(/^#/, '') || null
+    : null
+);
 
 const getInitialTheme = () => {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
@@ -581,6 +583,103 @@ const MissingWalletModal = ({ onDismiss, t }) => (
   </div>
 );
 
+const FaqSection = ({ t }) => (
+  <section id="proof-section" className="scroll-mt-28 border-b border-white/10 bg-[#090c09]/70">
+    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.7fr_1fr] lg:px-8 lg:py-16">
+      <div className="scroll-animate min-w-0 opacity-0">
+        <SectionHeader title={t('faq.heading')}>
+          {t('faq.intro')}
+        </SectionHeader>
+      </div>
+      <div className="scroll-animate grid min-w-0 gap-3 opacity-0">
+        {faqItems.map((key) => (
+          <details
+            key={key}
+            className="group border border-white/10 bg-[#080b08] transition-colors open:border-brand/30"
+          >
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-4 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-5">
+              <span className="min-w-0 text-sm font-semibold leading-6 text-white sm:text-base">
+                {t(`faq.${key}Question`)}
+              </span>
+              <svg className="mt-1 h-4 w-4 shrink-0 text-brand transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
+              <p className="text-sm leading-7 text-zinc-400">{t(`faq.${key}Answer`)}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const TeamCards = ({ t }) => (
+  <div className="grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10">
+    {teamMembers.map((member) => (
+      <article key={member.id} className="group relative min-w-0 bg-[#080b08] p-5 sm:p-6">
+        <div className="flex min-w-0 items-start gap-4">
+          <img
+            src={member.pfp}
+            alt={member.alt}
+            className="h-11 w-11 shrink-0 rounded border border-brand/30 object-cover"
+          />
+          <div className="min-w-0 lg:pr-36">
+            <h3 className="text-lg font-semibold text-white">{t(`team.${member.id}Name`)}</h3>
+            <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member.id}Role`)}</p>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member.id}Desc`)}</p>
+          </div>
+        </div>
+        <div className="pointer-events-none absolute right-8 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
+          <img
+            src={member.cardImage}
+            alt=""
+            aria-hidden="true"
+            className="w-32 origin-center translate-y-1 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:scale-[0.96]"
+          />
+        </div>
+      </article>
+    ))}
+  </div>
+);
+
+const LandingTeamPreview = ({ t, onMeetTeam }) => (
+  <section id="team-section" className="scroll-mt-28 border-b border-white/10">
+    <div className="mx-auto grid w-full max-w-6xl gap-7 px-4 py-14 sm:px-6 md:grid-cols-[minmax(0,0.85fr)_auto] md:items-center lg:px-8 lg:py-16">
+      <div className="scroll-animate min-w-0 opacity-0">
+        <SectionHeader title={t('team.previewHeading')}>
+          {t('team.previewBody')}
+        </SectionHeader>
+      </div>
+      <div className="scroll-animate min-w-0 opacity-0 md:justify-self-end">
+        <button
+          type="button"
+          onClick={onMeetTeam}
+          className="inline-flex min-h-12 w-full items-center justify-center border border-brand/35 bg-brand/8 px-6 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:w-auto"
+        >
+          {t('team.previewCta')}
+        </button>
+      </div>
+    </div>
+  </section>
+);
+
+const TeamPage = ({ t }) => (
+  <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-28 sm:px-6 md:pt-32 lg:px-8">
+    <section className="grid gap-8 md:grid-cols-[0.72fr_1fr] md:items-start">
+      <div className="min-w-0">
+        <h1 className="text-4xl font-semibold leading-[1.05] text-white sm:text-5xl">{t('team.heading')}</h1>
+        <p className="mt-5 text-base leading-8 text-zinc-400 md:text-lg">{t('team.intro')}</p>
+        <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
+          <p className="text-sm leading-7 text-zinc-300">{t('team.submissionNote')}</p>
+        </div>
+      </div>
+      <TeamCards t={t} />
+    </section>
+  </main>
+);
+
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
@@ -597,6 +696,8 @@ function App() {
     return stored === 'en' || stored === 'id' ? stored : 'id';
   });
   const t = useMemo(() => createT(lang), [lang]);
+  const [page, setPage] = useState(getCurrentPage);
+  const [pendingScrollTarget, setPendingScrollTarget] = useState(getInitialScrollTarget);
   const toggleLang = useCallback(() => {
     setLang((prev) => {
       const next = prev === 'id' ? 'en' : 'id';
@@ -1670,7 +1771,37 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [missingWalletModalOpen]);
 
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextPage = getCurrentPage();
+      setPage(nextPage);
+      setPendingScrollTarget(
+        nextPage === 'home'
+          ? window.location.hash.replace(/^#/, '') || 'top'
+          : null
+      );
+    };
 
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (page !== 'home' || !pendingScrollTarget) {
+      return undefined;
+    }
+
+    const scrollTimer = window.setTimeout(() => {
+      if (pendingScrollTarget === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        document.getElementById(pendingScrollTarget)?.scrollIntoView({ behavior: 'smooth' });
+      }
+      setPendingScrollTarget(null);
+    }, 0);
+
+    return () => window.clearTimeout(scrollTimer);
+  }, [page, pendingScrollTarget]);
 
   const toggleTheme = useCallback(() => {
     setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
@@ -1679,7 +1810,6 @@ function App() {
   const themeToggleLabel = t(theme === 'dark' ? 'theme.switchToLight' : 'theme.switchToDark');
 
   useEffect(() => {
-    let observer;
     let isMounted = true;
 
     const fetchSolPrice = async () => {
@@ -1698,6 +1828,15 @@ function App() {
 
     fetchSolPrice();
     const priceInterval = setInterval(fetchSolPrice, 60000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(priceInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let observer;
 
     scope.current = createScope({ root }).add(() => {
       animate('.nav-item', { translateY: [-30, 0], opacity: [0, 1], duration: 800, delay: stagger(100), ease: 'out(3)' });
@@ -1719,21 +1858,33 @@ function App() {
     });
 
     return () => {
-      isMounted = false;
-      scope.current.revert();
+      scope.current?.revert();
       if (observer) observer.disconnect();
-      clearInterval(priceInterval);
     };
+  }, [page]);
+
+  const navigateToTeam = useCallback(() => {
+    if (window.location.pathname !== '/team') {
+      window.history.pushState({}, '', '/team');
+    }
+    setPage('team');
+    setPendingScrollTarget(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const scrollToSection = (target) => {
-    if (target === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToSection = useCallback((target) => {
+    if (target === 'team-page') {
+      navigateToTeam();
       return;
     }
 
-    document.getElementById(target)?.scrollIntoView({ behavior: 'smooth' });
-  };
+    const nextUrl = target === 'top' ? '/' : `/#${target}`;
+    if (`${window.location.pathname}${window.location.hash}` !== nextUrl) {
+      window.history.pushState({}, '', nextUrl);
+    }
+    setPage('home');
+    setPendingScrollTarget(target);
+  }, [navigateToTeam]);
 
   const handleMobileNavClick = (target) => {
     scrollToSection(target);
@@ -1962,6 +2113,8 @@ function App() {
           </nav>
         </header>
 
+        {page === 'home' ? (
+          <>
         <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-24 sm:px-6 md:pt-28 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-32" data-hero-section>
           <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
             <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
@@ -2030,65 +2183,13 @@ function App() {
           </div>
         </section>
 
-        <section id="proof-section" className="scroll-mt-28 border-b border-white/10 bg-[#090c09]/70">
-          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.78fr_1fr] lg:px-8 lg:py-16">
-            <div className="scroll-animate min-w-0 opacity-0">
-              <SectionHeader title={t('demoProof.heading')}>
-                {t('demoProof.body')}
-              </SectionHeader>
-              <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
-                <p className="text-sm leading-7 text-zinc-300">{t('demoProof.note')}</p>
-              </div>
-            </div>
-            <div className="scroll-animate grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10 opacity-0 sm:grid-cols-2">
-              {techProofItems.map((key, index) => (
-                <div key={key} className="flex min-w-0 items-center gap-3 bg-[#080b08] px-5 py-4">
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${techProofDotClasses[index]}`}></span>
-                  <span className="text-sm text-zinc-300">{t(`techProof.${key}`)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FaqSection t={t} />
 
-        <section id="team-section" className="creator-section scroll-mt-28 border-b border-white/10 opacity-0">
-          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.78fr_1fr] lg:px-8 lg:py-16">
-            <div className="min-w-0">
-              <SectionHeader title={t('team.heading')}>
-                {t('team.intro')}
-              </SectionHeader>
-              <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
-                <p className="text-sm leading-7 text-zinc-300">{t('team.contactBody')}</p>
-              </div>
-            </div>
-            <div className="grid min-w-0 gap-px overflow-hidden border border-white/10 bg-white/10">
-              {teamMembers.map((member) => (
-                <article key={member.id} className="group relative min-w-0 bg-[#080b08] p-5">
-                  <div className="flex min-w-0 items-start gap-4">
-                    <img
-                      src={member.pfp}
-                      alt={member.alt}
-                      className="h-10 w-10 shrink-0 rounded border border-brand/30 object-cover"
-                    />
-                    <div className="min-w-0 lg:pr-32">
-                      <h3 className="text-lg font-semibold text-white">{t(`team.${member.id}Name`)}</h3>
-                      <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member.id}Role`)}</p>
-                      <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member.id}Desc`)}</p>
-                    </div>
-                  </div>
-                  <div className="pointer-events-none absolute right-8 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
-                    <img
-                      src={member.cardImage}
-                      alt=""
-                      aria-hidden="true"
-                      className="w-30 origin-center translate-y-1 rotate-0 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:rotate-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:rotate-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:rotate-0 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:rotate-0 motion-reduce:group-focus-within:scale-[0.96]"
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <LandingTeamPreview t={t} onMeetTeam={navigateToTeam} />
+          </>
+        ) : (
+          <TeamPage t={t} />
+        )}
 
         <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>

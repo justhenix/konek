@@ -20,10 +20,10 @@ const quoteExpiryFormatter = new Intl.DateTimeFormat('id-ID', {
 const FRONTEND_TREASURY_MISSING_ERROR = 'Frontend VITE_TREASURY_WALLET is missing.';
 const FRONTEND_TREASURY_INVALID_ERROR = 'Frontend VITE_TREASURY_WALLET is not a valid Solana address.';
 const PAYMENT_CONFIG_MISSING_MESSAGE = (
-  'Payment configuration is missing on this deployment. Set VITE_TREASURY_WALLET in Vercel and redeploy.'
+  'Payment setup is not ready on this demo. Please try again later.'
 );
 const PAYMENT_CONFIG_INVALID_MESSAGE = (
-  'Payment configuration is invalid on this deployment. Set VITE_TREASURY_WALLET to a valid Solana address in Vercel and redeploy.'
+  'Payment setup needs attention on this demo. Please try again later.'
 );
 const isMissingAmountError = (errorMsg) => {
   const msg = String(errorMsg).toLowerCase();
