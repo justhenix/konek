@@ -250,7 +250,7 @@ const noticeTitleStyles = {
 };
 
 const AppNotice = ({ variant = 'info', title, children, pulse = false }) => (
-  <div className={`border p-4 ${noticeStyles[variant] || noticeStyles.info}`}>
+  <div className={`border p-3 sm:p-4 ${noticeStyles[variant] || noticeStyles.info}`}>
     <div className="flex items-start gap-3">
       <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${variant === 'danger' ? 'bg-red-400' : variant === 'warning' ? 'bg-amber-300' : variant === 'wallet' ? 'bg-purple-400' : 'bg-brand'} ${pulse ? 'animate-pulse' : ''}`}></span>
       <div className="min-w-0">
@@ -274,7 +274,7 @@ const RailButton = ({ as = 'button', variant = 'primary', className = '', childr
 
   return (
     <ButtonComponent
-      className={`flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
+      className={`flex min-h-12 w-full items-center justify-center px-4 py-3 text-center text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
       {...props}
     >
       {children}
@@ -295,7 +295,7 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
       : 'break-words';
 
   return (
-    <div className="grid gap-1.5 border-b border-(--kp-border) px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4">
+    <div className="grid gap-1.5 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4 sm:px-4">
       <span className="kp-soft text-xs font-semibold">{label}</span>
       <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
@@ -632,14 +632,14 @@ export default function PaymentPage({
 
   return (
     <Fragment>
-      <div className="fixed inset-0 z-110 overflow-y-auto bg-black/85 p-3 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
+      <div className="fixed inset-0 z-110 overflow-hidden bg-black/85 p-0 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
-          className="kp-panel mx-auto my-3 w-full max-w-190 border border-brand/20 transition-colors duration-500 sm:my-5"
+          className="kp-panel mx-auto flex h-dvh max-h-dvh w-full flex-col overflow-hidden border-0 border-brand/20 transition-colors duration-500 sm:my-5 sm:h-auto sm:max-h-[calc(100dvh-2.5rem)] sm:max-w-190 sm:border"
           role="dialog"
           aria-modal="true"
           aria-labelledby="payment-panel-title"
         >
-          <div className="kp-panel-soft flex items-start justify-between gap-4 border-b p-4 sm:p-5">
+          <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
             <div className="min-w-0">
               <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
               <h3 id="payment-panel-title" className="kp-text text-xl font-semibold transition-colors sm:text-2xl">
@@ -649,7 +649,7 @@ export default function PaymentPage({
             <button
               type="button"
               onClick={onCancel}
-              className="kp-control grid h-9 w-9 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="kp-control grid h-11 w-11 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               aria-label="Close payment modal"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -658,7 +658,7 @@ export default function PaymentPage({
             </button>
           </div>
           
-          <div className="space-y-4 p-4 sm:p-5">
+          <div className="rail-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:p-5">
             {!canReviewPayment && !showManualAmountForm && (
               <AppNotice variant="warning" title={qrisReadNotice.title}>
                 <p>{qrisReadNotice.body}</p>
@@ -741,7 +741,7 @@ export default function PaymentPage({
                 
                 {/* 1. Payment Proof Card */}
                 <div className="flex flex-col overflow-hidden border border-brand/20 bg-(--kp-control-bg)">
-                  <div className="border-b border-brand/20 bg-brand/10 p-4 sm:p-5">
+                  <div className="border-b border-brand/20 bg-brand/10 p-3 sm:p-5">
                     <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.paymentProofTitle')}</p>
                     <p className="mt-2 text-xl font-semibold text-(--kp-text)">{t('payment.paymentProofStatus')}</p>
                     <p className="kp-muted mt-2 text-sm leading-6">
@@ -756,7 +756,7 @@ export default function PaymentPage({
                     <DetailRow label={t('payment.lblSolanaStatus')} value={t('payment.statusPaid')} tone="success" />
                   </div>
                   
-                  <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
+                  <div className="border-t border-brand/20 bg-brand/5 p-3 sm:p-5">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {primaryExplorerUrl && (
                         <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" variant="secondary" className="border-brand/30 text-brand hover:bg-brand/10">
@@ -772,7 +772,7 @@ export default function PaymentPage({
 
                 {/* 2. Merchant Payout Record Card */}
                 <div className="flex flex-col overflow-hidden border border-amber-500/20 bg-(--kp-control-bg)">
-                  <div className="border-b border-amber-500/20 bg-amber-500/10 p-4 sm:p-5">
+                  <div className="border-b border-amber-500/20 bg-amber-500/10 p-3 sm:p-5">
                     <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{t('payment.payoutRecordTitle')}</p>
                     
                     {settlementResult && (
@@ -829,7 +829,7 @@ export default function PaymentPage({
                     </TechnicalDetails>
                   </div>
 
-                  <div className="border-t border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
+                  <div className="border-t border-amber-500/20 bg-amber-500/5 p-3 sm:p-5">
                     <p className="mb-4 text-center text-xs font-medium text-amber-700 dark:text-amber-400/80">
                       {t('payment.payoutDemoNote')}
                     </p>
@@ -845,13 +845,13 @@ export default function PaymentPage({
             )}
 
             {!(flowState === 'paid_verified' || flowState === 'settled') && showManualAmountForm && (
-              <section className="space-y-5 border border-brand/20 bg-brand/6 p-4 sm:p-5">
+              <section className="-mx-3 space-y-5 border-y border-brand/20 bg-brand/6 p-3 sm:mx-0 sm:border sm:p-5">
                 <div>
                   <h4 className="kp-text text-xl font-semibold">{t('payment.manualAmountTitle')}</h4>
                   <p className="kp-muted mt-2 text-sm leading-6">{t('payment.manualAmountBody')}</p>
                 </div>
 
-                <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4">
+                <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 sm:border sm:p-4">
                   <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
                   <p className="kp-text mt-1 wrap-break-word text-base font-semibold">{merchantName}</p>
                 </div>
@@ -901,7 +901,7 @@ export default function PaymentPage({
                 <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
 
                 {!quoteReview && (
-                  <div className="border border-(--kp-border) bg-(--kp-control-bg) p-4 transition-colors">
+                  <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
                     <div className="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                       <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
                       <div className="min-w-0 text-left sm:text-right">
@@ -920,7 +920,7 @@ export default function PaymentPage({
                       </AppNotice>
                     )}
                     <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                      <div className={`border p-4 transition-colors ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
+                      <div className={`border p-3 transition-colors sm:p-4 ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
                         <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
                         <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
                         <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
@@ -939,7 +939,7 @@ export default function PaymentPage({
           </div>
 
           {!(flowState === 'paid_verified' || flowState === 'settled') && (
-            <div className="grid grid-cols-1 gap-3 border-t border-(--kp-border) p-4 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
+            <div className="grid shrink-0 grid-cols-1 gap-3 border-t border-(--kp-border) p-3 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
               <RailButton
                 onClick={showScanAnother ? onScanAnother : onCancel}
                 disabled={isBusy && !showScanAnother}

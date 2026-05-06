@@ -1758,7 +1758,7 @@ function App() {
         <header className="fixed inset-x-0 top-0 z-80 flex justify-center px-4 sm:px-6 lg:px-8">
           <nav
             ref={mobileMenuRef}
-            className={`nav-item relative grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border opacity-0 backdrop-blur-xl transition-colors duration-300 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${isScrolled ? 'kp-panel-soft px-3 py-3 sm:px-4' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`}
+            className={`nav-item relative grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border opacity-0 backdrop-blur-xl transition-[padding,background-color,border-color,box-shadow] duration-300 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] ${isScrolled ? 'kp-panel-soft px-3 py-2.5 sm:px-4 sm:py-3' : 'border-transparent bg-transparent px-0 py-4 sm:py-5'}`}
             style={isScrolled ? { boxShadow: 'var(--kp-nav-shadow)' } : undefined}
           >
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">

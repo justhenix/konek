@@ -150,15 +150,15 @@ export default function QrisScanner({ onClose, onResult, t }) {
         {`@keyframes scan-laser { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}
       </style>
 
-      <div className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-md transition-all">
+      <div className="fixed inset-0 z-100 flex items-stretch justify-center overflow-hidden bg-black/80 p-0 backdrop-blur-md transition-all sm:items-start sm:p-4">
         <div
-          className={`kp-panel rail-scrollbar relative my-3 flex w-full flex-col overflow-hidden border ${isCameraActive ? 'max-w-200' : 'max-w-lg'}`}
+          className={`kp-panel rail-scrollbar relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden border-0 sm:my-3 sm:h-auto sm:max-h-[calc(100dvh-1.5rem)] sm:border ${isCameraActive ? 'sm:max-w-200' : 'sm:max-w-lg'}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="qris-scanner-title"
         >
           
-          <div className="kp-panel-soft flex items-start justify-between gap-4 border-b p-5">
+          <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
             <div className="min-w-0">
               <h3 id="qris-scanner-title" className="kp-text text-xl font-semibold transition-colors">{t('scanner.title')}</h3>
               <p className="kp-soft mt-1 text-xs font-semibold">
@@ -167,29 +167,29 @@ export default function QrisScanner({ onClose, onResult, t }) {
             </div>
             <button
               onClick={handleClose}
-              className="kp-control grid h-9 w-9 shrink-0 place-items-center border transition-all hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="kp-control grid h-11 w-11 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               aria-label="Close QRIS scanner"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          <div className={isCameraActive ? 'md:grid md:grid-cols-[minmax(0,1fr)_20rem]' : ''}>
+          <div className={`min-h-0 flex-1 overflow-y-auto ${isCameraActive ? 'md:grid md:grid-cols-[minmax(0,1fr)_20rem]' : ''}`}>
           {/* SCREEN: PROMPT */}
           {permission === 'prompt' && (
-            <div className="flex flex-col items-center p-5 text-center sm:p-6">
+            <div className="flex flex-col items-center p-4 text-center sm:p-6">
               <div className="mb-4 flex h-12 w-12 items-center justify-center border border-brand/25 bg-brand/8">
                 <svg className="h-6 w-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
               </div>
               <h4 className="kp-text mb-2 text-xl font-semibold">{t('scanner.promptTitle')}</h4>
               <p className="kp-muted mb-5 text-sm leading-6">{t('scanner.promptDesc')}</p>
-              <button onClick={triggerScanner} className="min-h-11 w-full bg-brand px-5 py-2 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.enableBtn')}</button>
+              <button onClick={triggerScanner} className="min-h-12 w-full bg-brand px-5 py-3 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.enableBtn')}</button>
             </div>
           )}
 
           {/* SCREEN: DENIED */}
           {permission === 'denied' && (
-            <div className="flex flex-col items-center justify-center p-7 text-center sm:p-8">
+            <div className="flex flex-col items-center justify-center p-4 text-center sm:p-8">
               <div className="mb-5 flex h-16 w-16 items-center justify-center border border-red-500/25 bg-red-500/10">
                 <svg className="h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -239,25 +239,25 @@ export default function QrisScanner({ onClose, onResult, t }) {
                   <p className="text-xs leading-5 text-current">{t('scanner.errorHelp')}</p>
                 </div>
               )}
-              <div className={`flex w-full flex-col gap-2 ${isCameraActive ? '' : 'sm:flex-row'}`}>
+              <div className={`flex w-full flex-col gap-3 ${isCameraActive ? '' : 'sm:flex-row'}`}>
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
-                  className="kp-button-secondary min-h-11 flex-1 border px-4 py-3 text-sm font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('scanner.showDemoBtn')}
                 </button>
                 <button
                   type="button"
                   onClick={handleUseDemoQris}
-                  className="kp-button-secondary min-h-11 flex-1 border px-4 py-3 text-sm font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('scanner.demoBtn')}
                 </button>
               </div>
 
               {showDemoQr && (
-                <div className="kp-panel mt-4 flex w-full flex-col items-center border p-4 shadow-none">
+                <div className="mt-4 flex w-full flex-col items-center border-y border-(--kp-border) bg-(--kp-panel) p-3 shadow-none sm:border sm:p-4">
                   <p className="kp-text mb-2 text-sm font-semibold">{t('scanner.showDemoTitle')}</p>
                   <p className="kp-muted mb-3 max-w-xs text-center text-xs leading-5">
                     {t('scanner.showDemoHelper')}
@@ -283,25 +283,25 @@ export default function QrisScanner({ onClose, onResult, t }) {
           </div>
 
           {scanResult && !scanResult.parsedData.isValid && (
-            <div className="border-t border-amber-400/25 bg-amber-400/10 px-5 py-4 text-amber-800 dark:text-amber-100">
+            <div className="border-t border-amber-400/25 bg-amber-400/10 px-4 py-4 text-amber-800 dark:text-amber-100 sm:px-5">
               <div className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">
                 {t('scanner.unsupportedTitle')}
               </div>
               <p className="text-xs leading-6 text-current">
                 {t('scanner.unsupportedBody')}
               </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={handleScanAnother}
-                  className="kp-button-secondary min-h-10 flex-1 border px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('scanner.scanAnotherBtn')}
                 </button>
                 <button
                   type="button"
                   onClick={handleUseDemoQris}
-                  className="kp-button-secondary min-h-10 flex-1 border px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('scanner.demoBtn')}
                 </button>
