@@ -583,7 +583,6 @@ const MissingWalletModal = ({ onDismiss, t }) => (
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isAtStartingPoint, setIsAtStartingPoint] = useState(true);
   const root = useRef(null);
   const scope = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -1588,8 +1587,6 @@ function App() {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
-      const heroSection = document.querySelector('[data-hero-section]');
-      setIsAtStartingPoint(heroSection ? heroSection.getBoundingClientRect().bottom > 0 : window.scrollY < 80);
     };
 
     handleScroll();
@@ -1743,6 +1740,11 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  const handleMobileAppClick = () => {
+    setIsMobileMenuOpen(false);
+    handleOpenApp();
+  };
+
   const handleMobileWalletConnect = () => {
     setIsMobileMenuOpen(false);
     setIsLoginModalOpen(true);
@@ -1820,6 +1822,13 @@ function App() {
                     {t(item.key)}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={handleMobileAppClick}
+                  className="mt-1 flex min-h-12 w-full items-center justify-center bg-brand px-4 text-center text-sm font-bold text-black transition-colors hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {t('hero.ctaBtn')}
+                </button>
               </div>
 
               <div className="grid gap-3 border-b border-white/10 py-3">
@@ -2081,7 +2090,7 @@ function App() {
           </div>
         </section>
 
-        <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 pb-28 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between md:pb-10 lg:px-8">
+        <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
             <KonekLogo className="h-6 w-6" />
             <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
@@ -2089,18 +2098,6 @@ function App() {
           <p>{t('footer.builtFor')}</p>
         </footer>
       </div>
-
-      {!isAtStartingPoint && (
-        <button
-          onClick={handleOpenApp}
-          className="fixed inset-x-4 bottom-4 z-50 inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-5 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_24px_rgba(20,241,149,0.2)] transition hover:-translate-y-0.5 md:hidden"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-          </svg>
-          {t('fab.qrisPay')}
-        </button>
-      )}
 
 
       {/* ========================================================= */}
