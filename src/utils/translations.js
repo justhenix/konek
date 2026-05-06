@@ -86,7 +86,7 @@ export const translations = {
       freshifaDesc: "Works on business planning, presentation materials, market research, and QA.",
     },
     footer: {
-      builtFor: "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia",
+      builtFor: "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
     },
     language: {
       switch: "Switch language",
@@ -328,7 +328,7 @@ export const translations = {
       freshifaDesc: "Mengurus rencana bisnis, materi presentasi, riset market, dan QA.",
     },
     footer: {
-      builtFor: "Dibuat untuk Colosseum Frontier Hackathon 2026 x Superteam Indonesia",
+      builtFor: "Dibuat untuk Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
     },
     language: {
       switch: "Ubah bahasa",
@@ -347,7 +347,7 @@ export const translations = {
       disconnectedTitle: "Dompet terputus",
       disconnectedBody: "Kamu bisa hubungkan lagi kapan saja.",
       phantomNotReadyTitle: "Phantom belum siap",
-      phantomNotReadyBody: "Pasang Phantom atau buka halaman ini di browser yang mendukung Phantom.",
+      phantomNotReadyBody: "Install Phantom atau buka halaman ini di browser yang mendukung Phantom.",
     },
     walletDropdown: {
       label: "Dompet",
