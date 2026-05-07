@@ -288,7 +288,7 @@ const buildPythLatestPriceUrl = (priceIds) => {
   return `${PYTH_HERMES_LATEST_PRICE_URL}?${idsQuery}&parsed=true&ignore_invalid_price_ids=true`;
 };
 
-const fetchJsonWithTimeout = async (url, sourceName, timeoutMs = 10000) => {
+const fetchJsonWithTimeout = async (url, sourceName, timeoutMs = 5000) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 

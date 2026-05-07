@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import { formatDateTime } from './utils/dateFormat';
@@ -173,7 +173,7 @@ const formatPanelDateTime = (value, language, t) => (
   formatDateTime(value, language) || t('payment.lblDateUnavailable')
 );
 
-const fetchPaymentQuote = async ({ qrisPayload, idrAmount, walletAddress }) => {
+const fetchPaymentQuote = async ({ qrisPayload, idrAmount, walletAddress, signal }) => {
   const requestBody = { qrisPayload };
 
   if (idrAmount !== null && idrAmount !== undefined) {
@@ -193,8 +193,12 @@ const fetchPaymentQuote = async ({ qrisPayload, idrAmount, walletAddress }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
+      signal,
     });
-  } catch {
+  } catch (fetchError) {
+    if (fetchError?.name === 'AbortError') {
+      throw fetchError;
+    }
     const error = new Error('Payment could not be prepared. Check your connection and try again.');
     error.apiError = {
       code: 'NETWORK_ERROR',
@@ -447,6 +451,7 @@ export default function PaymentPage({
   const [manualAmountIdr, setManualAmountIdr] = useState(null);
   const [receiptActionMessage, setReceiptActionMessage] = useState('');
   const savedReceiptHistoryKeyRef = useRef('');
+  const quoteAbortRef = useRef(null);
 
   useEffect(() => {
     if (!quote) {
@@ -655,10 +660,17 @@ export default function PaymentPage({
     setPaymentError(null);
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     if (!canReviewPayment || isQuoteLoading) {
       return;
     }
+
+    // Abort any previous in-flight quote request
+    if (quoteAbortRef.current) {
+      quoteAbortRef.current.abort();
+    }
+    const abortController = new AbortController();
+    quoteAbortRef.current = abortController;
 
     setIsQuoteLoading(true);
     setQuoteError(null);
@@ -670,15 +682,36 @@ export default function PaymentPage({
         qrisPayload: parsedPayment.rawData,
         idrAmount: Number.isFinite(manualAmountIdr) ? manualAmountIdr : null,
         walletAddress,
+        signal: abortController.signal,
       });
-      setQuote(nextQuote);
+
+      // Only update state if this request wasn't superseded
+      if (!abortController.signal.aborted) {
+        setQuote(nextQuote);
+      }
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
       const apiError = error.apiError || normalizeApiError(null, error.message);
       setQuoteError(apiError);
     } finally {
-      setIsQuoteLoading(false);
+      if (!abortController.signal.aborted) {
+        setIsQuoteLoading(false);
+      }
+      if (quoteAbortRef.current === abortController) {
+        quoteAbortRef.current = null;
+      }
     }
-  };
+  }, [canReviewPayment, isQuoteLoading, manualAmountIdr, parsedPayment.rawData, walletAddress]);
+
+  // Abort in-flight quote request when modal closes
+  useEffect(() => () => {
+    if (quoteAbortRef.current) {
+      quoteAbortRef.current.abort();
+      quoteAbortRef.current = null;
+    }
+  }, []);
 
   const handleContinueToPhantom = async () => {
     if (!quote || quoteReview?.isExpired || isPaymentSubmitting || submittedPayment || verificationStatus === 'verifying') {
@@ -958,6 +991,16 @@ export default function PaymentPage({
             {quoteError && (
               <AppNotice variant="danger" title={t('payment.errorTitle')}>
                 <p>{t('payment.errorBody')}</p>
+                {canReviewPayment && (
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    disabled={isQuoteLoading}
+                    className="mt-3 inline-flex text-sm font-semibold text-brand hover:underline disabled:opacity-50"
+                  >
+                    {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnTryAgain')}
+                  </button>
+                )}
               </AppNotice>
             )}
 

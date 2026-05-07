@@ -30,7 +30,7 @@ function buildPythLatestPriceUrl(priceIds) {
   return `${PYTH_HERMES_LATEST_PRICE_URL}?${idsQuery}&parsed=true&ignore_invalid_price_ids=true`;
 }
 
-async function fetchJsonWithTimeout(url, sourceName, timeoutMs = 10_000) {
+async function fetchJsonWithTimeout(url, sourceName, timeoutMs = 5_000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -88,7 +88,7 @@ function getPythParsedPrice(data, feedId, label) {
 }
 
 async function fetchUsdIdrFallbackRate() {
-  const data = await fetchJsonWithTimeout(USD_IDR_FALLBACK_URL, 'USD/IDR fallback FX API');
+  const data = await fetchJsonWithTimeout(USD_IDR_FALLBACK_URL, 'USD/IDR fallback FX API', 4_000);
   const rate = data?.rates?.IDR;
 
   if (typeof rate !== 'number' || rate <= 0 || !Number.isFinite(rate)) {
@@ -313,6 +313,9 @@ const isValidWalletAddress = (walletAddress) => {
   }
 };
 
+// Pre-warm the transaction module import to avoid cold-start penalty per request.
+const transactionsModulePromise = import('../../lib/transactions.js').catch(() => null);
+
 const createPersistedTransactionQuote = async ({
   qrisPayload,
   fiatAmount,
@@ -325,9 +328,12 @@ const createPersistedTransactionQuote = async ({
   }
 
   try {
-    const { createTransactionIntent } = await import('../../lib/transactions.js');
+    const mod = await transactionsModulePromise;
+    if (!mod?.createTransactionIntent) {
+      return null;
+    }
     const qrisMetadata = readQrisQuoteMetadata(qrisPayload);
-    const transaction = await createTransactionIntent({
+    const transaction = await mod.createTransactionIntent({
       ...qrisMetadata,
       idr_amount: fiatAmount,
       sol_amount: Number(solAmount),
