@@ -10,8 +10,8 @@ import { createT } from './utils/translations';
 import {
   RiHome5Line,
   RiHome5Fill,
-  RiQrScan2Line,
-  RiQrScan2Fill,
+  RiQrCodeLine,
+  RiQrCodeFill,
   RiWallet3Line,
   RiWallet3Fill,
   RiCloseLine
@@ -878,17 +878,30 @@ const LandingTeamPreview = ({ t, onMeetTeam }) => (
   </section>
 );
 
-const TeamPage = ({ t }) => (
+const TeamPage = ({ t, onBackToHome, language }) => (
   <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-28 sm:px-6 md:pt-32 lg:px-8">
     <section className="grid gap-8 md:grid-cols-[0.72fr_1fr] md:items-start">
       <div className="min-w-0">
         <h1 className="text-4xl font-semibold leading-[1.05] text-white sm:text-5xl">{t('team.heading')}</h1>
+
         <p className="mt-5 text-base leading-8 text-zinc-400 md:text-lg">{t('team.intro')}</p>
         <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
           <p className="text-sm leading-7 text-zinc-300">{t('team.submissionNote')}</p>
         </div>
       </div>
-      <TeamCards t={t} />
+      <div className="grid gap-8">
+        <TeamCards t={t} />
+        <button
+          type="button"
+          onClick={onBackToHome}
+          className="inline-flex w-fit items-center gap-2 border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-400 transition hover:border-white/20 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          {language === 'id' ? 'Beranda' : 'Home'}
+        </button>
+      </div>
     </section>
   </main>
 );
@@ -2472,7 +2485,11 @@ function App() {
             )}
           </>
         ) : (
-          <TeamPage t={t} />
+          <TeamPage 
+            t={t} 
+            language={lang} 
+            onBackToHome={() => handleAppTabChange('pay')} 
+          />
         )}
 
         {(!page || activeTab === 'pay') && (
@@ -2509,7 +2526,7 @@ function App() {
             type="button"
             role="tab"
             id="mobile-tab-pay"
-            className="kp-bottom-tab"
+            className="group flex flex-1 flex-col items-center justify-center outline-none -mt-3"
             aria-selected={activeTab === 'pay' && mobileNavActive === 'qris'}
             aria-controls="tabpanel-pay"
             onClick={() => {
@@ -2518,8 +2535,10 @@ function App() {
             }}
             aria-label={t('appNav.payTabLabel')}
           >
-            {activeTab === 'pay' && mobileNavActive === 'qris' ? <RiQrScan2Fill className="h-5 w-5" /> : <RiQrScan2Line className="h-5 w-5" />}
-            <span>{t('appNav.payTab')}</span>
+            <div className={`mb-1 flex h-12 w-12 items-center justify-center shadow-lg transition-transform ${activeTab === 'pay' && mobileNavActive === 'qris' ? 'bg-brand text-black scale-105' : 'bg-brand text-black/90'}`}>
+              {activeTab === 'pay' && mobileNavActive === 'qris' ? <RiQrCodeFill className="h-6 w-6" /> : <RiQrCodeLine className="h-6 w-6" />}
+            </div>
+            <span className={`text-[11px] font-bold transition-colors ${activeTab === 'pay' && mobileNavActive === 'qris' ? 'text-brand' : 'text-zinc-400'}`}>{t('appNav.payTab')}</span>
           </button>
           <button
             type="button"

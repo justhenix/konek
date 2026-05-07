@@ -106,7 +106,7 @@ export const translations = {
     },
     "appNav": {
       "homeTab": "Home",
-      "payTab": "QRIS",
+      "payTab": "Pay",
       "walletTab": "Wallet",
       "historyTab": "History",
       "homeTabLabel": "Go to home",
