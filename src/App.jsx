@@ -18,6 +18,7 @@ import freshifaCard from './assets/freshifa_UNS.webp';
 
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage';
+import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
   buildDevnetSolTransferTransaction,
@@ -471,7 +472,7 @@ const ProtocolDiagram = ({ t }) => {
               <div className={`absolute left-8 top-full h-3 w-px sm:left-9 sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
             )}
             <div className="flex min-w-0 items-start gap-4">
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#1a1d1a] text-xs font-bold ${node.accent.text}`}>
+              <div className={`kp-control flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${node.accent.text}`}>
                 0{index + 1}
               </div>
               <div className="min-w-0 pt-1.5">
@@ -647,7 +648,7 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
           type="button"
           onClick={onDismissBanner}
           className="flex h-11 w-11 shrink-0 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-          aria-label="Close banner"
+          aria-label={t('devnet.bannerCloseLabel')}
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -907,6 +908,7 @@ function App() {
 
   const { connection } = useConnection();
   const { select, wallets, publicKey, connect, disconnect, connected, sendTransaction } = useWallet();
+  const rpcEndpoint = connection?.rpcEndpoint || import.meta.env.VITE_SOLANA_RPC_URL || '';
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [missingWalletModalOpen, setMissingWalletModalOpen] = useState(false);
@@ -2440,7 +2442,7 @@ function App() {
             <button
               onClick={() => setIsLoginModalOpen(false)}
               className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-              aria-label="Close wallet modal"
+              aria-label={t('loginModal.closeLabel')}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -2454,6 +2456,12 @@ function App() {
             <p className="mb-7 mt-3 text-sm leading-7 text-zinc-400">
               {t('loginModal.desc')}
             </p>
+
+            <DevnetSafetyNotice
+              t={t}
+              rpcEndpoint={rpcEndpoint}
+              className="mb-5"
+            />
 
             <button
               onClick={handleConnectWallet}
@@ -2507,6 +2515,7 @@ function App() {
           onConfirm={handlePaymentConfirm}
           onRetryVerification={handleRetryPaymentVerification}
           onScanAnother={handleScanAnotherPayment}
+          rpcEndpoint={rpcEndpoint}
           t={t}
         />
       )}

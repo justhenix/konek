@@ -234,17 +234,22 @@ body {
 
 :root[data-theme="light"] .text-red-100,
 :root[data-theme="light"] .text-red-200,
-:root[data-theme="light"] .text-red-300 {
+:root[data-theme="light"] .text-red-300,
+:root[data-theme="light"] .text-red-400 {
   color: #b91c1c !important;
 }
 
 :root[data-theme="light"] .text-amber-100,
-:root[data-theme="light"] .text-amber-200 {
+:root[data-theme="light"] .text-amber-200,
+:root[data-theme="light"] .text-amber-300,
+:root[data-theme="light"] .text-amber-400,
+:root[data-theme="light"] .text-amber-500 {
   color: #92400e !important;
 }
 
 :root[data-theme="light"] .text-purple-200,
-:root[data-theme="light"] .text-purple-300 {
+:root[data-theme="light"] .text-purple-300,
+:root[data-theme="light"] .text-purple-400 {
   color: #6d28d9 !important;
 }
 

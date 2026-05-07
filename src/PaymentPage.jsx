@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
+import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import {
   buildSolanaExplorerDevnetTxUrl,
   formatIdrAmount,
@@ -356,6 +357,7 @@ export default function PaymentPage({
   onRetryVerification,
   onScanAnother,
   onCancel,
+  rpcEndpoint,
   t,
 }) {
   const [parsedPayment] = useState(() => (
@@ -682,7 +684,7 @@ export default function PaymentPage({
               type="button"
               onClick={onCancel}
               className="kp-control grid h-11 w-11 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              aria-label="Close payment modal"
+              aria-label={t('payment.closeLabel')}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -971,71 +973,81 @@ export default function PaymentPage({
           </div>
 
           {!(flowState === 'paid_verified' || flowState === 'settled') && (
-            <div className="grid shrink-0 grid-cols-1 gap-3 border-t border-(--kp-border) p-3 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] sm:p-5">
-              <RailButton
-                onClick={showScanAnother ? onScanAnother : onCancel}
-                disabled={isBusy && !showScanAnother}
-                variant="secondary"
-              >
-                {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-              </RailButton>
-              
-              {flowState === 'mobile_expired' || flowState === 'unsupported' ? null : flowState === 'amount_required' ? (
+            <div className="shrink-0 border-t border-(--kp-border) p-3 sm:p-5">
+              {quoteReview && !submittedPayment && flowState !== 'unsupported' && (
+                <DevnetSafetyNotice
+                  t={t}
+                  rpcEndpoint={rpcEndpoint}
+                  className="mb-3"
+                />
+              )}
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
                 <RailButton
-                  onClick={handleManualAmountContinue}
-                  disabled={isBusy}
+                  onClick={showScanAnother ? onScanAnother : onCancel}
+                  disabled={isBusy && !showScanAnother}
+                  variant="secondary"
                 >
-                  {t('scanner.continue')}
+                  {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
                 </RailButton>
-              ) : flowState === 'mobile_restored' ? (
-                <RailButton
-                  onClick={handleContinueToPhantom}
-                  disabled={quoteReview?.isExpired || isPaymentSubmitting}
-                  variant="wallet"
-                >
-                  {t('payment.btnResumePayment')}
-                </RailButton>
-              ) : showTryAgain ? (
-                <RailButton
-                  onClick={handleTryAgain}
-                  disabled={isBusy}
-                >
-                  {t('payment.btnTryAgain')}
-                </RailButton>
-              ) : submittedPayment && primaryExplorerUrl ? (
-                <RailButton
-                  as="a"
-                  href={primaryExplorerUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {t('payment.btnViewExplorer')}
-                </RailButton>
-              ) : quoteReview ? (
-                quoteReview.isExpired ? (
+                
+                {flowState === 'mobile_expired' || flowState === 'unsupported' ? null : flowState === 'amount_required' ? (
                   <RailButton
-                    onClick={handleConfirm}
-                    disabled={isQuoteLoading}
+                    onClick={handleManualAmountContinue}
+                    disabled={isBusy}
                   >
-                    {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnTryAgain')}
+                    {t('scanner.continue')}
                   </RailButton>
-                ) : (
+                ) : flowState === 'mobile_restored' ? (
                   <RailButton
                     onClick={handleContinueToPhantom}
-                    disabled={isPaymentSubmitting}
+                    disabled={quoteReview?.isExpired || isPaymentSubmitting}
                     variant="wallet"
                   >
-                    {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
+                    {t('payment.btnResumePayment')}
                   </RailButton>
-                )
-              ) : (
-                <RailButton
-                  onClick={handleConfirm}
-                  disabled={!canReviewPayment || isQuoteLoading}
-                >
-                  {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
-                </RailButton>
-              )}
+                ) : showTryAgain ? (
+                  <RailButton
+                    onClick={handleTryAgain}
+                    disabled={isBusy}
+                  >
+                    {t('payment.btnTryAgain')}
+                  </RailButton>
+                ) : submittedPayment && primaryExplorerUrl ? (
+                  <RailButton
+                    as="a"
+                    href={primaryExplorerUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('payment.btnViewExplorer')}
+                  </RailButton>
+                ) : quoteReview ? (
+                  quoteReview.isExpired ? (
+                    <RailButton
+                      onClick={handleConfirm}
+                      disabled={isQuoteLoading}
+                    >
+                      {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnTryAgain')}
+                    </RailButton>
+                  ) : (
+                    <RailButton
+                      onClick={handleContinueToPhantom}
+                      disabled={isPaymentSubmitting}
+                      variant="wallet"
+                    >
+                      {isPaymentSubmitting ? t('payment.btnOpeningPhantom') : t('payment.btnPayPhantom')}
+                    </RailButton>
+                  )
+                ) : (
+                  <RailButton
+                    onClick={handleConfirm}
+                    disabled={!canReviewPayment || isQuoteLoading}
+                  >
+                    {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnConfirm')}
+                  </RailButton>
+                )}
+              </div>
             </div>
           )}
 

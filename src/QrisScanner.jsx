@@ -373,7 +373,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
             <button
               onClick={handleClose}
               className="kp-control grid h-11 w-11 shrink-0 place-items-center border transition-colors hover:border-red-500/30 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              aria-label="Close QRIS scanner"
+              aria-label={t('scanner.closeLabel')}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>

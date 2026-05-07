@@ -107,7 +107,8 @@ export const translations = {
     "loginModal": {
       "title": "Connect Wallet",
       "desc": "Connect Phantom to start paying with Solana.",
-      "btn": "Connect Phantom"
+      "btn": "Connect Phantom",
+      "closeLabel": "Close wallet connection"
     },
     "walletToast": {
       "connectedTitle": "Wallet connected",
@@ -170,6 +171,7 @@ export const translations = {
       "requestingCamera": "Requesting camera permission...",
       "cameraPermissionTitle": "Camera Access",
       "cameraPermissionBody": "Use your camera to scan a QRIS code.",
+      "closeLabel": "Close QRIS scanner",
       "cameraBlockedTitle": "Camera permission blocked",
       "cameraBlockedBody": "Allow camera access in your browser settings, then try again.",
       "cameraUnsupportedTitle": "Camera is not supported",
@@ -184,6 +186,7 @@ export const translations = {
     },
     "payment": {
       "qrisParsed": "Payment",
+      "closeLabel": "Close payment panel",
       "headerIdle": "Review Payment",
       "headerQuoting": "Preparing Price",
       "headerQuoteReady": "Review Price",
@@ -298,6 +301,12 @@ export const translations = {
       "bannerDesc": "Make sure Phantom is set to Devnet before paying.",
       "bannerHowToSwitch": "How to switch",
       "bannerGetSol": "Get Devnet SOL",
+      "bannerCloseLabel": "Close Devnet notice",
+      "paymentWarningTitle": "Mainnet wallet warning",
+      "paymentMainnetWarning": "Looks like you've connected a mainnet wallet. KonekPay demo runs on Devnet. Please switch to Devnet to avoid real-money loss or unexpected errors.",
+      "paymentSafetyTitle": "Devnet-only demo",
+      "paymentSafetyNotice": "KonekPay demo payments run on Solana Devnet only. Confirm Phantom is set to Devnet before paying.",
+      "paymentNonDevnetWarning": "KonekPay demo payments run on Solana Devnet only. Switch your app and Phantom wallet to Devnet before paying.",
       "modalEyebrow": "Solana Devnet",
       "modalTitle": "Switch Phantom to Devnet",
       "modalBody": "KonekPay demo payments use Solana Devnet, a free test network. Switch Phantom to Devnet so you see the right balance and approve the right transaction.",
@@ -426,7 +435,8 @@ export const translations = {
     "loginModal": {
       "title": "Konek Dompet",
       "desc": "Hubungkan Phantom untuk mulai bayar pakai Solana.",
-      "btn": "Hubungkan Phantom"
+      "btn": "Hubungkan Phantom",
+      "closeLabel": "Tutup koneksi dompet"
     },
     "walletToast": {
       "connectedTitle": "Dompet terhubung",
@@ -489,6 +499,7 @@ export const translations = {
       "requestingCamera": "Meminta izin kamera...",
       "cameraPermissionTitle": "Akses Kamera",
       "cameraPermissionBody": "Gunakan kamera untuk scan kode QRIS.",
+      "closeLabel": "Tutup scanner QRIS",
       "cameraBlockedTitle": "Izin kamera diblokir",
       "cameraBlockedBody": "Izinkan akses kamera di pengaturan browser, lalu coba lagi.",
       "cameraUnsupportedTitle": "Kamera tidak didukung",
@@ -503,6 +514,7 @@ export const translations = {
     },
     "payment": {
       "qrisParsed": "Pembayaran",
+      "closeLabel": "Tutup panel pembayaran",
       "headerIdle": "Cek Pembayaran",
       "headerQuoting": "Mengambil Harga",
       "headerQuoteReady": "Cek Harga",
@@ -617,6 +629,12 @@ export const translations = {
       "bannerDesc": "Pastikan Phantom sudah memakai Devnet sebelum bayar.",
       "bannerHowToSwitch": "Cara ganti",
       "bannerGetSol": "Ambil SOL Devnet",
+      "bannerCloseLabel": "Tutup peringatan Devnet",
+      "paymentWarningTitle": "Peringatan wallet mainnet",
+      "paymentMainnetWarning": "Sepertinya kamu menghubungkan wallet mainnet. Demo KonekPay berjalan di Devnet. Ganti ke Devnet untuk menghindari kehilangan dana asli atau error tak terduga.",
+      "paymentSafetyTitle": "Demo khusus Devnet",
+      "paymentSafetyNotice": "Pembayaran demo KonekPay hanya berjalan di Solana Devnet. Pastikan Phantom sudah di Devnet sebelum membayar.",
+      "paymentNonDevnetWarning": "Pembayaran demo KonekPay hanya berjalan di Solana Devnet. Ganti app dan wallet Phantom ke Devnet sebelum membayar.",
       "modalEyebrow": "Solana Devnet",
       "modalTitle": "Ganti Phantom ke Devnet",
       "modalBody": "Pembayaran demo KonekPay memakai Solana Devnet, jaringan tes gratis. Ganti Phantom ke Devnet supaya saldo dan transaksi yang muncul sesuai.",
