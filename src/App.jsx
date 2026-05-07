@@ -2259,35 +2259,6 @@ function App() {
                 </button>
               </div>
 
-              <div className="grid gap-3 border-b border-white/10 py-3">
-                {userProfile.isLoggedIn ? (
-                  <div className="grid gap-3">
-                    <div className="min-w-0 px-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-brand"></span>
-                        <p className="text-[11px] font-semibold text-purple-300">{t('walletDropdown.label')}</p>
-                      </div>
-                      <p className="mt-2 truncate font-mono text-sm font-semibold text-white" title={userProfile.address}>{userProfile.name}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleMobileWalletDisconnect}
-                      className="min-h-11 w-full border border-red-500/15 bg-red-500/5 px-3 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                    >
-                      {t('walletDropdown.disconnect')}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleMobileWalletConnect}
-                    className="flex min-h-11 w-full items-center border border-purple-400/25 bg-purple-500/10 px-3 text-left text-sm font-semibold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-                  >
-                    {t('navbar.connectWallet')}
-                  </button>
-                )}
-              </div>
-
               <div className="grid gap-3 pt-3">
                 <div className="flex min-h-11 items-center justify-between gap-4">
                   <span className="text-sm font-semibold text-zinc-300">{t('theme.label')}</span>
