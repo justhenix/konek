@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import { formatDateTime } from './utils/dateFormat';
+import { buildReceiptSummary, cleanReceiptValue, truncateMiddle } from './utils/receipt';
 import {
   buildSolanaExplorerDevnetTxUrl,
   formatIdrAmount,
@@ -239,6 +240,81 @@ const formatQuoteExpiry = (expiresAt, language, t) => (
   formatPanelDateTime(expiresAt, language, t)
 );
 
+const safeBuildSolanaExplorerDevnetTxUrl = (signature) => {
+  try {
+    return signature ? buildSolanaExplorerDevnetTxUrl(signature) : '';
+  } catch {
+    return '';
+  }
+};
+
+const copyTextToClipboard = async (text) => {
+  const cleanText = cleanReceiptValue(text);
+
+  if (!cleanText) {
+    return false;
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(cleanText);
+      return true;
+    } catch {
+      // Fall through to the textarea copy path below.
+    }
+  }
+
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = cleanText;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '0';
+
+  document.body.appendChild(textArea);
+  textArea.select();
+
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textArea);
+  }
+};
+
+const downloadTextFile = ({ fileName, text }) => {
+  if (
+    typeof document === 'undefined'
+    || typeof Blob === 'undefined'
+    || typeof URL === 'undefined'
+  ) {
+    return false;
+  }
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = downloadUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(downloadUrl);
+
+  return true;
+};
+
+const createReceiptFileName = (signature) => {
+  const suffix = cleanReceiptValue(signature).slice(0, 8) || new Date().toISOString().slice(0, 10);
+  return `konekpay-receipt-${suffix}.txt`;
+};
+
 const noticeStyles = {
   info: 'border-(--kp-border) bg-(--kp-control-bg) text-(--kp-text-muted)',
   success: 'border-brand/25 bg-brand/8 text-(--kp-text)',
@@ -334,6 +410,63 @@ const QrisTypeBadge = ({ type, t }) => {
   );
 };
 
+const SuccessCheckmark = () => (
+  <div className="receipt-checkmark grid h-16 w-16 shrink-0 place-items-center rounded-full border border-brand/30 bg-brand/12 text-brand shadow-[0_0_32px_rgba(20,241,149,0.18)]" aria-hidden="true">
+    <svg className="h-9 w-9" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="3" opacity="0.22" />
+      <path className="receipt-checkmark-path" d="M15 24.5L21.5 31L34 18" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </div>
+);
+
+const InlineActionButton = ({ as = 'button', children, className = '', ...props }) => {
+  const ButtonComponent = as;
+  const buttonProps = as === 'button' ? { type: 'button' } : {};
+
+  return (
+    <ButtonComponent
+      className={`shrink-0 border border-brand/25 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
+      {...buttonProps}
+      {...props}
+    >
+      {children}
+    </ButtonComponent>
+  );
+};
+
+const ReceiptField = ({
+  label,
+  value,
+  mono = false,
+  tone = 'default',
+  title,
+  action,
+}) => {
+  const cleanValue = cleanReceiptValue(value);
+
+  if (!cleanValue) {
+    return null;
+  }
+
+  const toneClass = tone === 'success'
+    ? 'text-brand'
+    : tone === 'muted'
+      ? 'kp-soft'
+      : 'kp-text';
+
+  return (
+    <div className="grid min-w-0 gap-2 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.78fr)_minmax(0,1.22fr)] sm:gap-4 sm:px-4">
+      <span className="kp-soft text-xs font-semibold">{label}</span>
+      <div className="flex min-w-0 items-start gap-2 sm:justify-end">
+        <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'break-all font-mono' : 'break-words'} ${toneClass}`} title={title || cleanValue}>
+          {cleanValue}
+        </span>
+        {action}
+      </div>
+    </div>
+  );
+};
+
 export default function PaymentPage({
   qrisData,
   initialParsedData,
@@ -366,6 +499,7 @@ export default function PaymentPage({
   const [manualAmountText, setManualAmountText] = useState('');
   const [manualAmountError, setManualAmountError] = useState('');
   const [manualAmountIdr, setManualAmountIdr] = useState(null);
+  const [receiptActionMessage, setReceiptActionMessage] = useState('');
 
   useEffect(() => {
     if (!quote) {
@@ -378,6 +512,18 @@ export default function PaymentPage({
 
     return () => clearInterval(timer);
   }, [quote]);
+
+  useEffect(() => {
+    if (!receiptActionMessage) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      setReceiptActionMessage('');
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, [receiptActionMessage]);
 
   const qrisIssueType = getQrisIssueType(parsedPayment);
   const qrisType = parsedPayment.qrisType || (parsedPayment.amountText ? 'dynamic' : 'static');
@@ -537,7 +683,10 @@ export default function PaymentPage({
     || flowState === 'settled'
     || flowState === 'mobile_restored'
     || flowState === 'mobile_expired';
-  const primaryExplorerUrl = verifiedPayment?.explorerUrl || submittedPayment?.explorerUrl || '';
+  const fullPaymentSignature = verifiedPayment?.signature || submittedPayment?.signature || '';
+  const primaryExplorerUrl = verifiedPayment?.explorerUrl
+    || submittedPayment?.explorerUrl
+    || safeBuildSolanaExplorerDevnetTxUrl(fullPaymentSignature);
   const isBusy = isQuoteLoading
     || isPaymentSubmitting
     || flowState === 'verifying'
@@ -679,6 +828,88 @@ export default function PaymentPage({
     ? formatPanelDateTime(settlementResult.settledAt, language, t)
     : formatPanelDateTime(submittedPayment?.submittedAt || quote?.createdAt, language, t);
   const payoutStatusLabel = t('payment.payoutStatusSimulated');
+  const receiptQrisTypeLabel = isStaticQris ? t('payment.qrisTypeStatic') : t('payment.qrisTypeDynamic');
+  const receiptIdrAmountLabel = quoteReview?.idrAmountLabel
+    || (Number.isFinite(paymentAmount) ? formatIdrAmount(paymentAmount) : '');
+  const receiptSolAmountLabel = quoteReview?.solAmountLabel
+    || (quote?.solAmount ? formatQuoteSolAmount(quote.solAmount) : '');
+  const receiptStatusLabel = t('payment.receiptStatusPaidVerified') || verifiedPayment?.status || t('payment.statusPaid');
+  const receiptWalletAddress = submittedPayment?.walletAddress || verifiedPayment?.walletAddress || '';
+  const receiptQuoteId = quote?.quoteId || submittedPayment?.quote?.quoteId || verifiedPayment?.quoteId || '';
+  const receiptTimestamp = formatPanelDateTime(
+    verifiedPayment?.verifiedAt || submittedPayment?.submittedAt || quote?.createdAt,
+    language,
+    t
+  );
+  const receiptSummary = useMemo(() => buildReceiptSummary({
+    title: t('payment.receiptSummaryTitle'),
+    fields: [
+      { label: t('payment.lblStore'), value: merchantName },
+      { label: t('payment.lblCity'), value: merchantCity },
+      { label: t('payment.lblQrisType'), value: receiptQrisTypeLabel },
+      { label: t('payment.lblIdrAmount'), value: receiptIdrAmountLabel },
+      { label: t('payment.lblSolPaid'), value: receiptSolAmountLabel },
+      { label: t('payment.lblStatus'), value: receiptStatusLabel },
+      { label: t('payment.lblWallet'), value: receiptWalletAddress },
+      { label: t('payment.lblSignature'), value: fullPaymentSignature },
+      { label: t('payment.lblExplorerLink'), value: primaryExplorerUrl },
+      { label: t('payment.receiptTimestamp'), value: receiptTimestamp },
+      { label: t('payment.lblQuoteId'), value: receiptQuoteId },
+      { label: t('payment.lblNetwork'), value: t('payment.receiptNetwork') },
+    ],
+    disclaimer: `${t('payment.receiptVerifiedBody')} ${t('payment.receiptSettlementDemoNote')}`,
+  }), [
+    fullPaymentSignature,
+    merchantCity,
+    merchantName,
+    primaryExplorerUrl,
+    receiptIdrAmountLabel,
+    receiptQrisTypeLabel,
+    receiptQuoteId,
+    receiptSolAmountLabel,
+    receiptStatusLabel,
+    receiptTimestamp,
+    receiptWalletAddress,
+    t,
+  ]);
+  const canUseWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const receiptShareButtonLabel = canUseWebShare ? t('payment.btnShareReceipt') : t('payment.btnCopyReceipt');
+
+  const handleCopyReceiptValue = async (value, successMessage) => {
+    const didCopy = await copyTextToClipboard(value);
+    setReceiptActionMessage(didCopy ? successMessage : t('payment.copyUnavailable'));
+  };
+
+  const handleShareReceipt = async () => {
+    if (canUseWebShare) {
+      try {
+        await navigator.share({
+          title: t('payment.receiptSummaryTitle'),
+          text: receiptSummary,
+          url: primaryExplorerUrl || undefined,
+        });
+        setReceiptActionMessage(t('payment.receiptShared'));
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return;
+        }
+      }
+    }
+
+    await handleCopyReceiptValue(receiptSummary, t('payment.receiptCopied'));
+  };
+
+  const handleDownloadReceipt = () => {
+    const didDownload = downloadTextFile({
+      fileName: createReceiptFileName(fullPaymentSignature),
+      text: receiptSummary,
+    });
+
+    setReceiptActionMessage(
+      didDownload ? t('payment.receiptDownloaded') : t('payment.receiptDownloadFailed')
+    );
+  };
 
   return (
     <Fragment>
@@ -789,33 +1020,90 @@ export default function PaymentPage({
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
               <section className="flex w-full flex-col gap-5">
 
-                {/* Payer Receipt Card */}
-                <div className="flex flex-col overflow-hidden border border-brand/20 bg-(--kp-control-bg)">
-                  <div className="border-b border-brand/20 bg-brand/10 p-3 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.paymentProofTitle')}</p>
-                    <p className="mt-2 text-xl font-semibold text-(--kp-text)">{t('payment.paymentProofStatus')}</p>
-                    <p className="kp-muted mt-2 text-sm leading-6">
-                      {t('payment.paymentProofBody')}
-                    </p>
+                <div className="flex flex-col overflow-hidden border border-brand/25 bg-(--kp-control-bg)">
+                  <div className="border-b border-brand/20 bg-brand/8 p-4 sm:p-5">
+                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-4">
+                        <SuccessCheckmark />
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
+                            <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand">
+                              {t('payment.receiptDevnetBadge')}
+                            </span>
+                          </div>
+                          <h4 className="kp-text mt-2 text-2xl font-semibold">{t('payment.receiptTitle')}</h4>
+                          <p className="kp-muted mt-2 text-sm leading-6">{t('payment.receiptVerifiedBody')}</p>
+                        </div>
+                      </div>
+                      <div className="min-w-0 border border-brand/20 bg-brand/10 px-3 py-2 text-left sm:text-right">
+                        <p className="kp-soft text-[11px] font-bold uppercase tracking-[0.12em]">{t('payment.lblStatus')}</p>
+                        <p className="mt-1 break-words font-mono text-sm font-bold text-brand">{receiptStatusLabel}</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-0">
-                    <DetailRow label={t('payment.lblStore')} value={merchantName} title={merchantName} />
-                    <DetailRow label={t('payment.lblTotalPay')} value={quoteReview?.idrAmountLabel || amountLabel} />
-                    <DetailRow label={t('payment.lblSolPaid')} value={quoteReview?.solAmountLabel || t('payment.lblNotProvided')} tone="success" />
-                    <DetailRow label={t('payment.lblSolanaStatus')} value={t('payment.statusPaid')} tone="success" />
+                    <ReceiptField label={t('payment.lblStore')} value={merchantName} title={merchantName} />
+                    <ReceiptField label={t('payment.lblCity')} value={merchantCity} />
+                    <ReceiptField label={t('payment.lblQrisType')} value={receiptQrisTypeLabel} />
+                    <ReceiptField label={t('payment.lblIdrAmount')} value={receiptIdrAmountLabel} />
+                    <ReceiptField label={t('payment.lblSolPaid')} value={receiptSolAmountLabel} tone="success" />
+                    <ReceiptField label={t('payment.lblWallet')} value={truncateMiddle(receiptWalletAddress)} mono title={receiptWalletAddress} action={receiptWalletAddress ? (
+                      <InlineActionButton onClick={() => handleCopyReceiptValue(receiptWalletAddress, t('payment.walletCopied'))} aria-label={t('payment.btnCopyWallet')}>
+                        {t('payment.btnCopy')}
+                      </InlineActionButton>
+                    ) : null} />
+                    <ReceiptField label={t('payment.lblSignature')} value={truncateMiddle(fullPaymentSignature, 10, 10)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
+                      <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} aria-label={t('payment.btnCopySignature')}>
+                        {t('payment.btnCopy')}
+                      </InlineActionButton>
+                    ) : null} />
+                    <ReceiptField label={t('payment.lblExplorerLink')} value={primaryExplorerUrl ? t('payment.receiptExplorerValue') : ''} title={primaryExplorerUrl} action={primaryExplorerUrl ? (
+                      <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
+                        {t('payment.btnViewExplorer')}
+                      </InlineActionButton>
+                    ) : null} />
+                    <ReceiptField label={t('payment.receiptTimestamp')} value={receiptTimestamp} />
+                    <ReceiptField label={t('payment.lblQuoteId')} value={truncateMiddle(receiptQuoteId, 12, 10)} mono title={receiptQuoteId} action={receiptQuoteId ? (
+                      <InlineActionButton onClick={() => handleCopyReceiptValue(receiptQuoteId, t('payment.referenceCopied'))} aria-label={t('payment.btnCopyReference')}>
+                        {t('payment.btnCopy')}
+                      </InlineActionButton>
+                    ) : null} />
+                    <ReceiptField label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} tone="success" />
                   </div>
 
-                  <div className="border-t border-brand/20 bg-brand/5 p-3 sm:p-5">
-                    <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                      {t('payment.receiptSettlementDemoNote')}
+                    </p>
+
+                    {receiptActionMessage && (
+                      <p className="mt-3 text-sm font-semibold text-brand" role="status">
+                        {receiptActionMessage}
+                      </p>
+                    )}
+
+                    <div className="mt-4 grid gap-3">
                       {primaryExplorerUrl && (
-                        <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" variant="secondary" className="border-brand/30 text-brand hover:bg-brand/10">
+                        <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer">
                           {t('payment.btnViewExplorer')}
                         </RailButton>
                       )}
-                      <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
-                        {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-                      </RailButton>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <RailButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} disabled={!fullPaymentSignature} variant="secondary">
+                          {t('payment.btnCopySignature')}
+                        </RailButton>
+                        <RailButton onClick={handleShareReceipt} variant="secondary">
+                          {receiptShareButtonLabel}
+                        </RailButton>
+                        <RailButton onClick={handleDownloadReceipt} variant="secondary">
+                          {t('payment.btnDownloadReceipt')}
+                        </RailButton>
+                        <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
+                          {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
+                        </RailButton>
+                      </div>
                     </div>
                   </div>
                 </div>

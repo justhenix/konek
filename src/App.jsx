@@ -123,7 +123,7 @@ const cleanCurrentUrlParams = () => {
   );
 };
 
-const createPendingPhantomPayment = ({ parsedPayment, quote }) => {
+const createPendingPhantomPayment = ({ parsedPayment, quote, walletAddress = null }) => {
   const qrisData = parsedPayment?.rawData || '';
   const paymentResumeId = createPaymentResumeId();
 
@@ -161,6 +161,7 @@ const createPendingPhantomPayment = ({ parsedPayment, quote }) => {
       }
       : null,
     qrisData,
+    walletAddress,
     createdAt: new Date().toISOString(),
     expiresAt: quote?.expiresAt || null,
     redirectPath: window.location.pathname,
@@ -1429,6 +1430,7 @@ function App() {
               const submissionExtra = {
                 quote,
                 submittedBy: 'phantom-mobile',
+                walletAddress: pendingPayment.walletAddress || null,
               };
 
               if (pendingPayment.explorerUrl) {
@@ -1573,6 +1575,7 @@ function App() {
           const submission = createPaymentSubmission(signature, {
             quote: pendingPayment?.quote || null,
             submittedBy: 'phantom-mobile',
+            walletAddress: pendingPayment?.walletAddress || null,
           });
           const submittedPendingPayment = {
             ...pendingPayment,
@@ -1747,9 +1750,11 @@ function App() {
       throw new Error('Reconnect Phantom mobile before paying.');
     }
 
+    const walletAddress = transaction.feePayer?.toBase58?.() || null;
+
     logPhantomMobilePayment('[PHANTOM_MOBILE_PAYMENT_START]', {
       quoteId: getQuoteIdLogPrefix(quote?.quoteId),
-      wallet: transaction.feePayer?.toBase58?.() || null,
+      wallet: walletAddress,
       status: 'starting',
     });
 
@@ -1764,7 +1769,7 @@ function App() {
       sharedSecret
     );
     const redirectUrl = new URL(window.location.href);
-    const pendingPayment = createPendingPhantomPayment({ parsedPayment, quote });
+    const pendingPayment = createPendingPhantomPayment({ parsedPayment, quote, walletAddress });
 
     redirectUrl.search = '';
     redirectUrl.hash = '';
@@ -1804,6 +1809,7 @@ function App() {
       }
 
       const payerPublicKey = publicKey || mobileWalletPublicKey;
+      const payerWalletAddress = payerPublicKey?.toBase58?.() || String(payerPublicKey || '');
       const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
 
       if (!payerPublicKey) {
@@ -1846,6 +1852,7 @@ function App() {
       const submission = createPaymentSubmission(signature, {
         quote,
         submittedBy: 'wallet-adapter',
+        walletAddress: payerWalletAddress,
       });
 
       setPaymentSubmission(submission);

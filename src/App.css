@@ -87,8 +87,38 @@
   from { opacity: 0; transform: translateY(10px); } 
   to { opacity: 1; transform: translateY(0); } 
 }
+@keyframes receiptCheckPop {
+  0% { opacity: 0; transform: scale(0.82); }
+  70% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes receiptCheckStroke {
+  to { stroke-dashoffset: 0; }
+}
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+.receipt-checkmark {
+  animation: receiptCheckPop 360ms ease-out both;
+}
+
+.receipt-checkmark-path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: receiptCheckStroke 420ms ease-out 160ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .receipt-checkmark,
+  .receipt-checkmark-path {
+    animation: none;
+  }
+
+  .receipt-checkmark-path {
+    stroke-dashoffset: 0;
+  }
+}
 
 html,
 body {

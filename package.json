@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test api/v1/payment/quote.test.js src/utils/parseEmvcoQris.test.js src/utils/dateFormat.test.js",
+    "test": "node --test api/v1/payment/quote.test.js src/utils/parseEmvcoQris.test.js src/utils/dateFormat.test.js src/utils/receipt.test.js",
     "dev:check-env": "node scripts/check-env.mjs"
   },
   "dependencies": {
