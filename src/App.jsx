@@ -419,11 +419,11 @@ const KonekLogo = ({ className = "w-8 h-8" }) => (
 );
 
 const protocolNodeAccents = [
-  { border: 'border-brand/50', dot: 'bg-brand', connector: 'bg-brand/35' },
-  { border: 'border-brand/70', dot: 'bg-brand', connector: 'bg-linear-to-b from-brand/40 to-purple-400/35' },
-  { border: 'border-purple-400/70', dot: 'bg-purple-400', connector: 'bg-linear-to-b from-purple-400/40 to-brand/35' },
-  { border: 'border-brand/50', dot: 'bg-brand', connector: 'bg-linear-to-b from-brand/35 to-purple-400/35' },
-  { border: 'border-purple-400/50', dot: 'bg-purple-400', connector: '' },
+  { border: 'border-brand/50', text: 'text-brand', connector: 'bg-brand/35' },
+  { border: 'border-brand/70', text: 'text-brand', connector: 'bg-linear-to-b from-brand/40 to-purple-400/35' },
+  { border: 'border-purple-400/70', text: 'text-purple-400', connector: 'bg-linear-to-b from-purple-400/40 to-brand/35' },
+  { border: 'border-brand/50', text: 'text-brand', connector: 'bg-linear-to-b from-brand/35 to-purple-400/35' },
+  { border: 'border-purple-400/50', text: 'text-purple-400', connector: '' },
 ];
 
 const faqItems = ['realQris', 'merchantRupiah', 'simulatedPayout', 'afterPayment', 'staticQris', 'whyDevnet'];
@@ -461,23 +461,23 @@ const ProtocolDiagram = ({ t }) => {
 
   return (
     <div className="relative mx-auto w-full max-w-136 lg:mx-0" data-hero-diagram>
-      <div className="absolute inset-4 hidden sm:block border border-dashed border-white/10 rounded-full"></div>
-      <div className="absolute left-1/2 top-10 bottom-10 hidden sm:block w-px bg-linear-to-b from-transparent via-brand/40 to-transparent"></div>
       <div className="relative grid gap-3 sm:gap-4">
         {nodes.map((node, index) => (
           <div
             key={index}
-            className={`protocol-node hero-text relative min-w-0 border ${node.accent.border} bg-[#111411]/85 px-4 py-3.5 backdrop-blur-sm sm:px-5 sm:py-4`}
+            className={`protocol-node hero-text relative min-w-0 border ${node.accent.border} bg-[#111411]/85 p-4 backdrop-blur-sm sm:p-5`}
           >
             {index < nodes.length - 1 && (
-              <div className={`absolute left-6 top-full h-3 w-px sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
+              <div className={`absolute left-8 top-full h-3 w-px sm:left-9 sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
             )}
-            <div className="flex min-w-0 items-center justify-between gap-4">
-              <div className="min-w-0">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#1a1d1a] text-xs font-bold ${node.accent.text}`}>
+                0{index + 1}
+              </div>
+              <div className="min-w-0 pt-1.5">
                 <p className="wrap-break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
                 <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
               </div>
-              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${node.accent.dot}`}></span>
             </div>
           </div>
         ))}
@@ -646,7 +646,7 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
         <button
           type="button"
           onClick={onDismissBanner}
-          className="kp-devnet-btn flex h-11 w-11 items-center justify-center border transition-colors hover:text-amber-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="flex h-11 w-11 shrink-0 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
           aria-label="Close banner"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
