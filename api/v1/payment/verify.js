@@ -176,7 +176,7 @@ const logVerificationDetails = ({
   });
 };
 
-const persistVerifiedPayment = async ({ quote, signature }) => {
+const persistVerifiedPayment = async ({ quote, signature, walletAddress }) => {
   const quoteSource = quote.source || 'UNKNOWN';
 
   if (quoteSource !== 'PERSISTED_TRANSACTION') {
@@ -189,11 +189,14 @@ const persistVerifiedPayment = async ({ quote, signature }) => {
 
   try {
     const { updateTransactionStatus } = await import('../../lib/transactions.js');
-    await updateTransactionStatus(quote.quoteId, 'CONFIRMED', signature);
+    await updateTransactionStatus(quote.quoteId, 'CONFIRMED', signature, {
+      walletAddress,
+    });
 
     console.info('[PAYMENT_VERIFY_PERSISTENCE] status updated', {
       signature,
       quoteSource,
+      walletAddress,
     });
   } catch {
     console.info('[PAYMENT_VERIFY_PERSISTENCE] persistence skipped', {
@@ -336,12 +339,19 @@ export default async function handler(req, res) {
       });
     }
 
-    await persistVerifiedPayment({ quote, signature: trimmedSignature });
+    await persistVerifiedPayment({
+      quote,
+      signature: trimmedSignature,
+      walletAddress: matchingTransfer.source,
+    });
 
     return res.status(200).json({
       status: 'PAID_VERIFIED',
       signature: trimmedSignature,
       explorerUrl: buildExplorerUrl(trimmedSignature),
+      walletAddress: matchingTransfer.source,
+      quoteId: quote.quoteId,
+      verifiedAt: new Date().toISOString(),
     });
   } catch (error) {
     if (error instanceof VerifyConfigError) {

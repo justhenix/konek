@@ -113,6 +113,10 @@ const loadTransactionQuote = async (quoteId) => {
       expiresAt,
       createdAt,
       source: 'PERSISTED_TRANSACTION',
+      walletAddress: transaction.user_wallet,
+      merchantName: transaction.merchant_name || '',
+      merchantCity: transaction.merchant_city || '',
+      qrisType: transaction.qris_type || '',
     };
   } catch (error) {
     console.warn('[QUOTE_PERSISTENCE_UNAVAILABLE]', error.message);

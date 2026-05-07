@@ -18,7 +18,9 @@ import freshifaCard from './assets/freshifa_UNS.webp';
 
 import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage';
+import TransactionHistory from './TransactionHistory';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
+import { saveVerifiedReceiptToHistory } from './utils/history';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
   buildDevnetSolTransferTransaction,
@@ -482,7 +484,7 @@ const ProtocolDiagram = ({ t }) => {
                 0{index + 1}
               </div>
               <div className="min-w-0 pt-1.5">
-                <p className="wrap-break-words text-sm font-semibold text-white sm:text-base">{node.label}</p>
+                <p className="wrap-break-word text-sm font-semibold text-white sm:text-base">{node.label}</p>
                 <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
               </div>
             </div>
@@ -1741,6 +1743,13 @@ function App() {
     setIsScannerOpen(true);
   }, [clearPendingPhantomPayment]);
 
+  const handleVerifiedReceipt = useCallback((receiptRecord) => {
+    saveVerifiedReceiptToHistory({
+      walletAddress: userProfile.address,
+      record: receiptRecord,
+    });
+  }, [userProfile.address]);
+
   const startPhantomMobilePayment = useCallback(({ transaction, parsedPayment, quote }) => {
     const dappEncryptionPublicKey = localStorage.getItem(PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY);
     const phantomEncryptionPublicKey = localStorage.getItem(PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY);
@@ -2381,6 +2390,13 @@ function App() {
           </section>
         </main>
 
+        <TransactionHistory
+          walletAddress={userProfile.address}
+          language={lang}
+          t={t}
+          onConnectWallet={() => setIsLoginModalOpen(true)}
+        />
+
         <section id="usp-section" className="scroll-mt-28 border-b border-white/10">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
             <div className="scroll-animate opacity-0 mb-9">
@@ -2527,7 +2543,9 @@ function App() {
           onConfirm={handlePaymentConfirm}
           onRetryVerification={handleRetryPaymentVerification}
           onScanAnother={handleScanAnotherPayment}
+          onVerifiedReceipt={handleVerifiedReceipt}
           rpcEndpoint={rpcEndpoint}
+          walletAddress={userProfile.address}
           language={lang}
           t={t}
         />

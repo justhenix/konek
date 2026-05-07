@@ -62,3 +62,70 @@ export const buildReceiptSummary = ({ title, fields = [], disclaimer }) => {
 
   return lines.join('\n');
 };
+
+export const copyTextToClipboard = async (text) => {
+  const cleanText = cleanReceiptValue(text);
+
+  if (!cleanText) {
+    return false;
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(cleanText);
+      return true;
+    } catch {
+      // Fall through to the textarea copy path below.
+    }
+  }
+
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = cleanText;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '0';
+
+  document.body.appendChild(textArea);
+  textArea.select();
+
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textArea);
+  }
+};
+
+export const downloadTextFile = ({ fileName, text }) => {
+  if (
+    typeof document === 'undefined'
+    || typeof Blob === 'undefined'
+    || typeof URL === 'undefined'
+  ) {
+    return false;
+  }
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = downloadUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(downloadUrl);
+
+  return true;
+};
+
+export const createReceiptFileName = (signature) => {
+  const suffix = cleanReceiptValue(signature).slice(0, 8) || new Date().toISOString().slice(0, 10);
+  return `konekpay-receipt-${suffix}.txt`;
+};

@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 import crypto from 'crypto';
+import { PublicKey } from '@solana/web3.js';
 import { createDemoQuoteId, QUOTE_TTL_MS } from '../../lib/paymentQuotes.js';
 
 // ─────────────────────────────────────────────────────
@@ -249,6 +250,27 @@ function extractAmountFromQris(payload) {
   return parseStrictQrisAmount(rawAmount);
 }
 
+const readQrisMerchantReference = (tags, qrisPayload) => {
+  for (let tag = 26; tag <= 51; tag += 1) {
+    const value = tags[String(tag).padStart(2, '0')];
+    if (value) return value.slice(0, 160);
+  }
+
+  return crypto.createHash('sha256').update(qrisPayload).digest('hex').slice(0, 32);
+};
+
+const readQrisQuoteMetadata = (qrisPayload) => {
+  const tags = parseEmvcoTlv(qrisPayload);
+  const hasAmount = Object.prototype.hasOwnProperty.call(tags, '54');
+
+  return {
+    merchant_qris_id: readQrisMerchantReference(tags, qrisPayload),
+    merchant_name: typeof tags['59'] === 'string' ? tags['59'].trim().slice(0, 120) : '',
+    merchant_city: typeof tags['60'] === 'string' ? tags['60'].trim().slice(0, 80) : '',
+    qris_type: hasAmount ? 'dynamic' : 'static',
+  };
+};
+
 function resolveFiatAmountForQuote({ qrisPayload, idrAmount }) {
   const tags = parseEmvcoTlv(qrisPayload);
   const hasQrisAmount = Object.prototype.hasOwnProperty.call(tags, '54');
@@ -278,6 +300,52 @@ function isValidQrisPayload(payload) {
   return true;
 }
 
+const isValidWalletAddress = (walletAddress) => {
+  if (typeof walletAddress !== 'string' || !walletAddress.trim()) {
+    return false;
+  }
+
+  try {
+    const normalizedWallet = walletAddress.trim();
+    return new PublicKey(normalizedWallet).toBase58() === normalizedWallet;
+  } catch {
+    return false;
+  }
+};
+
+const createPersistedTransactionQuote = async ({
+  qrisPayload,
+  fiatAmount,
+  solAmount,
+  walletAddress,
+  expiresAt,
+}) => {
+  if (!isValidWalletAddress(walletAddress)) {
+    return null;
+  }
+
+  try {
+    const { createTransactionIntent } = await import('../../lib/transactions.js');
+    const qrisMetadata = readQrisQuoteMetadata(qrisPayload);
+    const transaction = await createTransactionIntent({
+      ...qrisMetadata,
+      idr_amount: fiatAmount,
+      sol_amount: Number(solAmount),
+      user_wallet: walletAddress.trim(),
+      status: 'PENDING',
+      expires_at: expiresAt,
+      network: 'devnet',
+    });
+
+    return transaction;
+  } catch (error) {
+    console.warn('[QUOTE_PERSISTENCE_UNAVAILABLE]', {
+      message: error instanceof Error ? error.message : 'Unknown quote persistence error',
+    });
+    return null;
+  }
+};
+
 // ─────────────────────────────────────────────────────
 // VERCEL SERVERLESS HANDLER
 // POST /api/v1/payment/quote
@@ -297,7 +365,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { qrisPayload, idrAmount } = req.body;
+    const { qrisPayload, idrAmount, walletAddress } = req.body;
 
     // ── Input Validation ──────────────────────────────
     if (qrisPayload === undefined) {
@@ -363,17 +431,24 @@ export default async function handler(req, res) {
       expiresAt,
       createdAt,
     });
+    const persistedTransaction = await createPersistedTransactionQuote({
+      qrisPayload,
+      fiatAmount,
+      solAmount: solAmountStr,
+      walletAddress,
+      expiresAt,
+    });
 
     // ── Response ──────────────────────────────────────
     return res.status(200).json({
-      quoteId,
+      quoteId: persistedTransaction?.id || quoteId,
       solAmount: solAmountStr,
       exchangeRate: exchangeRateDecimal.toString(),
       fiatAmount,
       fiatCurrency: 'IDR',
       expiresAt,
       createdAt,
-      quoteSource: 'DEMO_SIGNED_FALLBACK',
+      quoteSource: persistedTransaction ? 'PERSISTED_TRANSACTION' : 'DEMO_SIGNED_FALLBACK',
     });
 
   } catch (err) {
@@ -387,4 +462,12 @@ export default async function handler(req, res) {
 }
 
 // Named exports for unit testing
-export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount, resolveFiatAmountForQuote, isValidQrisPayload };
+export {
+  parseEmvcoTlv,
+  extractAmountFromQris,
+  parseStrictQrisAmount,
+  resolveFiatAmountForQuote,
+  isValidQrisPayload,
+  isValidWalletAddress,
+  readQrisQuoteMetadata,
+};

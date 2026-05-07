@@ -6,6 +6,8 @@ import {
   parseEmvcoTlv,
   resolveFiatAmountForQuote,
   isValidQrisPayload,
+  isValidWalletAddress,
+  readQrisQuoteMetadata,
 } from './quote.js';
 import { createStaticDemoQrisPayload } from '../../../src/utils/demoQris.js';
 
@@ -279,5 +281,26 @@ describe('resolveFiatAmountForQuote', () => {
 
     assert.equal(isValidQrisPayload(payload), true);
     assert.equal(resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }), 25000);
+  });
+});
+
+describe('QRIS quote metadata', () => {
+  it('extracts merchant metadata for persisted transaction history', () => {
+    const payload = buildQrisPayload('15000');
+    const metadata = readQrisQuoteMetadata(payload);
+
+    assert.equal(metadata.merchant_name, 'TEST MERCHANT');
+    assert.equal(metadata.merchant_city, 'JAKARTA');
+    assert.equal(metadata.qris_type, 'dynamic');
+    assert.ok(metadata.merchant_qris_id);
+  });
+
+  it('marks QRIS without Tag 54 as static', () => {
+    const metadata = readQrisQuoteMetadata(buildQrisPayloadWithoutAmount());
+    assert.equal(metadata.qris_type, 'static');
+  });
+
+  it('validates Solana wallet addresses for persisted quote attempts', () => {
+    assert.equal(isValidWalletAddress('not-a-wallet'), false);
   });
 });

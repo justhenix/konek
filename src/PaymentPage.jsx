@@ -1,8 +1,15 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import { formatDateTime } from './utils/dateFormat';
-import { buildReceiptSummary, cleanReceiptValue, truncateMiddle } from './utils/receipt';
+import {
+  buildReceiptSummary,
+  cleanReceiptValue,
+  copyTextToClipboard,
+  createReceiptFileName,
+  downloadTextFile,
+  truncateMiddle,
+} from './utils/receipt';
 import {
   buildSolanaExplorerDevnetTxUrl,
   formatIdrAmount,
@@ -166,11 +173,15 @@ const formatPanelDateTime = (value, language, t) => (
   formatDateTime(value, language) || t('payment.lblDateUnavailable')
 );
 
-const fetchPaymentQuote = async ({ qrisPayload, idrAmount }) => {
+const fetchPaymentQuote = async ({ qrisPayload, idrAmount, walletAddress }) => {
   const requestBody = { qrisPayload };
 
   if (idrAmount !== null && idrAmount !== undefined) {
     requestBody.idrAmount = String(idrAmount);
+  }
+
+  if (walletAddress) {
+    requestBody.walletAddress = walletAddress;
   }
 
   let response;
@@ -248,73 +259,6 @@ const safeBuildSolanaExplorerDevnetTxUrl = (signature) => {
   }
 };
 
-const copyTextToClipboard = async (text) => {
-  const cleanText = cleanReceiptValue(text);
-
-  if (!cleanText) {
-    return false;
-  }
-
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(cleanText);
-      return true;
-    } catch {
-      // Fall through to the textarea copy path below.
-    }
-  }
-
-  if (typeof document === 'undefined') {
-    return false;
-  }
-
-  const textArea = document.createElement('textarea');
-  textArea.value = cleanText;
-  textArea.setAttribute('readonly', '');
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-9999px';
-  textArea.style.top = '0';
-
-  document.body.appendChild(textArea);
-  textArea.select();
-
-  try {
-    return document.execCommand('copy');
-  } catch {
-    return false;
-  } finally {
-    document.body.removeChild(textArea);
-  }
-};
-
-const downloadTextFile = ({ fileName, text }) => {
-  if (
-    typeof document === 'undefined'
-    || typeof Blob === 'undefined'
-    || typeof URL === 'undefined'
-  ) {
-    return false;
-  }
-
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const downloadUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = downloadUrl;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(downloadUrl);
-
-  return true;
-};
-
-const createReceiptFileName = (signature) => {
-  const suffix = cleanReceiptValue(signature).slice(0, 8) || new Date().toISOString().slice(0, 10);
-  return `konekpay-receipt-${suffix}.txt`;
-};
-
 const noticeStyles = {
   info: 'border-(--kp-border) bg-(--kp-control-bg) text-(--kp-text-muted)',
   success: 'border-brand/25 bg-brand/8 text-(--kp-text)',
@@ -374,7 +318,7 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
     ? 'truncate'
     : mono
       ? 'break-all'
-      : 'break-words';
+      : 'wrap-break-word';
 
   return (
     <div className="grid min-w-0 gap-1.5 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4 sm:px-4">
@@ -458,7 +402,7 @@ const ReceiptField = ({
     <div className="grid min-w-0 gap-2 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.78fr)_minmax(0,1.22fr)] sm:gap-4 sm:px-4">
       <span className="kp-soft text-xs font-semibold">{label}</span>
       <div className="flex min-w-0 items-start gap-2 sm:justify-end">
-        <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'break-all font-mono' : 'break-words'} ${toneClass}`} title={title || cleanValue}>
+        <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'break-all font-mono' : 'wrap-break-word'} ${toneClass}`} title={title || cleanValue}>
           {cleanValue}
         </span>
         {action}
@@ -479,8 +423,10 @@ export default function PaymentPage({
   onConfirm,
   onRetryVerification,
   onScanAnother,
+  onVerifiedReceipt,
   onCancel,
   rpcEndpoint,
+  walletAddress,
   language,
   t,
 }) {
@@ -500,6 +446,7 @@ export default function PaymentPage({
   const [manualAmountError, setManualAmountError] = useState('');
   const [manualAmountIdr, setManualAmountIdr] = useState(null);
   const [receiptActionMessage, setReceiptActionMessage] = useState('');
+  const savedReceiptHistoryKeyRef = useRef('');
 
   useEffect(() => {
     if (!quote) {
@@ -722,6 +669,7 @@ export default function PaymentPage({
       const nextQuote = await fetchPaymentQuote({
         qrisPayload: parsedPayment.rawData,
         idrAmount: Number.isFinite(manualAmountIdr) ? manualAmountIdr : null,
+        walletAddress,
       });
       setQuote(nextQuote);
     } catch (error) {
@@ -872,6 +820,67 @@ export default function PaymentPage({
     receiptWalletAddress,
     t,
   ]);
+  const verifiedReceiptHistoryRecord = useMemo(() => {
+    if (!verifiedPayment) {
+      return null;
+    }
+
+    return {
+      id: fullPaymentSignature || receiptQuoteId,
+      source: 'local_demo',
+      merchantName,
+      merchantCity,
+      qrisType: isStaticQris ? 'static' : 'dynamic',
+      idrAmount: Number.isFinite(Number(quote?.fiatAmount))
+        ? Number(quote.fiatAmount)
+        : Number.isFinite(paymentAmount)
+          ? paymentAmount
+          : null,
+      idrAmountLabel: receiptIdrAmountLabel,
+      solAmount: quote?.solAmount || '',
+      solAmountLabel: receiptSolAmountLabel,
+      status: 'paid_verified',
+      statusLabel: receiptStatusLabel,
+      walletAddress: receiptWalletAddress,
+      signature: fullPaymentSignature,
+      explorerUrl: primaryExplorerUrl,
+      timestamp: verifiedPayment?.verifiedAt || submittedPayment?.submittedAt || quote?.createdAt || new Date().toISOString(),
+      quoteId: receiptQuoteId,
+      network: 'devnet',
+      networkLabel: t('payment.receiptNetwork'),
+      settlementDisclaimer: t('payment.receiptSettlementDemoNote'),
+    };
+  }, [
+    fullPaymentSignature,
+    isStaticQris,
+    merchantCity,
+    merchantName,
+    paymentAmount,
+    primaryExplorerUrl,
+    quote,
+    receiptIdrAmountLabel,
+    receiptQuoteId,
+    receiptSolAmountLabel,
+    receiptStatusLabel,
+    receiptWalletAddress,
+    submittedPayment,
+    t,
+    verifiedPayment,
+  ]);
+
+  useEffect(() => {
+    if (!verifiedReceiptHistoryRecord || !onVerifiedReceipt) {
+      return;
+    }
+
+    const historyKey = `${verifiedReceiptHistoryRecord.walletAddress}:${verifiedReceiptHistoryRecord.signature || verifiedReceiptHistoryRecord.quoteId}`;
+    if (!verifiedReceiptHistoryRecord.walletAddress || savedReceiptHistoryKeyRef.current === historyKey) {
+      return;
+    }
+
+    savedReceiptHistoryKeyRef.current = historyKey;
+    onVerifiedReceipt(verifiedReceiptHistoryRecord);
+  }, [onVerifiedReceipt, verifiedReceiptHistoryRecord]);
   const canUseWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const receiptShareButtonLabel = canUseWebShare ? t('payment.btnShareReceipt') : t('payment.btnCopyReceipt');
 
@@ -1038,7 +1047,7 @@ export default function PaymentPage({
                       </div>
                       <div className="min-w-0 border border-brand/20 bg-brand/10 px-3 py-2 text-left sm:text-right">
                         <p className="kp-soft text-[11px] font-bold uppercase tracking-[0.12em]">{t('payment.lblStatus')}</p>
-                        <p className="mt-1 break-words font-mono text-sm font-bold text-brand">{receiptStatusLabel}</p>
+                        <p className="mt-1 wrap-break-word font-mono text-sm font-bold text-brand">{receiptStatusLabel}</p>
                       </div>
                     </div>
                   </div>
