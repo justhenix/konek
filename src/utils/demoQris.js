@@ -1,4 +1,4 @@
-import { calculateCrc16 } from './parseEmvcoQris';
+import { calculateCrc16 } from './parseEmvcoQris.js';
 
 // ─────────────────────────────────────────────────────
 // Demo QRIS Payload Generator
@@ -11,6 +11,7 @@ import { calculateCrc16 } from './parseEmvcoQris';
 
 export const DEMO_QRIS_MERCHANT_NAME = 'KANTIN 165 DEMO';
 export const DEMO_QRIS_AMOUNT_IDR = 15000;
+export const STATIC_DEMO_QRIS_MERCHANT_NAME = "Sol's Chicken";
 
 const DEMO_DEFAULTS = {
   payloadFormatIndicator: '01',      // Tag 00 — always "01"
@@ -45,7 +46,9 @@ const buildMerchantAccount = (acquirerId, reference) => {
  *
  * @param {Object} [options]
  * @param {string} [options.merchantName]  Merchant display name (Tag 59)
- * @param {number} [options.amount]        IDR amount (Tag 54)
+ * @param {number|null} [options.amount]   IDR amount (Tag 54), omitted when null
+ * @param {string} [options.pointOfInitiationMethod] "11" static or "12" dynamic
+ * @param {string} [options.merchantAccountReference] Merchant account reference
  * @param {string} [options.currency]      ISO 4217 numeric code (Tag 53)
  * @param {string} [options.city]          Merchant city (Tag 60)
  * @param {string} [options.countryCode]   2-letter country code (Tag 58)
@@ -54,23 +57,28 @@ const buildMerchantAccount = (acquirerId, reference) => {
 export const createDemoQrisPayload = ({
   merchantName = DEMO_QRIS_MERCHANT_NAME,
   amount = DEMO_QRIS_AMOUNT_IDR,
+  pointOfInitiationMethod = amount === null || amount === undefined ? '11' : DEMO_DEFAULTS.pointOfInitiationMethod,
+  merchantAccountReference = DEMO_DEFAULTS.merchantAccountReference,
   currency = DEMO_DEFAULTS.currency,
   city = DEMO_DEFAULTS.city,
   countryCode = DEMO_DEFAULTS.countryCode,
 } = {}) => {
-  const amountStr = String(amount);
+  const shouldIncludeAmount = amount !== null && amount !== undefined;
+  const amountStr = shouldIncludeAmount ? String(amount) : '';
 
   // Build TLV segments in EMVCo order
   let payload = '';
   payload += tlv('00', DEMO_DEFAULTS.payloadFormatIndicator);   // Tag 00
-  payload += tlv('01', DEMO_DEFAULTS.pointOfInitiationMethod);  // Tag 01
+  payload += tlv('01', pointOfInitiationMethod);                 // Tag 01
   payload += buildMerchantAccount(                               // Tag 26
     DEMO_DEFAULTS.merchantAccountId,
-    DEMO_DEFAULTS.merchantAccountReference,
+    merchantAccountReference,
   );
   payload += tlv('52', DEMO_DEFAULTS.mcc);                      // Tag 52
   payload += tlv('53', currency);                                // Tag 53
-  payload += tlv('54', amountStr);                               // Tag 54
+  if (shouldIncludeAmount) {
+    payload += tlv('54', amountStr);                             // Tag 54
+  }
   payload += tlv('58', countryCode);                             // Tag 58
   payload += tlv('59', merchantName);                            // Tag 59
   payload += tlv('60', city);                                    // Tag 60
@@ -89,3 +97,13 @@ export const createDemoQrisPayload = ({
  * @returns {string} EMVCo QRIS payload string
  */
 export const getDemoQrisPayload = () => createDemoQrisPayload();
+
+export const createStaticDemoQrisPayload = () => createDemoQrisPayload({
+  merchantName: STATIC_DEMO_QRIS_MERCHANT_NAME,
+  amount: null,
+  pointOfInitiationMethod: '11',
+  merchantAccountReference: 'DEMO-QRIS-SOLS-CHICKEN',
+  city: 'BANDUNG',
+});
+
+export const getStaticDemoQrisPayload = () => createStaticDemoQrisPayload();

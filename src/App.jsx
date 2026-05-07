@@ -145,7 +145,12 @@ const createPendingPhantomPayment = ({ parsedPayment, quote }) => {
     parsedPayment: parsedPayment
       ? {
         rawData: qrisData,
+        rawPayload: parsedPayment.rawPayload || qrisData,
+        qrisType: parsedPayment.qrisType,
+        amountSource: parsedPayment.amountSource,
         merchantName: parsedPayment.merchantName,
+        merchantCity: parsedPayment.merchantCity,
+        merchantId: parsedPayment.merchantId,
         amount: parsedPayment.amount,
         amountText: parsedPayment.amountText,
         formattedAmount: parsedPayment.formattedAmount,

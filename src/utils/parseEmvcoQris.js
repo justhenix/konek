@@ -19,24 +19,33 @@ export const calculateCrc16 = (payload) => {
 };
 
 const TAGS = {
+  pointOfInitiationMethod: '01',
   transactionAmount: '54',
   merchantName: '59',
+  merchantCity: '60',
   transactionCurrency: '53',
 };
 
 const createEmptyResult = (rawData, errors = []) => ({
   rawData,
+  rawPayload: rawData,
   isValid: false,
   isTlvValid: false,
   hasRequiredTags: false,
+  qrisType: null,
   merchantName: '',
+  merchantCity: '',
+  merchantId: '',
+  merchantAccountInfo: null,
   amount: null,
   amountText: '',
   formattedAmount: 'Not provided',
   currencyCode: '',
   tags: {
+    [TAGS.pointOfInitiationMethod]: '',
     [TAGS.transactionAmount]: '',
     [TAGS.merchantName]: '',
+    [TAGS.merchantCity]: '',
     [TAGS.transactionCurrency]: '',
   },
   errors,
@@ -87,6 +96,63 @@ const formatIdrAmount = (amount) => {
   });
 };
 
+const STRICT_QRIS_AMOUNT_RE = /^\d+(\.0{1,2})?$/;
+const MERCHANT_ACCOUNT_TAG_RE = /^(2[6-9]|3\d|4\d|5[0-1])$/;
+
+const parseQrisAmount = (amountText, errors) => {
+  if (!STRICT_QRIS_AMOUNT_RE.test(amountText)) {
+    errors.push('Tag 54 transaction amount is not a valid IDR amount.');
+    return null;
+  }
+
+  const amount = Number(amountText);
+
+  if (!Number.isFinite(amount)) {
+    errors.push('Tag 54 transaction amount is not numeric.');
+    return null;
+  }
+
+  if (amount <= 0) {
+    errors.push('Tag 54 transaction amount must be greater than zero.');
+    return null;
+  }
+
+  if (amount > 1_000_000_000) {
+    errors.push('Tag 54 transaction amount is too high.');
+    return null;
+  }
+
+  return Math.trunc(amount);
+};
+
+const readMerchantAccountInfo = (segments) => {
+  const merchantAccountSegment = segments.find((segment) => (
+    MERCHANT_ACCOUNT_TAG_RE.test(segment.tag)
+  ));
+
+  if (!merchantAccountSegment) {
+    return null;
+  }
+
+  const subTags = {};
+
+  try {
+    readTlvSegments(merchantAccountSegment.value).forEach((segment) => {
+      subTags[segment.tag] = segment.value;
+    });
+  } catch {
+    // Some merchant account values are opaque provider strings.
+  }
+
+  return {
+    tag: merchantAccountSegment.tag,
+    value: merchantAccountSegment.value,
+    providerId: subTags['00'] || '',
+    merchantId: subTags['01'] || subTags['02'] || subTags['03'] || '',
+    subTags,
+  };
+};
+
 export const parseEmvcoQris = (rawValue) => {
   const rawData = typeof rawValue === 'string' ? rawValue.trim() : '';
 
@@ -102,10 +168,14 @@ export const parseEmvcoQris = (rawValue) => {
     }, {});
     const crcSegment = segments.find((segment) => segment.tag === '63');
 
+    const hasAmountField = Object.prototype.hasOwnProperty.call(valuesByTag, TAGS.transactionAmount);
     const amountText = (valuesByTag[TAGS.transactionAmount] || '').trim();
     const merchantName = (valuesByTag[TAGS.merchantName] || '').trim();
-    const amount = amountText === '' ? null : Number(amountText);
+    const merchantCity = (valuesByTag[TAGS.merchantCity] || '').trim();
+    const qrisType = hasAmountField ? 'dynamic' : 'static';
     const errors = [];
+    const amount = hasAmountField ? parseQrisAmount(amountText, errors) : null;
+    const merchantAccountInfo = readMerchantAccountInfo(segments);
 
     if (!rawData.startsWith(REQUIRED_QRIS_PREFIX)) {
       errors.push('QR payload does not start with EMVCo QRIS payload format indicator.');
@@ -125,31 +195,32 @@ export const parseEmvcoQris = (rawValue) => {
       }
     }
 
-    if (!amountText) {
-      errors.push('Tag 54 transaction amount is missing.');
-    } else if (!Number.isFinite(amount)) {
-      errors.push('Tag 54 transaction amount is not numeric.');
-    }
-
     if (!merchantName) {
       errors.push('Tag 59 merchant name is missing.');
     }
 
-    const hasRequiredTags = Boolean(amountText && merchantName && Number.isFinite(amount));
+    const hasRequiredTags = Boolean(merchantName && (qrisType === 'static' || Number.isFinite(amount)));
 
     return {
       rawData,
+      rawPayload: rawData,
       isValid: errors.length === 0,
       isTlvValid: true,
       hasRequiredTags,
+      qrisType,
       merchantName,
+      merchantCity,
+      merchantId: merchantAccountInfo?.merchantId || merchantAccountInfo?.value || '',
+      merchantAccountInfo,
       amount,
       amountText,
       formattedAmount: formatIdrAmount(amount),
       currencyCode: valuesByTag[TAGS.transactionCurrency] || '',
       tags: {
+        [TAGS.pointOfInitiationMethod]: valuesByTag[TAGS.pointOfInitiationMethod] || '',
         [TAGS.transactionAmount]: amountText,
         [TAGS.merchantName]: merchantName,
+        [TAGS.merchantCity]: merchantCity,
         [TAGS.transactionCurrency]: valuesByTag[TAGS.transactionCurrency] || '',
       },
       segments,

@@ -5,7 +5,9 @@ import {
   extractAmountFromQris,
   parseEmvcoTlv,
   resolveFiatAmountForQuote,
+  isValidQrisPayload,
 } from './quote.js';
+import { createStaticDemoQrisPayload } from '../../../src/utils/demoQris.js';
 
 // ─────────────────────────────────────────────────────
 // Helper: build a minimal EMVCo TLV segment
@@ -208,6 +210,11 @@ describe('extractAmountFromQris', () => {
     assert.throws(() => extractAmountFromQris(payload), /missing transaction amount/i);
   });
 
+  it('throws on QRIS payload with empty Tag 54', () => {
+    const payload = buildQrisPayload('');
+    assert.throws(() => extractAmountFromQris(payload), /empty/);
+  });
+
   it('throws on QRIS payload with invalid amount in Tag 54', () => {
     const payload = buildQrisPayload('15000abc');
     assert.throws(() => extractAmountFromQris(payload), /invalid characters/);
@@ -243,6 +250,14 @@ describe('resolveFiatAmountForQuote', () => {
     assert.equal(resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }), 25000);
   });
 
+  it('does not use a manual IDR amount when Tag 54 is present but empty', () => {
+    const payload = buildQrisPayload('');
+    assert.throws(
+      () => resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }),
+      /empty/
+    );
+  });
+
   it('rejects formatted manual IDR amount text', () => {
     const payload = buildQrisPayloadWithoutAmount();
     assert.throws(
@@ -257,5 +272,12 @@ describe('resolveFiatAmountForQuote', () => {
       () => resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '0' }),
       /greater than zero/
     );
+  });
+
+  it("accepts the Sol's Chicken static demo payload with a strict manual amount", () => {
+    const payload = createStaticDemoQrisPayload();
+
+    assert.equal(isValidQrisPayload(payload), true);
+    assert.equal(resolveFiatAmountForQuote({ qrisPayload: payload, idrAmount: '25000' }), 25000);
   });
 });

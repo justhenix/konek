@@ -1,8 +1,8 @@
-import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
+import { Fragment, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
-import { getDemoQrisPayload } from './utils/demoQris';
+import { getDemoQrisPayload, getStaticDemoQrisPayload } from './utils/demoQris';
 
 const isMissingAmountError = (errorMsg) => {
   const msg = String(errorMsg).toLowerCase();
@@ -103,6 +103,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
   const [cameraStatus, setCameraStatus] = useState('idle');
   const [scanResult, setScanResult] = useState(null);
   const [showDemoQr, setShowDemoQr] = useState(false);
+  const [demoQrType, setDemoQrType] = useState('dynamic');
 
   // Progressive hint state: 'idle' | 'scanning' | 'unreadable'
   const [scanHint, setScanHint] = useState('idle');
@@ -312,8 +313,12 @@ export default function QrisScanner({ onClose, onResult, t }) {
     }
   }, [clearHintTimer, processPayment, stopCamera, scannerId]);
 
-  const handleUseDemoQris = async () => {
-    const demoPayload = getDemoQrisPayload();
+  const currentDemoPayload = useMemo(() => (
+    demoQrType === 'static' ? getStaticDemoQrisPayload() : getDemoQrisPayload()
+  ), [demoQrType]);
+
+  const handleUseDemoQris = async (type = 'dynamic') => {
+    const demoPayload = type === 'static' ? getStaticDemoQrisPayload() : getDemoQrisPayload();
     await stopCamera();
     processPayment(demoPayload);
   };
@@ -467,7 +472,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 </div>
               )}
 
-              <div className={`flex w-full flex-col gap-2 ${showCameraPreview ? '' : 'sm:flex-row'}`}>
+              <div className={`grid w-full grid-cols-1 gap-2 ${showCameraPreview ? '' : 'sm:grid-cols-3'}`}>
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
@@ -477,10 +482,17 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 </button>
                 <button
                   type="button"
-                  onClick={handleUseDemoQris}
+                  onClick={() => handleUseDemoQris('dynamic')}
                   className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
-                  {t('scanner.useDemo')}
+                  {t('scanner.useDynamicDemo')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUseDemoQris('static')}
+                  className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
+                >
+                  {t('scanner.useStaticDemo')}
                 </button>
               </div>
 
@@ -488,11 +500,29 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 <div className="mt-3 flex w-full flex-col items-center border-y border-(--kp-border) bg-(--kp-panel) p-3 shadow-none sm:border sm:p-4">
                   <p className="kp-text mb-2 text-sm font-semibold">{t('scanner.showDemoTitle')}</p>
                   <p className="kp-muted mb-3 max-w-xs text-center text-xs leading-5">
-                    {t('scanner.showDemoHelper')}
+                    {demoQrType === 'static' ? t('scanner.showStaticDemoHelper') : t('scanner.showDynamicDemoHelper')}
                   </p>
+                  <div className="mb-3 grid w-full grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDemoQrType('dynamic')}
+                      aria-pressed={demoQrType === 'dynamic'}
+                      className={`min-h-10 border px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${demoQrType === 'dynamic' ? 'border-brand/35 bg-brand/10 text-brand' : 'kp-button-secondary'}`}
+                    >
+                      {t('scanner.demoDynamicLabel')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDemoQrType('static')}
+                      aria-pressed={demoQrType === 'static'}
+                      className={`min-h-10 border px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${demoQrType === 'static' ? 'border-brand/35 bg-brand/10 text-brand' : 'kp-button-secondary'}`}
+                    >
+                      {t('scanner.demoStaticLabel')}
+                    </button>
+                  </div>
                   <div className={`flex w-full items-center justify-center rounded bg-white p-3 ${showCameraPreview ? 'min-h-52 max-w-52' : 'min-h-61 max-w-61'}`}>
                     <QRCodeSVG
-                      value={getDemoQrisPayload()}
+                      value={currentDemoPayload}
                       size={showCameraPreview ? 184 : 220}
                       level="M"
                       bgColor="#ffffff"
@@ -524,10 +554,10 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 </button>
                 <button
                   type="button"
-                  onClick={handleUseDemoQris}
+                  onClick={() => handleUseDemoQris('dynamic')}
                   className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  {t('scanner.useDemo')}
+                  {t('scanner.useDynamicDemo')}
                 </button>
               </div>
             </div>

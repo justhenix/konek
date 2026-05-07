@@ -344,6 +344,16 @@ const TechnicalDetails = ({ label, children, className = '' }) => (
   </details>
 );
 
+const QrisTypeBadge = ({ type, t }) => {
+  const isStatic = type === 'static';
+
+  return (
+    <span className={`inline-flex shrink-0 items-center border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${isStatic ? 'border-amber-400/35 bg-amber-400/10 text-amber-700 dark:text-amber-200' : 'border-brand/30 bg-brand/10 text-brand'}`}>
+      {isStatic ? t('payment.qrisTypeStatic') : t('payment.qrisTypeDynamic')}
+    </span>
+  );
+};
+
 export default function PaymentPage({
   qrisData,
   initialParsedData,
@@ -389,36 +399,56 @@ export default function PaymentPage({
   }, [quote]);
 
   const qrisIssueType = getQrisIssueType(parsedPayment);
-  const isMissingAmountFlow = qrisIssueType === 'missingAmount';
-  const manualAmountPreview = useMemo(() => {
-    const result = validateManualIdrAmount(manualAmountText, t);
-    return result.amount ? formatIdrAmount(result.amount) : '';
-  }, [manualAmountText, t]);
+  const qrisType = parsedPayment.qrisType || (parsedPayment.amountText ? 'dynamic' : 'static');
+  const isStaticQris = qrisType === 'static' || qrisIssueType === 'missingAmount';
+  const isDynamicQris = qrisType === 'dynamic';
+  const isStaticPaymentFlow = isStaticQris && (parsedPayment.isValid || qrisIssueType === 'missingAmount');
+  const manualAmountValidation = useMemo(() => (
+    validateManualIdrAmount(manualAmountText, t)
+  ), [manualAmountText, t]);
+  const isManualAmountInputValid = Number.isFinite(manualAmountValidation.amount);
+  const manualAmountPreview = isManualAmountInputValid
+    ? formatIdrAmount(manualAmountValidation.amount)
+    : '';
+  const visibleManualAmountError = manualAmountText.trim() && manualAmountValidation.error
+    ? manualAmountValidation.error
+    : manualAmountError;
   const paymentAmount = Number.isFinite(manualAmountIdr)
     ? manualAmountIdr
     : parsedPayment.amount;
   const paymentReviewData = useMemo(() => {
     if (!Number.isFinite(manualAmountIdr)) {
-      return parsedPayment;
+      return {
+        ...parsedPayment,
+        qrisType,
+        amountSource: isDynamicQris ? 'qris' : parsedPayment.amountSource || null,
+      };
     }
 
     return {
       ...parsedPayment,
       isValid: true,
       hasRequiredTags: true,
+      qrisType: 'static',
+      amountSource: 'manual',
       amount: manualAmountIdr,
       amountText: String(manualAmountIdr),
       formattedAmount: manualAmountIdr.toLocaleString('id-ID'),
-      tags: {
-        ...parsedPayment.tags,
-        54: String(manualAmountIdr),
-      },
       errors: [],
     };
-  }, [manualAmountIdr, parsedPayment]);
-  const canReviewPayment = parsedPayment.isValid || (isMissingAmountFlow && Number.isFinite(manualAmountIdr));
-  const showManualAmountForm = isMissingAmountFlow && !Number.isFinite(manualAmountIdr);
+  }, [isDynamicQris, manualAmountIdr, parsedPayment, qrisType]);
+  const canReviewPayment = (isDynamicQris && parsedPayment.isValid)
+    || (isStaticPaymentFlow && Number.isFinite(manualAmountIdr));
+  const showManualAmountForm = isStaticPaymentFlow && !Number.isFinite(manualAmountIdr);
   const merchantName = parsedPayment.merchantName || t('payment.lblMissing');
+  const merchantCity = parsedPayment.merchantCity || parsedPayment.tags?.['60'] || '';
+  const merchantId = parsedPayment.merchantId || parsedPayment.merchantAccountInfo?.merchantId || '';
+  const qrisTypeDescription = isStaticQris
+    ? t('payment.staticQrisDetectedBody')
+    : t('payment.dynamicQrisDetectedBody');
+  const amountSourceLabel = isStaticQris
+    ? t('payment.amountManualLabel')
+    : t('payment.amountLockedLabel');
   const amountLabel = Number.isFinite(paymentAmount)
     ? formatIdrAmount(paymentAmount)
     : t('payment.lblNotProvided');
@@ -501,7 +531,7 @@ export default function PaymentPage({
   ]);
   const headerTitle = {
     idle: t('payment.headerIdle'),
-    amount_required: t('scanner.missingAmountTitle'),
+    amount_required: t('payment.staticQrisDetectedTitle'),
     unsupported: t('payment.headerFailed'),
     parsed: t('payment.headerIdle'),
     quoting: t('payment.headerQuoting'),
@@ -520,7 +550,7 @@ export default function PaymentPage({
 
   const showTryAgain = flowState === 'failed' && canReviewPayment;
   const showScanAnother = !canReviewPayment
-    || isMissingAmountFlow
+    || isStaticPaymentFlow
     || flowState === 'failed'
     || flowState === 'paid_verified'
     || flowState === 'settled'
@@ -535,7 +565,7 @@ export default function PaymentPage({
     || isSettling;
 
   const handleManualAmountContinue = () => {
-    const result = validateManualIdrAmount(manualAmountText, t);
+    const result = manualAmountValidation;
 
     if (result.error) {
       setManualAmountError(result.error);
@@ -584,7 +614,12 @@ export default function PaymentPage({
       const result = await onConfirm?.({
         parsedPayment: {
           rawData: paymentReviewData.rawData,
+          rawPayload: paymentReviewData.rawPayload || paymentReviewData.rawData,
+          qrisType: paymentReviewData.qrisType,
+          amountSource: paymentReviewData.amountSource,
           merchantName: paymentReviewData.merchantName,
+          merchantCity: paymentReviewData.merchantCity,
+          merchantId: paymentReviewData.merchantId,
           amount: paymentReviewData.amount,
           amountText: paymentReviewData.amountText,
           formattedAmount: paymentReviewData.formattedAmount,
@@ -881,13 +916,29 @@ export default function PaymentPage({
             {!(flowState === 'paid_verified' || flowState === 'settled') && showManualAmountForm && (
               <section className="-mx-3 space-y-5 border-y border-brand/20 bg-brand/6 p-3 sm:mx-0 sm:border sm:p-5">
                 <div>
-                  <h4 className="kp-text text-xl font-semibold">{t('scanner.missingAmountTitle')}</h4>
-                  <p className="kp-muted mt-2 text-sm leading-6">{t('scanner.missingAmountBody')}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="kp-text text-xl font-semibold">{t('payment.staticQrisDetectedTitle')}</h4>
+                    <QrisTypeBadge type="static" t={t} />
+                  </div>
+                  <p className="kp-muted mt-2 text-sm leading-6">{t('payment.staticQrisDetectedBody')}</p>
                 </div>
 
                 <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 sm:border sm:p-4">
-                  <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
-                  <p className="kp-text mt-1 wrap-break-word text-base font-semibold">{merchantName}</p>
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
+                      <p className="kp-text mt-1 wrap-break-word text-base font-semibold">{merchantName}</p>
+                      {merchantCity && (
+                        <p className="kp-muted mt-1 text-xs font-semibold">{merchantCity}</p>
+                      )}
+                    </div>
+                    {merchantId && (
+                      <div className="min-w-0 text-left sm:text-right">
+                        <p className="kp-soft text-xs font-semibold">{t('payment.lblMerchantId')}</p>
+                        <p className="kp-muted mt-1 break-all text-xs font-semibold">{merchantId}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -913,13 +964,13 @@ export default function PaymentPage({
                       }
                     }}
                     placeholder={t('scanner.paymentAmountPlaceholder')}
-                    aria-invalid={manualAmountError ? 'true' : 'false'}
+                    aria-invalid={visibleManualAmountError ? 'true' : 'false'}
                     aria-describedby="manual-idr-amount-helper"
                     className="kp-input min-h-12 w-full border px-4 py-3 text-base font-semibold outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
                   />
                   <div id="manual-idr-amount-helper" className="mt-2 min-h-5 text-xs font-semibold">
-                    {manualAmountError ? (
-                      <p className="text-red-700 dark:text-red-300">{manualAmountError}</p>
+                    {visibleManualAmountError ? (
+                      <p className="text-red-700 dark:text-red-300">{visibleManualAmountError}</p>
                     ) : manualAmountPreview ? (
                       <p className="text-brand">{manualAmountPreview}</p>
                     ) : (
@@ -932,12 +983,29 @@ export default function PaymentPage({
 
             {!(flowState === 'paid_verified' || flowState === 'settled') && !showManualAmountForm && canReviewPayment && (
               <div className="space-y-4">
-                <DetailRow label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+                <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="kp-soft text-xs font-semibold">{t('payment.lblMerchant')}</p>
+                      <p className="kp-text mt-1 wrap-break-word text-lg font-semibold">{merchantName}</p>
+                      {merchantCity && (
+                        <p className="kp-muted mt-1 text-xs font-semibold">{merchantCity}</p>
+                      )}
+                    </div>
+                    <QrisTypeBadge type={isStaticQris ? 'static' : 'dynamic'} t={t} />
+                  </div>
+                  <p className="kp-muted mt-3 text-sm leading-6">{qrisTypeDescription}</p>
+                  {merchantId && (
+                    <p className="kp-soft mt-2 break-all text-xs font-semibold">
+                      {t('payment.lblMerchantId')}: {merchantId}
+                    </p>
+                  )}
+                </div>
 
                 {!quoteReview && (
                   <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
                     <div className="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                      <span className="kp-text text-sm font-semibold transition-colors">{t('payment.lblTotalPay')}</span>
+                      <span className="kp-text text-sm font-semibold transition-colors">{amountSourceLabel}</span>
                       <div className="min-w-0 text-left sm:text-right">
                         <div className="wrap-break-word text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
                         <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
@@ -994,7 +1062,7 @@ export default function PaymentPage({
                 {flowState === 'mobile_expired' || flowState === 'unsupported' ? null : flowState === 'amount_required' ? (
                   <RailButton
                     onClick={handleManualAmountContinue}
-                    disabled={isBusy}
+                    disabled={isBusy || !isManualAmountInputValid}
                   >
                     {t('scanner.continue')}
                   </RailButton>

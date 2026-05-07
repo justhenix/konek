@@ -242,7 +242,7 @@ function extractAmountFromQris(payload) {
   const tags = parseEmvcoTlv(payload);
   const rawAmount = tags['54'];
 
-  if (rawAmount === undefined || rawAmount === null || rawAmount === '') {
+  if (rawAmount === undefined || rawAmount === null) {
     throw new Error('QRIS payload is missing transaction amount (Tag 54)');
   }
 
@@ -251,9 +251,10 @@ function extractAmountFromQris(payload) {
 
 function resolveFiatAmountForQuote({ qrisPayload, idrAmount }) {
   const tags = parseEmvcoTlv(qrisPayload);
+  const hasQrisAmount = Object.prototype.hasOwnProperty.call(tags, '54');
   const rawQrisAmount = tags['54'];
 
-  if (rawQrisAmount !== undefined && rawQrisAmount !== null && rawQrisAmount !== '') {
+  if (hasQrisAmount) {
     return parseStrictQrisAmount(rawQrisAmount);
   }
 
@@ -273,7 +274,7 @@ function isValidQrisPayload(payload) {
   if (payload.length < 20 || payload.length > 1000) return false;
   if (!payload.startsWith('000201')) return false;
   if (!payload.includes('6304')) return false;
-  if (!/^[A-Za-z0-9.@\-+:/ ]+$/.test(payload)) return false;
+  if (!/^[A-Za-z0-9.@'\-+:/ ]+$/.test(payload)) return false;
   return true;
 }
 
@@ -386,4 +387,4 @@ export default async function handler(req, res) {
 }
 
 // Named exports for unit testing
-export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount, resolveFiatAmountForQuote };
+export { parseEmvcoTlv, extractAmountFromQris, parseStrictQrisAmount, resolveFiatAmountForQuote, isValidQrisPayload };
