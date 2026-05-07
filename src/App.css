@@ -393,9 +393,111 @@ body {
   background: rgba(255, 255, 255, 0.18);
   border: 2px solid rgba(8, 11, 8, 0.95);
 }
-
 .rail-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(20, 241, 149, 0.34);
+}
+
+/* App Nav: Desktop Segmented Control */
+.kp-segmented-control {
+  display: inline-flex;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-control-bg);
+  gap: 0;
+  padding: 3px;
+}
+
+.kp-segmented-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kp-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  min-height: 30px;
+}
+
+.kp-segmented-btn:hover {
+  color: var(--kp-text);
+  background-color: var(--kp-control-bg-hover);
+}
+
+.kp-segmented-btn[aria-selected="true"] {
+  color: var(--kp-brand-contrast);
+  background-color: var(--kp-brand);
+  border-color: var(--kp-brand);
+}
+
+.kp-segmented-btn:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: -2px;
+}
+
+/* App Nav: Mobile Bottom Tab Bar */
+.kp-bottom-tabs {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 70;
+  display: none;
+  align-items: stretch;
+  justify-content: center;
+  border-top: 1px solid var(--kp-border);
+  background-color: var(--kp-panel);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+@media (max-width: 767px) {
+  .kp-bottom-tabs {
+    display: flex;
+  }
+}
+
+.kp-bottom-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--kp-text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 56px;
+  max-width: 160px;
+  transition: color 0.15s, background-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kp-bottom-tab:active {
+  background-color: var(--kp-control-bg-hover);
+}
+
+.kp-bottom-tab[aria-selected="true"] {
+  color: var(--kp-brand);
+}
+
+.kp-bottom-tab:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: -2px;
+}
+
+/* Give bottom padding when bottom tabs are shown on mobile */
+@media (max-width: 767px) {
+  .kp-has-bottom-tabs {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 420px) {

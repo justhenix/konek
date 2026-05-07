@@ -13,6 +13,7 @@
     "dev:check-env": "node scripts/check-env.mjs"
   },
   "dependencies": {
+    "@remixicon/react": "^4.9.0",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-phantom": "^0.9.29",
     "@solana/wallet-adapter-react": "^0.15.39",

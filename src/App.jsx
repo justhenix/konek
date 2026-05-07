@@ -7,6 +7,16 @@ import nacl from 'tweetnacl';
 import './App.css';
 import { createT } from './utils/translations';
 
+import {
+  RiHome5Line,
+  RiHome5Fill,
+  RiQrScan2Line,
+  RiQrScan2Fill,
+  RiWallet3Line,
+  RiWallet3Fill,
+  RiCloseLine
+} from '@remixicon/react';
+
 import logoKonekPayColor from './assets/konekpay-color.svg';
 import logoPhantom from './assets/Phantom_SVG_Icon.svg';
 import henixPfp from './assets/henix_UNS_pfp.webp';
@@ -624,10 +634,18 @@ const DEVNET_MODAL_STEPS = ['modalStep1', 'modalStep2', 'modalStep3', 'modalStep
 const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
   <div
     id="devnet-notice-banner"
-    className="kp-devnet-banner mx-auto w-full max-w-6xl border px-4 py-3 sm:px-5"
+    className="kp-devnet-banner mx-auto w-full max-w-6xl border px-4 py-3 sm:px-5 relative"
     role="status"
   >
-    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <button
+      type="button"
+      onClick={onDismissBanner}
+      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+      aria-label={t('devnet.bannerCloseLabel')}
+    >
+      <RiCloseLine className="h-5 w-5" />
+    </button>
+    <div className="flex min-w-0 flex-col gap-3 pr-8 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="text-sm font-bold" style={{ color: 'var(--kp-amber)' }}>
           {t('devnet.bannerTitle')}
@@ -652,16 +670,6 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
         >
           {t('devnet.bannerGetSol')}
         </a>
-        <button
-          type="button"
-          onClick={onDismissBanner}
-          className="flex h-11 w-11 shrink-0 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-          aria-label={t('devnet.bannerCloseLabel')}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
       </div>
     </div>
   </div>
@@ -892,6 +900,7 @@ function App() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileWalletOpen, setIsMobileWalletOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const toastIdRef = useRef(0);
   const [solPrice, setSolPrice] = useState(null);
@@ -901,6 +910,8 @@ function App() {
     return stored === 'en' || stored === 'id' ? stored : 'id';
   });
   const t = useMemo(() => createT(lang), [lang]);
+  const [activeTab, setActiveTab] = useState('pay');
+  const [mobileNavActive, setMobileNavActive] = useState('home');
   const [page, setPage] = useState(getCurrentPage);
   const [pendingScrollTarget, setPendingScrollTarget] = useState(getInitialScrollTarget);
   const toggleLang = useCallback(() => {
@@ -1697,6 +1708,9 @@ function App() {
 
   // Fungsi pengatur klik tombol utama (Launch App / QRIS Pay)
   const handleOpenApp = () => {
+    setActiveTab('pay');
+    setPendingScrollTarget('qris');
+    setIsMobileWalletOpen(false);
     if (userProfile.isLoggedIn) {
       setIsScannerOpen(true); // Kalau udah login, buka kamera
     } else {
@@ -2103,6 +2117,7 @@ function App() {
     if (window.location.pathname !== '/team') {
       window.history.pushState({}, '', '/team');
     }
+    setActiveTab('pay');
     setPage('team');
     setPendingScrollTarget(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2118,28 +2133,54 @@ function App() {
     if (`${window.location.pathname}${window.location.hash}` !== nextUrl) {
       window.history.pushState({}, '', nextUrl);
     }
+    setActiveTab('pay');
     setPage('home');
     setPendingScrollTarget(target);
   }, [navigateToTeam]);
+
+  const handleAppTabChange = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+    setIsMobileMenuOpen(false);
+    setIsMobileWalletOpen(false);
+    if (nextTab === 'pay') setMobileNavActive('home');
+
+    if (page !== 'home') {
+      if (`${window.location.pathname}${window.location.hash}` !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      setPage('home');
+    }
+
+    if (nextTab === 'pay') {
+      setPendingScrollTarget('top');
+      return;
+    }
+
+    setPendingScrollTarget(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const handleMobileNavClick = (target) => {
     scrollToSection(target);
     setIsMobileMenuOpen(false);
   };
 
-  const handleMobileAppClick = () => {
-    setIsMobileMenuOpen(false);
-    handleOpenApp();
-  };
-
   const handleMobileWalletConnect = () => {
+    setIsMobileWalletOpen(false);
     setIsMobileMenuOpen(false);
     setIsLoginModalOpen(true);
   };
 
   const handleMobileWalletDisconnect = () => {
+    setIsMobileWalletOpen(false);
     setIsMobileMenuOpen(false);
     handleDisconnectWallet();
+  };
+
+  const handleMobileAppClick = () => {
+    setIsMobileWalletOpen(false);
+    setIsMobileMenuOpen(false);
+    handleOpenApp();
   };
 
   return (
@@ -2314,8 +2355,19 @@ function App() {
                     </div>
                     <button
                       type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        handleAppTabChange('history');
+                      }}
+                      className="w-full border-b border-white/10 px-3 py-2.5 text-left text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      role="menuitem"
+                    >
+                      {t('history.transactionHistory')}
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleDisconnectWallet}
-                      className="w-full border border-red-500/15 bg-red-500/5 px-3 py-2.5 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                      className="w-full border-t border-transparent bg-red-500/5 px-3 py-2.5 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                       role="menuitem"
                     >
                       {t('walletDropdown.disconnect')}
@@ -2351,23 +2403,26 @@ function App() {
 
         {page === 'home' ? (
           <>
-        <div className="mx-auto w-full max-w-6xl px-4 pt-20 sm:px-6 md:pt-24 lg:px-8">
-        {!isDevnetBannerDismissed && (
-          <DevnetBanner 
-            t={t} 
-            onHowToSwitch={() => setIsDevnetModalOpen(true)} 
-            onDismissBanner={() => setIsDevnetBannerDismissed(true)} 
-          />
-        )}
-        </div>
-        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-4 sm:px-6 md:pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-8" data-hero-section>
-          <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
-            <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
-              {t('hero.headline')}
-            </h1>
-            <p className="hero-text mt-5 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
-              {t('hero.subtitle')}
-            </p>
+            {activeTab === 'pay' && !isDevnetBannerDismissed && (
+              <div className="mx-auto w-full max-w-6xl px-4 pt-20 sm:px-6 md:pt-24 lg:px-8">
+                <DevnetBanner 
+                  t={t} 
+                  onHowToSwitch={() => setIsDevnetModalOpen(true)} 
+                  onDismissBanner={() => setIsDevnetBannerDismissed(true)} 
+                />
+              </div>
+            )}
+
+            {activeTab === 'pay' ? (
+              <>
+                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16${isDevnetBannerDismissed ? ' pt-20 md:pt-24' : ' pt-4 md:pt-6'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
+                  <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
+                    <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
+                      {t('hero.headline')}
+                    </h1>
+                    <p className="hero-text mt-5 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
+                      {t('hero.subtitle')}
+                    </p>
             <div className="hero-text mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center" data-hero-cta>
               <button
                 onClick={handleOpenApp}
@@ -2390,12 +2445,6 @@ function App() {
           </section>
         </main>
 
-        <TransactionHistory
-          walletAddress={userProfile.address}
-          language={lang}
-          t={t}
-          onConnectWallet={() => setIsLoginModalOpen(true)}
-        />
 
         <section id="usp-section" className="scroll-mt-28 border-b border-white/10">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
@@ -2433,24 +2482,156 @@ function App() {
               ))}
             </div>
           </div>
-        </section>
+                </section>
 
-        <FaqSection t={t} />
+                <FaqSection t={t} />
 
-        <LandingTeamPreview t={t} onMeetTeam={navigateToTeam} />
+                <LandingTeamPreview t={t} onMeetTeam={navigateToTeam} />
+              </>
+            ) : (
+              <main id="tabpanel-history" role="tabpanel" aria-labelledby="desktop-tab-history mobile-tab-history" className={`pt-20 md:pt-24${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-0!' : ''}`}>
+                <TransactionHistory
+                  walletAddress={userProfile.address}
+                  language={lang}
+                  t={t}
+                  onConnectWallet={() => setIsLoginModalOpen(true)}
+                  onBackToPayment={() => handleAppTabChange('pay')}
+                />
+              </main>
+            )}
           </>
         ) : (
           <TeamPage t={t} />
         )}
 
-        <footer className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
-            <KonekLogo className="h-6 w-6" />
-            <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
-          </button>
-          <p>{t('footer.builtFor')}</p>
-        </footer>
+        {(!page || activeTab === 'pay') && (
+          <footer className={`mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-10!' : ''}`}>
+            <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
+              <KonekLogo className="h-6 w-6" />
+              <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
+            </button>
+            <p>{t('footer.builtFor')}</p>
+          </footer>
+        )}
       </div>
+
+      {userProfile.isLoggedIn && page === 'home' && !isScannerOpen && !scannedData && (
+        <nav className="kp-bottom-tabs md:hidden" role="tablist" aria-label={`${t('appNav.homeTab')} / ${t('appNav.payTab')} / ${t('appNav.walletTab')}`}>
+          <button
+            type="button"
+            role="tab"
+            id="mobile-tab-home"
+            className="kp-bottom-tab"
+            aria-selected={activeTab === 'pay' && mobileNavActive === 'home'}
+            aria-controls="tabpanel-home"
+            onClick={() => {
+              handleAppTabChange('pay');
+              setMobileNavActive('home');
+              scrollToSection('top');
+            }}
+            aria-label={t('appNav.homeTabLabel')}
+          >
+            {activeTab === 'pay' && mobileNavActive === 'home' ? <RiHome5Fill className="h-5 w-5" /> : <RiHome5Line className="h-5 w-5" />}
+            <span>{t('appNav.homeTab')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="mobile-tab-pay"
+            className="kp-bottom-tab"
+            aria-selected={activeTab === 'pay' && mobileNavActive === 'qris'}
+            aria-controls="tabpanel-pay"
+            onClick={() => {
+              handleOpenApp();
+              setMobileNavActive('qris');
+            }}
+            aria-label={t('appNav.payTabLabel')}
+          >
+            {activeTab === 'pay' && mobileNavActive === 'qris' ? <RiQrScan2Fill className="h-5 w-5" /> : <RiQrScan2Line className="h-5 w-5" />}
+            <span>{t('appNav.payTab')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="mobile-tab-wallet"
+            className="kp-bottom-tab"
+            aria-selected={isMobileWalletOpen}
+            aria-controls="mobile-wallet-panel"
+            onClick={() => setIsMobileWalletOpen(!isMobileWalletOpen)}
+            aria-label={t('appNav.walletTabLabel')}
+          >
+            {isMobileWalletOpen ? <RiWallet3Fill className="h-5 w-5" /> : <RiWallet3Line className="h-5 w-5" />}
+            <span>{t('appNav.walletTab')}</span>
+          </button>
+        </nav>
+      )}
+
+      {isMobileWalletOpen && (
+        <div
+          className="fixed inset-0 z-130 flex items-end bg-black/85 p-0 backdrop-blur-md animate-fade-in transition-all md:hidden"
+          onClick={() => setIsMobileWalletOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            id="mobile-wallet-panel"
+            className="w-full border-t border-purple-400/25 bg-[#080b08] p-5 shadow-[0_-24px_70px_rgba(0,0,0,0.42)] transition-colors"
+            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-purple-300">{t('navbar.wallet')}</span>
+              <button
+                type="button"
+                onClick={() => setIsMobileWalletOpen(false)}
+                className="kp-control grid h-8 w-8 place-items-center border focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              >
+                <RiCloseLine className="h-5 w-5" />
+              </button>
+            </div>
+
+            {userProfile.isLoggedIn ? (
+              <div className="grid gap-3">
+                <div className="mb-2 min-w-0 border-b border-white/10 pb-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-brand"></span>
+                    <p className="text-xs font-semibold text-purple-300">{t('walletDropdown.label')}</p>
+                  </div>
+                  <p className="mt-4 text-[11px] font-semibold text-zinc-500">{t('walletDropdown.address')}</p>
+                  <p className="mt-1 truncate font-mono text-base font-semibold text-white" title={userProfile.address}>{userProfile.address}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileWalletOpen(false);
+                    handleAppTabChange('history');
+                  }}
+                  className="w-full border-b border-white/10 px-3 py-3.5 text-left text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {t('history.transactionHistory')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleMobileWalletDisconnect}
+                  className="mt-2 w-full bg-red-500/5 px-3 py-3.5 text-left text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                  {t('walletDropdown.disconnect')}
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleMobileWalletConnect}
+                  className="flex min-h-12 w-full items-center justify-center border border-purple-400/25 bg-purple-500/10 px-3 text-sm font-bold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                >
+                  {t('navbar.connectWallet')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
 
       {/* ========================================================= */}

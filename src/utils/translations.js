@@ -104,6 +104,17 @@ export const translations = {
     "fab": {
       "qrisPay": "Open App"
     },
+    "appNav": {
+      "homeTab": "Home",
+      "payTab": "QRIS",
+      "walletTab": "Wallet",
+      "historyTab": "History",
+      "homeTabLabel": "Go to home",
+      "payTabLabel": "Switch to payment",
+      "walletTabLabel": "Open wallet menu",
+      "historyTabLabel": "Switch to transaction history",
+      "backToPayment": "Back to payment"
+    },
     "loginModal": {
       "title": "Connect Wallet",
       "desc": "Connect Phantom to start paying with Solana.",
@@ -341,17 +352,17 @@ export const translations = {
     },
     "history": {
       "history": "History",
-      "transactionHistory": "Transaction history",
+      "transactionHistory": "Transaction History",
       "connectWalletPrompt": "Connect your wallet to view only that wallet's payment history.",
-      "connectWalletToView": "Connect wallet to view history.",
+      "connectWalletToView": "Connect your wallet to view transaction history.",
       "localDemoNotice": "Local demo history is stored in this browser for the connected wallet only. Merchant settlement is simulated.",
-      "backendHistoryIntro": "KonekPay loads verified wallet history from the backend when available.",
-      "backendUnavailable": "Backend history is unavailable. Showing local demo history when available.",
-      "showingLocalDemoHistory": "Showing local demo history from this browser.",
-      "unableToLoadHistory": "Unable to load backend history.",
-      "retryHistoryLoad": "Retry history load",
-      "loadingHistory": "Loading history",
-      "loadingHistoryBody": "Checking backend transaction history for this wallet.",
+      "backendHistoryIntro": "Review verified KonekPay payments for the connected wallet.",
+      "backendUnavailable": "Local demo history is being shown on this device.",
+      "showingLocalDemoHistory": "Local demo history is being shown on this device.",
+      "unableToLoadHistory": "Transaction history is temporarily unavailable.",
+      "retryHistoryLoad": "Try again",
+      "loadingHistory": "Checking transaction history...",
+      "loadingHistoryBody": "Checking transaction history...",
       "noTransactions": "No transactions yet",
       "noTransactionsBody": "Verified payments will appear here after KonekPay checks the Solana Devnet transaction.",
       "viewReceipt": "View receipt",
@@ -370,7 +381,8 @@ export const translations = {
       "statusPending": "PENDING",
       "statusFailed": "FAILED",
       "statusSettled": "SETTLED",
-      "statusUnknown": "UNKNOWN"
+      "statusUnknown": "UNKNOWN",
+      "useWalletButton": "Use the wallet button above to connect."
     },
     "devnet": {
       "bannerTitle": "Devnet Mode",
@@ -405,7 +417,7 @@ export const translations = {
   },
   "id": {
     "navbar": {
-      "connectWallet": "Konek Dompet",
+      "connectWallet": "Hubungkan Dompet",
       "disconnectWallet": "Putuskan Dompet",
       "launchApp": "Buka App",
       "home": "Beranda",
@@ -508,8 +520,19 @@ export const translations = {
     "fab": {
       "qrisPay": "Buka App"
     },
+    "appNav": {
+      "homeTab": "Beranda",
+      "payTab": "QRIS",
+      "walletTab": "Dompet",
+      "historyTab": "Riwayat",
+      "homeTabLabel": "Pergi ke beranda",
+      "payTabLabel": "Beralih ke pembayaran",
+      "walletTabLabel": "Buka menu dompet",
+      "historyTabLabel": "Beralih ke riwayat transaksi",
+      "backToPayment": "Kembali ke pembayaran"
+    },
     "loginModal": {
-      "title": "Konek Dompet",
+      "title": "Hubungkan Dompet",
       "desc": "Hubungkan Phantom untuk mulai bayar pakai Solana.",
       "btn": "Hubungkan Phantom",
       "closeLabel": "Tutup koneksi dompet"
@@ -745,19 +768,19 @@ export const translations = {
     },
     "history": {
       "history": "Riwayat",
-      "transactionHistory": "Riwayat transaksi",
+      "transactionHistory": "Riwayat Transaksi",
       "connectWalletPrompt": "Hubungkan wallet untuk melihat riwayat pembayaran wallet itu saja.",
-      "connectWalletToView": "Hubungkan wallet untuk melihat riwayat.",
+      "connectWalletToView": "Hubungkan wallet untuk melihat riwayat transaksi.",
       "localDemoNotice": "Riwayat demo lokal disimpan di browser ini hanya untuk wallet yang terhubung. Settlement merchant disimulasikan.",
-      "backendHistoryIntro": "KonekPay memuat riwayat wallet terverifikasi dari backend jika tersedia.",
-      "backendUnavailable": "Riwayat backend tidak tersedia. Riwayat demo lokal akan ditampilkan jika ada.",
-      "showingLocalDemoHistory": "Menampilkan riwayat demo lokal dari browser ini.",
-      "unableToLoadHistory": "Riwayat backend belum bisa dimuat.",
-      "retryHistoryLoad": "Muat ulang riwayat",
-      "loadingHistory": "Memuat riwayat",
-      "loadingHistoryBody": "Mengecek riwayat transaksi backend untuk wallet ini.",
+      "backendHistoryIntro": "Lihat pembayaran KonekPay terverifikasi untuk wallet yang terhubung.",
+      "backendUnavailable": "Riwayat demo lokal ditampilkan di perangkat ini.",
+      "showingLocalDemoHistory": "Riwayat demo lokal ditampilkan di perangkat ini.",
+      "unableToLoadHistory": "Riwayat transaksi sementara belum tersedia.",
+      "retryHistoryLoad": "Coba lagi",
+      "loadingHistory": "Memeriksa riwayat transaksi...",
+      "loadingHistoryBody": "Memeriksa riwayat transaksi...",
       "noTransactions": "Belum ada transaksi",
-      "noTransactionsBody": "Pembayaran terverifikasi akan muncul di sini setelah KonekPay mengecek transaksi Solana Devnet.",
+      "noTransactionsBody": "Pembayaran terverifikasi akan muncul di sini setelah KonekPay memeriksa transaksi Solana Devnet.",
       "viewReceipt": "Lihat bukti",
       "receiptDetail": "Detail bukti",
       "closeReceipt": "Tutup",
@@ -774,7 +797,8 @@ export const translations = {
       "statusPending": "MENUNGGU",
       "statusFailed": "GAGAL",
       "statusSettled": "SETTLED",
-      "statusUnknown": "TIDAK DIKETAHUI"
+      "statusUnknown": "TIDAK DIKETAHUI",
+      "useWalletButton": "Gunakan tombol wallet di atas untuk menghubungkan."
     },
     "devnet": {
       "bannerTitle": "Mode Devnet",

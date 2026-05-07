@@ -236,9 +236,11 @@ export default function TransactionHistory({
   language,
   t,
   onConnectWallet,
+  onBackToPayment,
 }) {
   const [historyVersion, setHistoryVersion] = useState(0);
   const [backendRecords, setBackendRecords] = useState([]);
+  const [backendWalletAddress, setBackendWalletAddress] = useState('');
   const [historySource, setHistorySource] = useState('local_demo');
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(null);
@@ -248,9 +250,12 @@ export default function TransactionHistory({
   const localRecords = useMemo(() => (
     walletAddress ? readWalletHistory({ walletAddress, refreshToken: historyVersion }) : []
   ), [historyVersion, walletAddress]);
+  const effectiveBackendRecords = useMemo(() => (
+    backendWalletAddress === walletAddress ? backendRecords : []
+  ), [backendRecords, backendWalletAddress, walletAddress]);
   const records = useMemo(() => (
-    mergeWalletHistoryRecords({ walletAddress, backendRecords, localRecords })
-  ), [backendRecords, localRecords, walletAddress]);
+    mergeWalletHistoryRecords({ walletAddress, backendRecords: effectiveBackendRecords, localRecords })
+  ), [effectiveBackendRecords, localRecords, walletAddress]);
   const visibleSelectedRecord = selectedRecord?.walletAddress === walletAddress
     ? selectedRecord
     : null;
@@ -259,6 +264,7 @@ export default function TransactionHistory({
   const loadBackendHistory = useCallback(async () => {
     if (!walletAddress) {
       setBackendRecords([]);
+      setBackendWalletAddress('');
       setHistorySource('local_demo');
       setHistoryError(null);
       return;
@@ -266,13 +272,16 @@ export default function TransactionHistory({
 
     setIsHistoryLoading(true);
     setHistoryError(null);
+    setSelectedRecord(null);
 
     try {
       const nextBackendRecords = await fetchWalletHistoryFromBackend({ walletAddress });
       setBackendRecords(nextBackendRecords);
+      setBackendWalletAddress(walletAddress);
       setHistorySource('supabase');
     } catch (error) {
       setBackendRecords([]);
+      setBackendWalletAddress('');
       setHistorySource('local_demo');
       setHistoryError(error);
     } finally {
@@ -361,14 +370,28 @@ export default function TransactionHistory({
 
   return (
     <section id="history-section" className="border-y border-white/10">
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="kp-panel overflow-hidden border border-white/10">
+      {onBackToPayment && (
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-6 pt-2 sm:px-6 md:pb-8 lg:px-8">
+          <button
+            type="button"
+            onClick={onBackToPayment}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-400 transition hover:text-white"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            {language === 'id' ? 'Kembali ke pembayaran' : 'Back to payment'}
+          </button>
+        </div>
+      )}
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 md:pb-10 md:pt-6 lg:px-8">
+        <div className="kp-panel overflow-hidden border border-white/10 rounded-xl sm:rounded-none">
           <div className="kp-panel-soft flex min-w-0 flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">{t('history.history')}</p>
               <h2 className="kp-text mt-2 text-2xl font-semibold">{t('history.transactionHistory')}</h2>
               <p className="kp-muted mt-2 text-sm leading-6">
-                {isConnected ? t('history.backendHistoryIntro') : t('history.connectWalletPrompt')}
+                {isConnected ? t('history.backendHistoryIntro') : t('history.connectWalletToView')}
               </p>
             </div>
             {isConnected && (
@@ -384,30 +407,39 @@ export default function TransactionHistory({
           </div>
 
           {!isConnected ? (
-            <div className="grid gap-4 p-4 sm:p-5">
-              <p className="kp-muted text-sm leading-6">{t('history.connectWalletToView')}</p>
-              <HistoryActionButton onClick={onConnectWallet} className="w-full bg-brand text-black hover:bg-brand/90 sm:w-fit">
-                {t('navbar.connectWallet')}
-              </HistoryActionButton>
+            <div className="grid gap-4 p-6 sm:p-8">
+              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center rounded-lg">
+                <p className="kp-text text-base font-semibold">{t('history.connectWalletToView')}</p>
+                <button
+                  type="button"
+                  onClick={onConnectWallet}
+                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 border border-purple-400/25 bg-purple-500/10 px-5 py-2.5 text-sm font-bold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                >
+                  {t('navbar.connectWallet')}
+                </button>
+              </div>
             </div>
           ) : isHistoryLoading && records.length === 0 ? (
-            <div className="p-4 sm:p-5">
-              <div className="border border-(--kp-border) bg-(--kp-control-bg) p-5">
+            <div className="p-6 sm:p-8">
+              <div className="border border-(--kp-border) bg-(--kp-control-bg) p-8 rounded-lg">
                 <p className="kp-text text-base font-semibold">{t('history.loadingHistory')}</p>
-                <p className="kp-muted mt-2 text-sm leading-6">{t('history.loadingHistoryBody')}</p>
               </div>
             </div>
           ) : records.length === 0 ? (
-            <div className="p-4 sm:p-5">
-              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-5 text-center">
+            <div className="p-6 sm:p-8">
+              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center rounded-lg">
                 <p className="kp-text text-base font-semibold">{t('history.noTransactions')}</p>
                 <p className="kp-muted mt-2 text-sm leading-6">{t('history.noTransactionsBody')}</p>
                 {historyError && (
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{t('history.unableToLoadHistory')}</p>
-                    <HistoryActionButton onClick={loadBackendHistory} className="mt-3">
+                  <div className="mt-6 flex flex-col items-center gap-2">
+                    <p className="kp-soft text-xs">{t('history.unableToLoadHistory')}</p>
+                    <button
+                      type="button"
+                      onClick={loadBackendHistory}
+                      className="kp-soft text-xs font-semibold underline underline-offset-2 hover:text-(--kp-text)"
+                    >
                       {t('history.retryHistoryLoad')}
-                    </HistoryActionButton>
+                    </button>
                   </div>
                 )}
               </div>
@@ -415,8 +447,8 @@ export default function TransactionHistory({
           ) : (
             <div className="grid gap-0">
               {(isShowingLocalFallback || historyError) && (
-                <div className="border-b border-amber-400/25 bg-amber-400/10 px-4 py-3 sm:px-5">
-                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                <div className="border-b border-(--kp-border) bg-(--kp-control-bg) px-4 py-3 sm:px-5">
+                  <p className="kp-soft text-xs font-medium">
                     {isShowingLocalFallback ? t('history.showingLocalDemoHistory') : t('history.backendUnavailable')}
                   </p>
                 </div>
