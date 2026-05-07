@@ -362,7 +362,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
       <div className="fixed inset-0 z-100 flex items-stretch justify-center overflow-hidden bg-black/80 p-0 backdrop-blur-md transition-all sm:items-start sm:p-4">
         <div
-          className={`kp-panel rail-scrollbar relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden border-0 sm:my-3 sm:h-auto sm:max-h-[calc(100dvh-1.5rem)] sm:border ${showCameraPreview ? 'sm:max-w-200' : 'sm:max-w-lg'}`}
+          className={`kp-panel rail-scrollbar relative flex h-dvh max-h-dvh w-full max-w-full flex-col overflow-hidden border-0 sm:my-3 sm:h-auto sm:max-h-[calc(100dvh-1.5rem)] sm:border ${showCameraPreview ? 'sm:max-w-200' : 'sm:max-w-lg'}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="qris-scanner-title"
@@ -476,21 +476,21 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 <button
                   type="button"
                   onClick={() => setShowDemoQr((prev) => !prev)}
-                  className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
+                  className={`${showCameraPreview ? 'min-h-11 px-3 py-2.5 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
                   {t('scanner.showDemo')}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleUseDemoQris('dynamic')}
-                  className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
+                  className={`${showCameraPreview ? 'min-h-11 px-3 py-2.5 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
                   {t('scanner.useDynamicDemo')}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleUseDemoQris('static')}
-                  className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
+                  className={`${showCameraPreview ? 'min-h-11 px-3 py-2.5 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
                   {t('scanner.useStaticDemo')}
                 </button>

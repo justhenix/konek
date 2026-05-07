@@ -2127,7 +2127,7 @@ function App() {
   };
 
   return (
-    <div className="kp-page relative min-h-screen selection:bg-brand selection:text-black" ref={root}>
+    <div className="kp-page relative min-h-screen overflow-x-hidden selection:bg-brand selection:text-black" ref={root}>
       <div className="kp-grid-bg pointer-events-none fixed inset-0 z-0 bg-size-[48px_48px]"></div>
       <div className="kp-hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
@@ -2521,6 +2521,7 @@ function App() {
           onRetryVerification={handleRetryPaymentVerification}
           onScanAnother={handleScanAnotherPayment}
           rpcEndpoint={rpcEndpoint}
+          language={lang}
           t={t}
         />
       )}

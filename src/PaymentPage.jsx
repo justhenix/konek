@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
+import { formatDateTime } from './utils/dateFormat';
 import {
   buildSolanaExplorerDevnetTxUrl,
   formatIdrAmount,
@@ -9,14 +10,6 @@ import {
   normalizeApiError,
   solToLamports,
 } from './utils/payment';
-
-const quoteExpiryFormatter = new Intl.DateTimeFormat('id-ID', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-});
 
 const FRONTEND_TREASURY_MISSING_ERROR = 'Frontend VITE_TREASURY_WALLET is missing.';
 const FRONTEND_TREASURY_INVALID_ERROR = 'Frontend VITE_TREASURY_WALLET is not a valid Solana address.';
@@ -168,16 +161,9 @@ const fetchSettleDemo = async ({ quoteId, signature }) => {
   return responseBody;
 };
 
-const formatSettledAt = (iso) => {
-  try {
-    return new Intl.DateTimeFormat('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-};
+const formatPanelDateTime = (value, language, t) => (
+  formatDateTime(value, language) || t('payment.lblDateUnavailable')
+);
 
 const fetchPaymentQuote = async ({ qrisPayload, idrAmount }) => {
   const requestBody = { qrisPayload };
@@ -249,15 +235,9 @@ const formatQuoteSolAmount = (solAmount) => {
   }
 };
 
-const formatQuoteExpiry = (expiresAt) => {
-  const expiresAtDate = new Date(expiresAt);
-
-  if (!Number.isFinite(expiresAtDate.getTime())) {
-    return 'Invalid expiry';
-  }
-
-  return quoteExpiryFormatter.format(expiresAtDate);
-};
+const formatQuoteExpiry = (expiresAt, language, t) => (
+  formatPanelDateTime(expiresAt, language, t)
+);
 
 const noticeStyles = {
   info: 'border-(--kp-border) bg-(--kp-control-bg) text-(--kp-text-muted)',
@@ -321,7 +301,7 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
       : 'break-words';
 
   return (
-    <div className="grid gap-1.5 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4 sm:px-4">
+    <div className="grid min-w-0 gap-1.5 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4 sm:px-4">
       <span className="kp-soft text-xs font-semibold">{label}</span>
       <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
@@ -368,6 +348,7 @@ export default function PaymentPage({
   onScanAnother,
   onCancel,
   rpcEndpoint,
+  language,
   t,
 }) {
   const [parsedPayment] = useState(() => (
@@ -433,7 +414,7 @@ export default function PaymentPage({
       amountSource: 'manual',
       amount: manualAmountIdr,
       amountText: String(manualAmountIdr),
-      formattedAmount: manualAmountIdr.toLocaleString('id-ID'),
+      formattedAmount: formatIdrAmount(manualAmountIdr),
       errors: [],
     };
   }, [isDynamicQris, manualAmountIdr, parsedPayment, qrisType]);
@@ -469,10 +450,10 @@ export default function PaymentPage({
       idrAmountLabel: formatIdrAmount(quote.fiatAmount),
       solAmountLabel: formatQuoteSolAmount(quote.solAmount),
       exchangeRateLabel: `${formatIdrAmount(Number(quote.exchangeRate))} / SOL`,
-      expiresAtLabel: formatQuoteExpiry(quote.expiresAt),
+      expiresAtLabel: formatQuoteExpiry(quote.expiresAt, language, t),
       isExpired: isQuoteExpired(quote.expiresAt, quoteClock),
     };
-  }, [quote, quoteClock]);
+  }, [language, quote, quoteClock, t]);
   const submittedPayment = useMemo(() => (
     paymentSubmission?.signature
       ? {
@@ -695,15 +676,15 @@ export default function PaymentPage({
     || `DEMO-PAYOUT-${(verifiedPayment?.signature || submittedPayment?.signature || '').slice(-8).toUpperCase()}`;
   const linkedSolanaTx = shortSignature(verifiedPayment?.signature);
   const merchantRecordCreatedAt = settlementResult
-    ? formatSettledAt(settlementResult.settledAt)
-    : formatSettledAt(submittedPayment?.submittedAt || quote?.createdAt);
+    ? formatPanelDateTime(settlementResult.settledAt, language, t)
+    : formatPanelDateTime(submittedPayment?.submittedAt || quote?.createdAt, language, t);
   const payoutStatusLabel = t('payment.payoutStatusSimulated');
 
   return (
     <Fragment>
       <div className="fixed inset-0 z-110 overflow-hidden bg-black/85 p-0 backdrop-blur-lg transition-all animate-fade-in sm:p-4">
         <div
-          className="kp-panel mx-auto flex h-dvh max-h-dvh w-full flex-col overflow-hidden border-0 border-brand/20 transition-colors duration-500 sm:my-5 sm:h-auto sm:max-h-[calc(100dvh-2.5rem)] sm:max-w-190 sm:border"
+          className="kp-panel mx-auto flex h-dvh max-h-dvh w-full max-w-full flex-col overflow-hidden border-0 border-brand/20 transition-colors duration-500 sm:my-5 sm:h-auto sm:max-h-[calc(100dvh-2.5rem)] sm:max-w-190 sm:border"
           role="dialog"
           aria-modal="true"
           aria-labelledby="payment-panel-title"

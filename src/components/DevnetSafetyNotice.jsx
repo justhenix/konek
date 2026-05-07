@@ -1,4 +1,4 @@
-const MAINNET_WALLET_WARNING = "Looks like you've connected a mainnet wallet. KonekPay demo runs on Devnet. Please switch to Devnet to avoid real-money loss or unexpected errors.";
+const MAINNET_WALLET_WARNING = 'This demo payment uses Solana Devnet. Switch Phantom to Devnet before approving.';
 
 const getRpcClusterHint = (rpcEndpoint) => {
   const endpoint = String(rpcEndpoint || '').toLowerCase();
@@ -23,16 +23,16 @@ export default function DevnetSafetyNotice({ t, rpcEndpoint, className = '' }) {
 
   return (
     <div
-      className={`kp-devnet-banner border p-3 sm:p-4 ${className}`}
+      className={`${isNonDevnetHint ? 'kp-devnet-banner p-3 sm:p-4' : 'kp-devnet-subtle px-3 py-2.5'} border ${className}`}
       role={isNonDevnetHint ? 'alert' : 'status'}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: 'var(--kp-amber)' }}></span>
+      <div className="flex min-w-0 items-start gap-2.5">
+        <span className={`${isNonDevnetHint ? 'mt-1.5 h-2.5 w-2.5' : 'mt-1.5 h-2 w-2'} shrink-0 rounded-full`} style={{ backgroundColor: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-brand)' }}></span>
         <div className="min-w-0">
-          <p className="text-sm font-bold" style={{ color: 'var(--kp-amber)' }}>
+          <p className={isNonDevnetHint ? 'text-sm font-bold' : 'text-xs font-semibold'} style={{ color: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-text-muted)' }}>
             {title}
           </p>
-          <p className="mt-1 text-xs leading-5 sm:text-sm sm:leading-6" style={{ color: 'var(--kp-amber-text)' }}>
+          <p className={isNonDevnetHint ? 'mt-1 text-xs leading-5 sm:text-sm sm:leading-6' : 'mt-0.5 text-xs leading-5'} style={{ color: isNonDevnetHint ? 'var(--kp-amber-text)' : 'var(--kp-text-soft)' }}>
             {body}
           </p>
         </div>
