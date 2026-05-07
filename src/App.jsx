@@ -640,7 +640,7 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
     <button
       type="button"
       onClick={onDismissBanner}
-      className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex"
+      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
       aria-label={t('devnet.bannerCloseLabel')}
     >
       <RiCloseLine className="h-5 w-5" />
