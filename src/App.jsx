@@ -490,12 +490,12 @@ const ProtocolDiagram = ({ t }) => {
               <div className={`absolute left-8 top-full h-3 w-px sm:left-9 sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
             )}
             <div className="flex min-w-0 items-start gap-4">
-              <div className={`kp-control flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${node.accent.text}`}>
+              <div className={`kp-control flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs  ${node.accent.text}`}>
                 0{index + 1}
               </div>
               <div className="min-w-0 pt-1.5">
-                <p className="wrap-break-word text-sm font-semibold text-white sm:text-base">{node.label}</p>
-                <p className="mt-1 text-[11px] font-semibold text-zinc-500">{node.sub}</p>
+                <p className="wrap-break-word text-sm  text-white sm:text-base">{node.label}</p>
+                <p className="mt-1 text-[11px]  text-zinc-500">{node.sub}</p>
               </div>
             </div>
           </div>
@@ -507,9 +507,9 @@ const ProtocolDiagram = ({ t }) => {
 const SectionHeader = ({ eyebrow, title, children, className = '' }) => (
   <div className={`min-w-0 max-w-3xl ${className}`}>
     {eyebrow && (
-      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brand sm:tracking-[0.24em]">{eyebrow}</p>
+      <p className="mb-3 text-[11px]  uppercase tracking-[0.2em] text-brand sm:tracking-[0.24em]">{eyebrow}</p>
     )}
-    <h2 className="text-3xl font-semibold leading-[1.08] text-white sm:text-4xl lg:text-5xl">{title}</h2>
+    <h2 className="text-3xl  leading-[1.08] text-white sm:text-4xl lg:text-5xl">{title}</h2>
     {children && (
       <p className="mt-5 text-base leading-8 text-zinc-400 md:text-lg">{children}</p>
     )}
@@ -545,20 +545,20 @@ const AppToast = ({ toast, onDismiss }) => {
 
   return (
     <div
-      className={`pointer-events-auto w-full max-w-88 border px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl ${styles.shell}`}
+      className={`pointer-events-auto w-full max-w-104 border px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl kp-animate-notice ${styles.shell}`}
       role={role}
       aria-live={role === 'alert' ? 'assertive' : 'polite'}
     >
       <div className="flex min-w-0 items-start gap-3">
         <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${styles.dot}`}></span>
         <div className="min-w-0 flex-1">
-          <p className={`text-sm font-semibold ${styles.title}`}>{toast.title}</p>
+          <p className={`text-sm  ${styles.title}`}>{toast.title}</p>
           <p className="kp-muted mt-1 text-xs leading-5">{toast.body}</p>
         </div>
         <button
           type="button"
           onClick={() => onDismiss(toast.id)}
-          className="kp-control grid h-6 w-6 shrink-0 place-items-center border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="kp-control hidden h-6 w-6 shrink-0 place-items-center border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:grid"
           aria-label="Close notification"
         >
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -571,7 +571,7 @@ const AppToast = ({ toast, onDismiss }) => {
 };
 
 const ToastViewport = ({ toasts, onDismiss }) => (
-  <div className="fixed inset-x-3 top-3 z-150 flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:right-4 sm:top-4 sm:items-end">
+  <div className="fixed inset-x-3 top-3 z-150 flex pointer-events-none flex-col items-center gap-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-4">
     {toasts.map((toast) => (
       <AppToast key={toast.id} toast={toast} onDismiss={onDismiss} />
     ))}
@@ -601,8 +601,8 @@ const MissingWalletModal = ({ onDismiss, t }) => (
         <img src={logoPhantom} alt="Phantom" className="h-8 w-8 object-contain" />
       </div>
 
-      <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('missingWalletModal.eyebrow')}</p>
-      <h3 id="missing-wallet-title" className="pr-10 text-2xl font-semibold text-(--kp-text)">
+      <p className="mb-2 text-[11px]  text-purple-300">{t('missingWalletModal.eyebrow')}</p>
+      <h3 id="missing-wallet-title" className="pr-10 text-2xl  text-(--kp-text)">
         {t('missingWalletModal.title')}
       </h3>
       <p className="kp-muted mt-3 text-sm leading-7">{t('missingWalletModal.body')}</p>
@@ -613,14 +613,14 @@ const MissingWalletModal = ({ onDismiss, t }) => (
           href={PHANTOM_DOWNLOAD_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+          className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
         >
           {t('missingWalletModal.install')}
         </a>
         <button
           type="button"
           onClick={onDismiss}
-          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
         >
           {t('missingWalletModal.dismiss')}
         </button>
@@ -634,20 +634,20 @@ const DEVNET_MODAL_STEPS = ['modalStep1', 'modalStep2', 'modalStep3', 'modalStep
 const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
   <div
     id="devnet-notice-banner"
-    className="kp-devnet-banner mx-auto w-full max-w-6xl border px-4 py-3 sm:px-5 relative"
+    className="kp-devnet-banner mx-auto w-full max-w-6xl border px-4 py-3 sm:px-5 relative kp-animate-notice"
     role="status"
   >
     <button
       type="button"
       onClick={onDismissBanner}
-      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+      className="absolute right-2 top-2 hidden h-8 w-8 items-center justify-center text-amber-500/60 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex"
       aria-label={t('devnet.bannerCloseLabel')}
     >
       <RiCloseLine className="h-5 w-5" />
     </button>
-    <div className="flex min-w-0 flex-col gap-3 pr-8 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex min-w-0 flex-col gap-3 sm:pr-8 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <p className="text-sm font-bold" style={{ color: 'var(--kp-amber)' }}>
+        <p className="text-sm " style={{ color: 'var(--kp-amber)' }}>
           {t('devnet.bannerTitle')}
         </p>
         <p className="mt-1 text-xs leading-5" style={{ color: 'var(--kp-amber-text)' }}>
@@ -658,7 +658,7 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
         <button
           type="button"
           onClick={onHowToSwitch}
-          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
         >
           {t('devnet.bannerHowToSwitch')}
         </button>
@@ -666,7 +666,7 @@ const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
           href={SOLANA_FAUCET_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
         >
           {t('devnet.bannerGetSol')}
         </a>
@@ -702,10 +702,10 @@ const DevnetHelpModal = ({ onDismiss, t }) => (
         </svg>
       </div>
 
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--kp-amber)' }}>
+      <p className="mb-2 text-[11px]  uppercase tracking-[0.18em]" style={{ color: 'var(--kp-amber)' }}>
         {t('devnet.modalEyebrow')}
       </p>
-      <h3 id="devnet-help-title" className="pr-12 text-2xl font-semibold text-(--kp-text)">
+      <h3 id="devnet-help-title" className="pr-12 text-2xl  text-(--kp-text)">
         {t('devnet.modalTitle')}
       </h3>
       <p className="kp-muted mt-3 text-sm leading-7">
@@ -716,7 +716,7 @@ const DevnetHelpModal = ({ onDismiss, t }) => (
         {DEVNET_MODAL_STEPS.map((stepKey, index) => (
           <li key={stepKey} className="flex items-start gap-3 text-sm leading-6">
             <span
-              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold"
+              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-xs "
               style={{ backgroundColor: 'var(--kp-amber-bg)', border: '1px solid var(--kp-amber-border)', color: 'var(--kp-amber)' }}
             >
               {index + 1}
@@ -737,14 +737,14 @@ const DevnetHelpModal = ({ onDismiss, t }) => (
           href={SOLANA_FAUCET_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="kp-devnet-btn-primary flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="kp-devnet-btn-primary flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
         >
           {t('devnet.modalPrimary')}
         </a>
         <button
           type="button"
           onClick={onDismiss}
-          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
         >
           {t('devnet.modalSecondary')}
         </button>
@@ -754,7 +754,7 @@ const DevnetHelpModal = ({ onDismiss, t }) => (
         <button
           type="button"
           onClick={onDismiss}
-          className="kp-soft text-xs font-semibold underline underline-offset-2 transition-colors hover:text-(--kp-text) focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="kp-soft text-xs  underline underline-offset-2 transition-colors hover:text-(--kp-text) focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
         >
           {t('devnet.modalAlreadySwitched')}
         </button>
@@ -782,7 +782,7 @@ const FaqSection = ({ t }) => (
             className="group border border-white/10 bg-[#080b08] transition-colors open:border-brand/30"
           >
             <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-4 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-5">
-              <span className="min-w-0 text-sm font-semibold leading-6 text-white sm:text-base">
+              <span className="min-w-0 text-sm  leading-6 text-white sm:text-base">
                 {t(`faq.${key}Question`)}
               </span>
               <svg className="mt-1 h-4 w-4 shrink-0 text-brand transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -831,11 +831,11 @@ const TeamCards = ({ t }) => (
           <img
             src={member.pfp}
             alt={member.alt}
-            className="h-11 w-11 shrink-0 rounded border border-brand/30 object-cover"
+            className="h-11 w-11 shrink-0 border border-brand/30 object-cover"
           />
           <div className="min-w-0 lg:pr-36">
-            <h3 className="text-lg font-semibold text-white">{t(`team.${member.id}Name`)}</h3>
-            <p className="mt-1 text-sm font-semibold leading-6 text-brand">{t(`team.${member.id}Role`)}</p>
+            <h3 className="text-lg  text-white">{t(`team.${member.id}Name`)}</h3>
+            <p className="mt-1 text-sm  leading-6 text-brand">{t(`team.${member.id}Role`)}</p>
             <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`team.${member.id}Desc`)}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {member.socials.map((social) => (
@@ -849,7 +849,7 @@ const TeamCards = ({ t }) => (
             src={member.cardImage}
             alt=""
             aria-hidden="true"
-            className="w-32 origin-center translate-y-1 scale-[0.96] rounded border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:scale-[0.96]"
+            className="w-32 origin-center translate-y-1 scale-[0.96] border border-white/5 opacity-0 shadow-lg transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-[0.32] group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-[0.32] motion-reduce:transition-opacity motion-reduce:group-hover:translate-y-1 motion-reduce:group-hover:scale-[0.96] motion-reduce:group-focus-within:translate-y-1 motion-reduce:group-focus-within:scale-[0.96]"
           />
         </div>
       </article>
@@ -869,7 +869,7 @@ const LandingTeamPreview = ({ t, onMeetTeam }) => (
         <button
           type="button"
           onClick={onMeetTeam}
-          className="inline-flex min-h-12 w-full items-center justify-center border border-brand/35 bg-brand/8 px-6 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:w-auto"
+          className="inline-flex min-h-12 w-full items-center justify-center border border-brand/35 bg-brand/8 px-6 py-3 text-sm  text-brand transition-colors hover:bg-brand/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:w-auto"
         >
           {t('team.previewCta')}
         </button>
@@ -882,7 +882,7 @@ const TeamPage = ({ t, onBackToHome, language }) => (
   <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-28 sm:px-6 md:pt-32 lg:px-8">
     <section className="grid gap-8 md:grid-cols-[0.72fr_1fr] md:items-start">
       <div className="min-w-0">
-        <h1 className="text-4xl font-semibold leading-[1.05] text-white sm:text-5xl">{t('team.heading')}</h1>
+        <h1 className="text-4xl  leading-[1.05] text-white sm:text-5xl">{t('team.heading')}</h1>
 
         <p className="mt-5 text-base leading-8 text-zinc-400 md:text-lg">{t('team.intro')}</p>
         <div className="mt-7 border-l-2 border-purple-400/70 pl-5">
@@ -894,7 +894,7 @@ const TeamPage = ({ t, onBackToHome, language }) => (
         <button
           type="button"
           onClick={onBackToHome}
-          className="inline-flex w-fit items-center gap-2 border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-400 transition hover:border-white/20 hover:text-white"
+          className="inline-flex w-fit items-center gap-2 border border-white/10 px-4 py-2 text-sm  text-zinc-400 transition hover:border-white/20 hover:text-white"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -2210,10 +2210,10 @@ function App() {
           >
             <button type="button" onClick={() => scrollToSection('top')} className="col-start-1 flex min-w-0 items-center gap-2 text-left sm:gap-2.5">
               <KonekLogo className="h-8 w-8 shrink-0" />
-              <span className="truncate text-sm font-semibold text-white sm:text-lg" aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
+              <span className="truncate text-sm  text-white sm:text-lg" aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
             </button>
 
-            <ul className="col-start-2 hidden min-w-0 items-center justify-center gap-1 text-sm font-semibold text-zinc-400 xl:flex">
+            <ul className="col-start-2 hidden min-w-0 items-center justify-center gap-1 text-sm  text-zinc-400 xl:flex">
               {navItems.map((item) => (
                 <li key={item.key}>
                   <button
@@ -2258,7 +2258,7 @@ function App() {
                     key={item.key}
                     type="button"
                     onClick={() => handleMobileNavClick(item.target)}
-                    className="flex min-h-11 items-center border border-transparent px-3 text-left text-sm font-semibold text-zinc-300 transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="flex min-h-11 items-center border border-transparent px-3 text-left text-sm  text-zinc-300 transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   >
                     {t(item.key)}
                   </button>
@@ -2266,7 +2266,7 @@ function App() {
                 <button
                   type="button"
                   onClick={handleMobileAppClick}
-                  className="mt-1 flex min-h-12 w-full items-center justify-center bg-brand px-4 text-center text-sm font-bold text-black transition-colors hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="mt-1 flex min-h-12 w-full items-center justify-center bg-brand px-4 text-center text-sm  text-black transition-colors hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('hero.ctaBtn')}
                 </button>
@@ -2274,11 +2274,11 @@ function App() {
 
               <div className="grid gap-3 pt-3">
                 <div className="flex min-h-11 items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-zinc-300">{t('theme.label')}</span>
+                  <span className="text-sm  text-zinc-300">{t('theme.label')}</span>
                   <button
                     type="button"
                     onClick={toggleTheme}
-                    className="kp-control inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="kp-control inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border px-3 text-sm  transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     aria-label={themeToggleLabel}
                     title={themeToggleLabel}
                   >
@@ -2292,11 +2292,11 @@ function App() {
                 </div>
 
                 <div className="flex min-h-11 items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-zinc-300">{t('language.label')}</span>
+                  <span className="text-sm  text-zinc-300">{t('language.label')}</span>
                   <button
                     type="button"
                     onClick={toggleLang}
-                    className="kp-control min-h-11 min-w-11 shrink-0 border px-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="kp-control min-h-11 min-w-11 shrink-0 border px-3 text-xs  uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     title={t('language.switch')}
                     aria-label={t('language.switch')}
                   >
@@ -2314,7 +2314,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
-                    className="flex h-9 items-center gap-2 border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-zinc-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                    className="flex h-9 items-center gap-2 border border-purple-400/25 bg-purple-500/10 px-3 text-xs  text-zinc-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                     aria-haspopup="menu"
                     aria-expanded={isProfileMenuOpen}
                   >
@@ -2332,10 +2332,10 @@ function App() {
                     <div className="mb-2 border-b border-white/10 px-2 pb-3 pt-1 text-left">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-brand"></span>
-                        <p className="text-[11px] font-semibold text-purple-300">{t('walletDropdown.label')}</p>
+                        <p className="text-[11px]  text-purple-300">{t('walletDropdown.label')}</p>
                       </div>
-                      <p className="mt-3 text-[11px] font-semibold text-zinc-500">{t('walletDropdown.address')}</p>
-                      <p className="mt-1 truncate font-mono text-sm font-semibold text-white" title={userProfile.address}>{userProfile.address}</p>
+                      <p className="mt-3 text-[11px]  text-zinc-500">{t('walletDropdown.address')}</p>
+                      <p className="mt-1 truncate font-mono text-sm  text-white" title={userProfile.address}>{userProfile.address}</p>
                     </div>
                     <button
                       type="button"
@@ -2343,7 +2343,7 @@ function App() {
                         setIsProfileMenuOpen(false);
                         handleAppTabChange('history');
                       }}
-                      className="w-full border-b border-white/10 px-3 py-2.5 text-left text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      className="w-full border-b border-white/10 px-3 py-2.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                       role="menuitem"
                     >
                       {t('history.transactionHistory')}
@@ -2351,7 +2351,7 @@ function App() {
                     <button
                       type="button"
                       onClick={handleDisconnectWallet}
-                      className="w-full border-t border-transparent bg-red-500/5 px-3 py-2.5 text-left text-sm font-semibold text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                      className="w-full border-t border-transparent bg-red-500/5 px-3 py-2.5 text-left text-sm  text-red-300 transition-colors hover:border-red-500/35 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                       role="menuitem"
                     >
                       {t('walletDropdown.disconnect')}
@@ -2362,7 +2362,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-3 text-xs font-semibold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                  className="inline-flex h-9 shrink-0 items-center border border-purple-400/25 bg-purple-500/10 px-3 text-xs  text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                 >
                   {t('navbar.connectWallet')}
                 </button>
@@ -2376,7 +2376,7 @@ function App() {
                 )}
               </button>
 
-              <button onClick={toggleLang} className="kp-control h-9 shrink-0 border px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" title={t('language.switch')} aria-label={t('language.switch')}>
+              <button onClick={toggleLang} className="kp-control h-9 shrink-0 border px-2 text-[10px]  uppercase tracking-[0.12em] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand" title={t('language.switch')} aria-label={t('language.switch')}>
                 <span className={lang === 'id' ? 'text-brand' : 'text-zinc-500'}>ID</span>
                 <span className="mx-0.5 text-zinc-700">/</span>
                 <span className={lang === 'en' ? 'text-brand' : 'text-zinc-500'}>EN</span>
@@ -2401,7 +2401,7 @@ function App() {
               <>
                 <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16${isDevnetBannerDismissed ? ' pt-20 md:pt-24' : ' pt-4 md:pt-6'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
                   <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
-                    <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
+                    <h1 className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
                       {t('hero.headline')}
                     </h1>
                     <p className="hero-text mt-5 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg" data-hero-copy>
@@ -2410,16 +2410,16 @@ function App() {
             <div className="hero-text mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center" data-hero-cta>
               <button
                 onClick={handleOpenApp}
-                className="inline-flex min-h-12 w-full items-center justify-center bg-brand px-7 py-3 text-sm font-bold tracking-[0.02em] text-black shadow-[0_0_22px_rgba(20,241,149,0.18)] transition hover:-translate-y-0.5 sm:w-auto"
+                className="inline-flex min-h-12 w-full items-center justify-center bg-brand px-7 py-3 text-sm  tracking-[0.02em] text-black shadow-[0_0_22px_rgba(20,241,149,0.18)] transition hover:-translate-y-0.5 sm:w-auto"
               >
                 {t('hero.ctaBtn')}
               </button>
               <div className="inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/3.5 px-4 py-3 text-sm sm:justify-start">
                 <span className="h-2 w-2 rounded-full bg-brand"></span>
-                <span className="text-xs font-semibold text-zinc-500">{t('hero.pythRate')}</span>
-                <span className="font-semibold text-white">1 SOL</span>
+                <span className="text-xs  text-zinc-500">{t('hero.pythRate')}</span>
+                <span className=" text-white">1 SOL</span>
                 <span className="text-zinc-600">=</span>
-                <span className="font-semibold text-brand">{solPrice ? `Rp ${Math.round(solPrice).toLocaleString('id-ID')}` : t('hero.loading')}</span>
+                <span className=" text-brand">{solPrice ? `Rp ${Math.round(solPrice).toLocaleString('id-ID')}` : t('hero.loading')}</span>
               </div>
             </div>
           </section>
@@ -2440,10 +2440,10 @@ function App() {
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-3">
               {uspItems.map((key) => (
                 <article key={key} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6">
-                  <div className={`mb-5 flex h-9 w-9 items-center justify-center border text-sm font-semibold ${uspAccentClasses[key]}`}>
+                  <div className={`mb-5 flex h-9 w-9 items-center justify-center border text-sm  ${uspAccentClasses[key]}`}>
                     {String(uspItems.indexOf(key) + 1).padStart(2, '0')}
                   </div>
-                  <h3 className="text-xl font-semibold text-white">{t(`usp.${key}Title`)}</h3>
+                  <h3 className="text-xl  text-white">{t(`usp.${key}Title`)}</h3>
                   <p className="mt-3 text-sm leading-6 text-zinc-400">{t(`usp.${key}Body`)}</p>
                 </article>
               ))}
@@ -2459,8 +2459,8 @@ function App() {
             <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5" data-how-track>
               {[1, 2, 3, 4, 5].map((n, index) => (
                 <article key={n} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6" data-how-card>
-                  <p className={`text-[11px] font-bold ${workflowAccentClasses[index]}`}>{String(n).padStart(2, '0')}</p>
-                  <h3 className="mt-5 text-lg font-semibold leading-6 text-white lg:min-h-12">{t(`howItWorks.step${n}Title`)}</h3>
+                  <p className={`text-[11px]  ${workflowAccentClasses[index]}`}>{String(n).padStart(2, '0')}</p>
+                  <h3 className="mt-5 text-lg  leading-6 text-white lg:min-h-12">{t(`howItWorks.step${n}Title`)}</h3>
                   <p className="mt-4 text-sm leading-6 text-zinc-500">{t(`howItWorks.step${n}Desc`)}</p>
                 </article>
               ))}
@@ -2493,7 +2493,7 @@ function App() {
         )}
 
         {(!page || activeTab === 'pay') && (
-          <footer className={`mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm font-semibold text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-10!' : ''}`}>
+          <footer className={`mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm  text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-10!' : ''}`}>
             <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
               <KonekLogo className="h-6 w-6" />
               <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
@@ -2538,7 +2538,7 @@ function App() {
             <div className={`mb-1 flex h-12 w-12 items-center justify-center shadow-lg transition-transform ${activeTab === 'pay' && mobileNavActive === 'qris' ? 'bg-brand text-black scale-105' : 'bg-brand text-black/90'}`}>
               {activeTab === 'pay' && mobileNavActive === 'qris' ? <RiQrCodeFill className="h-6 w-6" /> : <RiQrCodeLine className="h-6 w-6" />}
             </div>
-            <span className={`text-[11px] font-bold transition-colors ${activeTab === 'pay' && mobileNavActive === 'qris' ? 'text-brand' : 'text-zinc-400'}`}>{t('appNav.payTab')}</span>
+            <span className={`text-[11px]  transition-colors ${activeTab === 'pay' && mobileNavActive === 'qris' ? 'text-brand' : 'text-zinc-400'}`}>{t('appNav.payTab')}</span>
           </button>
           <button
             type="button"
@@ -2570,7 +2570,7 @@ function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-purple-300">{t('navbar.wallet')}</span>
+              <span className="text-[11px]  uppercase tracking-[0.14em] text-purple-300">{t('navbar.wallet')}</span>
               <button
                 type="button"
                 onClick={() => setIsMobileWalletOpen(false)}
@@ -2585,10 +2585,10 @@ function App() {
                 <div className="mb-2 min-w-0 border-b border-white/10 pb-4 text-left">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-brand"></span>
-                    <p className="text-xs font-semibold text-purple-300">{t('walletDropdown.label')}</p>
+                    <p className="text-xs  text-purple-300">{t('walletDropdown.label')}</p>
                   </div>
-                  <p className="mt-4 text-[11px] font-semibold text-zinc-500">{t('walletDropdown.address')}</p>
-                  <p className="mt-1 truncate font-mono text-base font-semibold text-white" title={userProfile.address}>{userProfile.address}</p>
+                  <p className="mt-4 text-[11px]  text-zinc-500">{t('walletDropdown.address')}</p>
+                  <p className="mt-1 truncate font-mono text-base  text-white" title={userProfile.address}>{userProfile.address}</p>
                 </div>
                 <button
                   type="button"
@@ -2596,14 +2596,14 @@ function App() {
                     setIsMobileWalletOpen(false);
                     handleAppTabChange('history');
                   }}
-                  className="w-full border-b border-white/10 px-3 py-3.5 text-left text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="w-full border-b border-white/10 px-3 py-3.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {t('history.transactionHistory')}
                 </button>
                 <button
                   type="button"
                   onClick={handleMobileWalletDisconnect}
-                  className="mt-2 w-full bg-red-500/5 px-3 py-3.5 text-left text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                  className="mt-2 w-full bg-red-500/5 px-3 py-3.5 text-left text-sm  text-red-300 transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                 >
                   {t('walletDropdown.disconnect')}
                 </button>
@@ -2613,7 +2613,7 @@ function App() {
                 <button
                   type="button"
                   onClick={handleMobileWalletConnect}
-                  className="flex min-h-12 w-full items-center justify-center border border-purple-400/25 bg-purple-500/10 px-3 text-sm font-bold text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                  className="flex min-h-12 w-full items-center justify-center border border-purple-400/25 bg-purple-500/10 px-3 text-sm  text-purple-200 transition-colors hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                 >
                   {t('navbar.connectWallet')}
                 </button>
@@ -2650,8 +2650,8 @@ function App() {
               <img src={logoPhantom} alt="Phantom" className="h-10 w-10 object-contain" />
             </div>
 
-            <p className="mb-2 text-[11px] font-semibold text-purple-300">{t('navbar.wallet')}</p>
-            <h3 id="wallet-connect-title" className="pr-10 text-2xl font-semibold text-white">{t('loginModal.title')}</h3>
+            <p className="mb-2 text-[11px]  text-purple-300">{t('navbar.wallet')}</p>
+            <h3 id="wallet-connect-title" className="pr-10 text-2xl  text-white">{t('loginModal.title')}</h3>
             <p className="mb-7 mt-3 text-sm leading-7 text-zinc-400">
               {t('loginModal.desc')}
             </p>
@@ -2665,7 +2665,7 @@ function App() {
             <button
               onClick={handleConnectWallet}
               disabled={isConnecting}
-              className="kp-button-wallet flex min-h-12 w-full items-center justify-center gap-3 px-5 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              className="kp-button-wallet flex min-h-12 w-full items-center justify-center gap-3 px-5 py-3 text-sm  transition disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
             >
               {t('loginModal.btn')}
             </button>

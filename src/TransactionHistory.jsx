@@ -48,7 +48,7 @@ const getSolAmountLabel = (record) => (
 const HistoryActionButton = ({ children, className = '', ...props }) => (
   <button
     type="button"
-    className={`min-h-10 border border-brand/25 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    className={`min-h-10 border border-brand/25 px-3 py-2 text-xs  uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     {...props}
   >
     {children}
@@ -57,7 +57,7 @@ const HistoryActionButton = ({ children, className = '', ...props }) => (
 
 const HistoryLinkButton = ({ children, className = '', ...props }) => (
   <a
-    className={`inline-flex min-h-10 items-center justify-center border border-brand/25 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
+    className={`inline-flex min-h-10 items-center justify-center border border-brand/25 px-3 py-2 text-xs  uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
     {...props}
   >
     {children}
@@ -69,8 +69,8 @@ const ReceiptDetailRow = ({ label, value, mono = false, title }) => {
 
   return (
     <div className="grid min-w-0 gap-2 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.78fr)_minmax(0,1.22fr)] sm:px-4">
-      <span className="kp-soft text-xs font-semibold">{label}</span>
-      <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'break-all font-mono' : 'wrap-break-word'} kp-text`} title={title || value}>
+      <span className="kp-soft text-xs ">{label}</span>
+      <span className={`min-w-0 text-left text-sm  sm:text-right ${mono ? 'break-all font-mono' : 'wrap-break-word'} kp-text`} title={title || value}>
         {value}
       </span>
     </div>
@@ -165,12 +165,12 @@ function HistoryReceiptDetail({
         <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
-              <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand">
+              <p className="text-xs  uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
+              <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
                 {t('payment.receiptDevnetBadge')}
               </span>
             </div>
-            <h3 id="history-receipt-title" className="kp-text mt-2 text-xl font-semibold sm:text-2xl">{t('history.receiptDetail')}</h3>
+            <h3 id="history-receipt-title" className="kp-text mt-2 text-xl  sm:text-2xl">{t('history.receiptDetail')}</h3>
           </div>
           <button
             type="button"
@@ -201,9 +201,9 @@ function HistoryReceiptDetail({
           </div>
 
           <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{disclaimer}</p>
+            <p className="text-sm  text-amber-700 dark:text-amber-300">{disclaimer}</p>
             {actionMessage && (
-              <p className="mt-3 text-sm font-semibold text-brand" role="status">{actionMessage}</p>
+              <p className="mt-3 text-sm  text-brand" role="status">{actionMessage}</p>
             )}
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {record.explorerUrl && (
@@ -371,11 +371,11 @@ export default function TransactionHistory({
   return (
     <section id="history-section" className="border-y border-white/10">
       {onBackToPayment && (
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-6 pt-2 sm:px-6 md:pb-8 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-2 pt-2 sm:px-6 md:pb-8 lg:px-8">
           <button
             type="button"
             onClick={onBackToPayment}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-400 transition hover:text-white"
+            className="inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -384,22 +384,21 @@ export default function TransactionHistory({
           </button>
         </div>
       )}
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:px-6 md:pb-10 md:pt-6 lg:px-8">
-        <div className="kp-panel overflow-hidden border border-white/10 rounded-xl sm:rounded-none">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-2 sm:px-6 md:pb-10 md:pt-6 lg:px-8">
+        <div className="kp-panel overflow-hidden border border-white/10">
           <div className="kp-panel-soft flex min-w-0 flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">{t('history.history')}</p>
-              <h2 className="kp-text mt-2 text-2xl font-semibold">{t('history.transactionHistory')}</h2>
+              <h2 className="text-2xl text-brand">{t('history.transactionHistory')}</h2>
               <p className="kp-muted mt-2 text-sm leading-6">
                 {isConnected ? t('history.backendHistoryIntro') : t('history.connectWalletToView')}
               </p>
             </div>
             {isConnected && (
               <div className="flex min-w-0 flex-col gap-2 sm:items-end">
-                <span className="inline-flex w-fit border border-brand/30 bg-brand/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand">
+                <span className="inline-flex w-fit border border-brand/30 bg-brand/10 px-2.5 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
                   {t('payment.receiptDevnetBadge')}
                 </span>
-                <p className="max-w-full truncate font-mono text-xs font-semibold text-zinc-500" title={walletAddress}>
+                <p className="max-w-full truncate font-mono text-xs  text-zinc-500" title={walletAddress}>
                   {truncateMiddle(walletAddress, 10, 8)}
                 </p>
               </div>
@@ -408,12 +407,12 @@ export default function TransactionHistory({
 
           {!isConnected ? (
             <div className="grid gap-4 p-6 sm:p-8">
-              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center rounded-lg">
-                <p className="kp-text text-base font-semibold">{t('history.connectWalletToView')}</p>
+              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center">
+                <p className="kp-text text-base ">{t('history.connectWalletToView')}</p>
                 <button
                   type="button"
                   onClick={onConnectWallet}
-                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 border border-purple-400/25 bg-purple-500/10 px-5 py-2.5 text-sm font-bold text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 border border-purple-400/25 bg-purple-500/10 px-5 py-2.5 text-sm  text-purple-200 transition hover:border-purple-400/45 hover:bg-purple-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                 >
                   {t('navbar.connectWallet')}
                 </button>
@@ -421,26 +420,34 @@ export default function TransactionHistory({
             </div>
           ) : isHistoryLoading && records.length === 0 ? (
             <div className="p-6 sm:p-8">
-              <div className="border border-(--kp-border) bg-(--kp-control-bg) p-8 rounded-lg">
-                <p className="kp-text text-base font-semibold">{t('history.loadingHistory')}</p>
+              <div className="animate-border-glow border border-brand/40 bg-(--kp-control-bg) p-8">
+                <p className="text-brand text-base">
+                  {t('history.loadingHistory').replace(/\.+$/, '')}
+                  <span className="loading-dots"></span>
+                </p>
               </div>
             </div>
           ) : records.length === 0 ? (
             <div className="p-6 sm:p-8">
-              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center rounded-lg">
-                <p className="kp-text text-base font-semibold">{t('history.noTransactions')}</p>
-                <p className="kp-muted mt-2 text-sm leading-6">{t('history.noTransactionsBody')}</p>
-                {historyError && (
-                  <div className="mt-6 flex flex-col items-center gap-2">
-                    <p className="kp-soft text-xs">{t('history.unableToLoadHistory')}</p>
-                    <button
-                      type="button"
-                      onClick={loadBackendHistory}
-                      className="kp-soft text-xs font-semibold underline underline-offset-2 hover:text-(--kp-text)"
-                    >
-                      {t('history.retryHistoryLoad')}
-                    </button>
-                  </div>
+              <div className="border border-dashed border-(--kp-border) bg-(--kp-control-bg) p-8 text-center">
+                {historyError ? (
+                  <>
+                    <p className="kp-text text-base ">{t('history.unableToLoadHistory')}</p>
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={loadBackendHistory}
+                        className="kp-soft text-xs  underline underline-offset-2 hover:text-(--kp-text)"
+                      >
+                        {t('history.retryHistoryLoad')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="kp-text text-base ">{t('history.noTransactions')}</p>
+                    <p className="kp-muted mt-2 text-sm leading-6">{t('history.noTransactionsBody')}</p>
+                  </>
                 )}
               </div>
             </div>
@@ -454,7 +461,7 @@ export default function TransactionHistory({
                 </div>
               )}
               <div className="flex flex-col gap-3 border-b border-(--kp-border) p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                <p className="kp-muted text-sm font-semibold">{t('history.itemCount').replace('{count}', String(records.length))}</p>
+                <p className="kp-muted text-sm ">{t('history.itemCount').replace('{count}', String(records.length))}</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {historyError && (
                     <HistoryActionButton onClick={loadBackendHistory}>{t('history.retryHistoryLoad')}</HistoryActionButton>
@@ -474,36 +481,36 @@ export default function TransactionHistory({
                     <article key={record.id} className="grid min-w-0 gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                       <div className="min-w-0">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <h3 className="kp-text min-w-0 wrap-break-word text-base font-semibold">{record.merchantName || t('payment.lblNotProvided')}</h3>
-                          <span className="inline-flex shrink-0 border border-brand/25 bg-brand/8 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand">
+                          <h3 className="kp-text min-w-0 wrap-break-word text-base ">{record.merchantName || t('payment.lblNotProvided')}</h3>
+                          <span className="inline-flex shrink-0 border border-brand/25 bg-brand/8 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
                             {getQrisTypeLabel(record.qrisType, t)}
                           </span>
-                          <span className="inline-flex shrink-0 border border-purple-400/25 bg-purple-500/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-purple-700 dark:text-purple-200">
+                          <span className="inline-flex shrink-0 border border-purple-400/25 bg-purple-500/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-purple-700 dark:text-purple-200">
                             {record.networkLabel || t('payment.receiptNetwork')}
                           </span>
                         </div>
 
                         <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                           <div className="min-w-0">
-                            <p className="kp-soft text-xs font-semibold">{t('payment.lblIdrAmount')}</p>
-                            <p className="kp-text mt-1 font-semibold">{getIdrAmountLabel(record) || t('payment.lblNotProvided')}</p>
+                            <p className="kp-soft text-xs ">{t('payment.lblIdrAmount')}</p>
+                            <p className="kp-text mt-1 ">{getIdrAmountLabel(record) || t('payment.lblNotProvided')}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="kp-soft text-xs font-semibold">{t('payment.lblSolPaid')}</p>
-                            <p className="kp-text mt-1 font-semibold">{getSolAmountLabel(record) || t('payment.lblNotProvided')}</p>
+                            <p className="kp-soft text-xs ">{t('payment.lblSolPaid')}</p>
+                            <p className="kp-text mt-1 ">{getSolAmountLabel(record) || t('payment.lblNotProvided')}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="kp-soft text-xs font-semibold">{t('payment.lblStatus')}</p>
-                            <p className="mt-1 wrap-break-word font-mono text-xs font-bold text-brand">{statusLabel}</p>
+                            <p className="kp-soft text-xs ">{t('payment.lblStatus')}</p>
+                            <p className="mt-1 wrap-break-word font-mono text-xs  text-brand">{statusLabel}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="kp-soft text-xs font-semibold">{t('payment.receiptTimestamp')}</p>
-                            <p className="kp-text mt-1 font-semibold">{timestampLabel}</p>
+                            <p className="kp-soft text-xs ">{t('payment.receiptTimestamp')}</p>
+                            <p className="kp-text mt-1 ">{timestampLabel}</p>
                           </div>
                         </div>
 
                         {record.signature && (
-                          <p className="kp-muted mt-3 min-w-0 break-all font-mono text-xs font-semibold" title={record.signature}>
+                          <p className="kp-muted mt-3 min-w-0 break-all font-mono text-xs " title={record.signature}>
                             {truncateMiddle(record.signature, 12, 12)}
                           </p>
                         )}
@@ -525,7 +532,7 @@ export default function TransactionHistory({
               </div>
 
               {actionMessage && (
-                <p className="border-t border-(--kp-border) px-4 py-3 text-sm font-semibold text-brand sm:px-5" role="status">
+                <p className="border-t border-(--kp-border) px-4 py-3 text-sm  text-brand sm:px-5" role="status">
                   {actionMessage}
                 </p>
               )}

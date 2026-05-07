@@ -285,7 +285,7 @@ const AppNotice = ({ variant = 'info', title, children, pulse = false }) => (
       <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${variant === 'danger' ? 'bg-red-400' : variant === 'warning' ? 'bg-amber-300' : variant === 'wallet' ? 'bg-purple-400' : 'bg-brand'} ${pulse ? 'animate-pulse' : ''}`}></span>
       <div className="min-w-0">
         {title && (
-          <p className={`text-sm font-semibold ${noticeTitleStyles[variant] || noticeTitleStyles.info}`}>{title}</p>
+          <p className={`text-sm  ${noticeTitleStyles[variant] || noticeTitleStyles.info}`}>{title}</p>
         )}
         <div className="mt-1 text-sm leading-6 text-current">{children}</div>
       </div>
@@ -304,7 +304,7 @@ const RailButton = ({ as = 'button', variant = 'primary', className = '', childr
 
   return (
     <ButtonComponent
-      className={`flex min-h-12 w-full items-center justify-center px-4 py-3 text-center text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
+      className={`flex min-h-12 w-full items-center justify-center px-4 py-3 text-center text-sm  transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
       {...props}
     >
       {children}
@@ -326,8 +326,8 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
 
   return (
     <div className="grid min-w-0 gap-1.5 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.85fr)_minmax(0,1.15fr)] sm:gap-4 sm:px-4">
-      <span className="kp-soft text-xs font-semibold">{label}</span>
-      <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
+      <span className="kp-soft text-xs ">{label}</span>
+      <span className={`min-w-0 text-left text-sm  sm:text-right ${mono ? 'font-mono' : ''} ${valueFlowClass} ${toneClass}`} title={title}>
         {value}
       </span>
     </div>
@@ -336,7 +336,7 @@ const DetailRow = ({ label, value, mono = false, tone = 'default', title, trunca
 
 const TechnicalDetails = ({ label, children, className = '' }) => (
   <details className={`group border border-(--kp-border) bg-(--kp-control-bg) ${className}`}>
-    <summary className="kp-muted flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+    <summary className="kp-muted flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm  transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
       <span>{label}</span>
       <svg className="h-4 w-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -352,7 +352,7 @@ const QrisTypeBadge = ({ type, t }) => {
   const isStatic = type === 'static';
 
   return (
-    <span className={`inline-flex shrink-0 items-center border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${isStatic ? 'border-amber-400/35 bg-amber-400/10 text-amber-700 dark:text-amber-200' : 'border-brand/30 bg-brand/10 text-brand'}`}>
+    <span className={`inline-flex shrink-0 items-center border px-2.5 py-1 text-[11px]  uppercase tracking-[0.12em] ${isStatic ? 'border-amber-400/35 bg-amber-400/10 text-amber-700 dark:text-amber-200' : 'border-brand/30 bg-brand/10 text-brand'}`}>
       {isStatic ? t('payment.qrisTypeStatic') : t('payment.qrisTypeDynamic')}
     </span>
   );
@@ -373,7 +373,7 @@ const InlineActionButton = ({ as = 'button', children, className = '', ...props 
 
   return (
     <ButtonComponent
-      className={`shrink-0 border border-brand/25 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
+      className={`shrink-0 border border-brand/25 px-2.5 py-1.5 text-[11px]  uppercase tracking-[0.12em] text-brand transition hover:bg-brand/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${className}`}
       {...buttonProps}
       {...props}
     >
@@ -404,9 +404,9 @@ const ReceiptField = ({
 
   return (
     <div className="grid min-w-0 gap-2 border-b border-(--kp-border) px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(6.75rem,0.78fr)_minmax(0,1.22fr)] sm:gap-4 sm:px-4">
-      <span className="kp-soft text-xs font-semibold">{label}</span>
+      <span className="kp-soft text-xs ">{label}</span>
       <div className="flex min-w-0 items-start gap-2 sm:justify-end">
-        <span className={`min-w-0 text-left text-sm font-semibold sm:text-right ${mono ? 'break-all font-mono' : 'wrap-break-word'} ${toneClass}`} title={title || cleanValue}>
+        <span className={`min-w-0 text-left text-sm  sm:text-right ${mono ? 'break-all font-mono' : 'wrap-break-word'} ${toneClass}`} title={title || cleanValue}>
           {cleanValue}
         </span>
         {action}
@@ -964,8 +964,8 @@ export default function PaymentPage({
         >
           <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
             <div className="min-w-0">
-              <div className="mb-2 text-xs font-semibold text-brand">{t('payment.qrisParsed')}</div>
-              <h3 id="payment-panel-title" className="kp-text text-xl font-semibold transition-colors sm:text-2xl">
+              <div className="mb-2 text-xs  text-brand">{t('payment.qrisParsed')}</div>
+              <h3 id="payment-panel-title" className="kp-text text-xl  transition-colors sm:text-2xl">
                 {headerTitle}
               </h3>
             </div>
@@ -996,7 +996,7 @@ export default function PaymentPage({
                     type="button"
                     onClick={handleConfirm}
                     disabled={isQuoteLoading}
-                    className="mt-3 inline-flex text-sm font-semibold text-brand hover:underline disabled:opacity-50"
+                    className="mt-3 inline-flex text-sm  text-brand hover:underline disabled:opacity-50"
                   >
                     {isQuoteLoading ? t('payment.btnLoading') : t('payment.btnTryAgain')}
                   </button>
@@ -1012,7 +1012,7 @@ export default function PaymentPage({
                     href={primaryExplorerUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-4 inline-flex text-sm font-semibold text-brand hover:underline"
+                    className="mt-4 inline-flex text-sm  text-brand hover:underline"
                   >
                     {t('payment.btnViewExplorer')}
                   </a>
@@ -1079,18 +1079,18 @@ export default function PaymentPage({
                         <SuccessCheckmark />
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-bold uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
-                            <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand">
+                            <p className="text-xs  uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
+                            <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
                               {t('payment.receiptDevnetBadge')}
                             </span>
                           </div>
-                          <h4 className="kp-text mt-2 text-2xl font-semibold">{t('payment.receiptTitle')}</h4>
+                          <h4 className="kp-text mt-2 text-2xl ">{t('payment.receiptTitle')}</h4>
                           <p className="kp-muted mt-2 text-sm leading-6">{t('payment.receiptVerifiedBody')}</p>
                         </div>
                       </div>
                       <div className="min-w-0 border border-brand/20 bg-brand/10 px-3 py-2 text-left sm:text-right">
-                        <p className="kp-soft text-[11px] font-bold uppercase tracking-[0.12em]">{t('payment.lblStatus')}</p>
-                        <p className="mt-1 wrap-break-word font-mono text-sm font-bold text-brand">{receiptStatusLabel}</p>
+                        <p className="kp-soft text-[11px]  uppercase tracking-[0.12em]">{t('payment.lblStatus')}</p>
+                        <p className="mt-1 wrap-break-word font-mono text-sm  text-brand">{receiptStatusLabel}</p>
                       </div>
                     </div>
                   </div>
@@ -1126,12 +1126,12 @@ export default function PaymentPage({
                   </div>
 
                   <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
-                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    <p className="text-sm  text-amber-700 dark:text-amber-300">
                       {t('payment.receiptSettlementDemoNote')}
                     </p>
 
                     {receiptActionMessage && (
-                      <p className="mt-3 text-sm font-semibold text-brand" role="status">
+                      <p className="mt-3 text-sm  text-brand" role="status">
                         {receiptActionMessage}
                       </p>
                     )}
@@ -1164,7 +1164,7 @@ export default function PaymentPage({
                 <details className="group border border-(--kp-border) bg-(--kp-control-bg)">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-3 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold kp-muted">{t('payment.merchantDemoTitle')}</p>
+                      <p className="text-sm  kp-muted">{t('payment.merchantDemoTitle')}</p>
                       <p className="kp-soft mt-1 text-xs leading-5">{t('payment.merchantDemoSummary')}</p>
                     </div>
                     <svg className="h-4 w-4 shrink-0 kp-soft transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1174,7 +1174,7 @@ export default function PaymentPage({
 
                   <div className="border-t border-(--kp-border)">
                     <div className="border-b border-(--kp-border) bg-amber-500/6 px-3 py-3 sm:px-4">
-                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{t('payment.merchantDemoExpandedTitle')}</p>
+                      <p className="text-sm  text-amber-700 dark:text-amber-300">{t('payment.merchantDemoExpandedTitle')}</p>
                       <p className="kp-muted mt-1 text-xs leading-5">{t('payment.merchantDemoExpandedBody')}</p>
                     </div>
 
@@ -1189,7 +1189,7 @@ export default function PaymentPage({
                     {isSettling && (
                       <div className="flex items-center gap-3 border-b border-(--kp-border) px-3 py-3">
                         <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
-                        <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{t('payment.btnSettling')}</span>
+                        <span className="text-sm  text-amber-700 dark:text-amber-400">{t('payment.btnSettling')}</span>
                       </div>
                     )}
 
@@ -1238,7 +1238,7 @@ export default function PaymentPage({
               <section className="-mx-3 space-y-5 border-y border-brand/20 bg-brand/6 p-3 sm:mx-0 sm:border sm:p-5">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="kp-text text-xl font-semibold">{t('payment.staticQrisDetectedTitle')}</h4>
+                    <h4 className="kp-text text-xl ">{t('payment.staticQrisDetectedTitle')}</h4>
                     <QrisTypeBadge type="static" t={t} />
                   </div>
                   <p className="kp-muted mt-2 text-sm leading-6">{t('payment.staticQrisDetectedBody')}</p>
@@ -1247,23 +1247,23 @@ export default function PaymentPage({
                 <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 sm:border sm:p-4">
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="kp-soft text-xs font-semibold">{t('payment.manualAmountStoreHelper')}</p>
-                      <p className="kp-text mt-1 wrap-break-word text-base font-semibold">{merchantName}</p>
+                      <p className="kp-soft text-xs ">{t('payment.manualAmountStoreHelper')}</p>
+                      <p className="kp-text mt-1 wrap-break-word text-base ">{merchantName}</p>
                       {merchantCity && (
-                        <p className="kp-muted mt-1 text-xs font-semibold">{merchantCity}</p>
+                        <p className="kp-muted mt-1 text-xs ">{merchantCity}</p>
                       )}
                     </div>
                     {merchantId && (
                       <div className="min-w-0 text-left sm:text-right">
-                        <p className="kp-soft text-xs font-semibold">{t('payment.lblMerchantId')}</p>
-                        <p className="kp-muted mt-1 break-all text-xs font-semibold">{merchantId}</p>
+                        <p className="kp-soft text-xs ">{t('payment.lblMerchantId')}</p>
+                        <p className="kp-muted mt-1 break-all text-xs ">{merchantId}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="manual-idr-amount" className="kp-text mb-2 block text-sm font-semibold">
+                  <label htmlFor="manual-idr-amount" className="kp-text mb-2 block text-sm ">
                     {t('scanner.paymentAmount')}
                   </label>
                   <input
@@ -1287,9 +1287,9 @@ export default function PaymentPage({
                     placeholder={t('scanner.paymentAmountPlaceholder')}
                     aria-invalid={visibleManualAmountError ? 'true' : 'false'}
                     aria-describedby="manual-idr-amount-helper"
-                    className="kp-input min-h-12 w-full border px-4 py-3 text-base font-semibold outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
+                    className="kp-input min-h-12 w-full border px-4 py-3 text-base  outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
                   />
-                  <div id="manual-idr-amount-helper" className="mt-2 min-h-5 text-xs font-semibold">
+                  <div id="manual-idr-amount-helper" className="mt-2 min-h-5 text-xs ">
                     {visibleManualAmountError ? (
                       <p className="text-red-700 dark:text-red-300">{visibleManualAmountError}</p>
                     ) : manualAmountPreview ? (
@@ -1307,17 +1307,17 @@ export default function PaymentPage({
                 <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="kp-soft text-xs font-semibold">{t('payment.lblMerchant')}</p>
-                      <p className="kp-text mt-1 wrap-break-word text-lg font-semibold">{merchantName}</p>
+                      <p className="kp-soft text-xs ">{t('payment.lblMerchant')}</p>
+                      <p className="kp-text mt-1 wrap-break-word text-lg ">{merchantName}</p>
                       {merchantCity && (
-                        <p className="kp-muted mt-1 text-xs font-semibold">{merchantCity}</p>
+                        <p className="kp-muted mt-1 text-xs ">{merchantCity}</p>
                       )}
                     </div>
                     <QrisTypeBadge type={isStaticQris ? 'static' : 'dynamic'} t={t} />
                   </div>
                   <p className="kp-muted mt-3 text-sm leading-6">{qrisTypeDescription}</p>
                   {merchantId && (
-                    <p className="kp-soft mt-2 break-all text-xs font-semibold">
+                    <p className="kp-soft mt-2 break-all text-xs ">
                       {t('payment.lblMerchantId')}: {merchantId}
                     </p>
                   )}
@@ -1326,10 +1326,10 @@ export default function PaymentPage({
                 {!quoteReview && (
                   <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
                     <div className="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                      <span className="kp-text text-sm font-semibold transition-colors">{amountSourceLabel}</span>
+                      <span className="kp-text text-sm  transition-colors">{amountSourceLabel}</span>
                       <div className="min-w-0 text-left sm:text-right">
-                        <div className="wrap-break-word text-2xl font-semibold text-brand sm:text-3xl">{amountLabel}</div>
-                        <div className="mt-1 text-xs font-semibold text-zinc-500">{currencyLabel}</div>
+                        <div className="wrap-break-word text-2xl  text-brand sm:text-3xl">{amountLabel}</div>
+                        <div className="mt-1 text-xs  text-zinc-500">{currencyLabel}</div>
                       </div>
                     </div>
                   </div>
@@ -1344,9 +1344,9 @@ export default function PaymentPage({
                     )}
                     <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                       <div className={`border p-3 transition-colors sm:p-4 ${quoteReview.isExpired ? 'border-(--kp-border) bg-(--kp-control-bg) opacity-60' : 'border-brand/25 bg-brand/8'}`}>
-                        <div className="kp-muted mb-2 text-sm font-semibold">{t('payment.lblBackendQuote')}</div>
-                        <div className={`wrap-break-word text-3xl font-semibold leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
-                        <div className="mt-2 text-xs font-semibold text-zinc-500">SOL</div>
+                        <div className="kp-muted mb-2 text-sm ">{t('payment.lblBackendQuote')}</div>
+                        <div className={`wrap-break-word text-3xl  leading-none sm:text-4xl ${quoteReview.isExpired ? 'text-zinc-500' : 'text-brand'}`}>{quoteReview.solAmountLabel.replace(' SOL', '')}</div>
+                        <div className="mt-2 text-xs  text-zinc-500">SOL</div>
                       </div>
 
                       <div className="kp-surface overflow-hidden border">

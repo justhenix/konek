@@ -29,7 +29,7 @@ export default function DevnetSafetyNotice({ t, rpcEndpoint, className = '' }) {
       <div className="flex min-w-0 items-start gap-2.5">
         <span className={`${isNonDevnetHint ? 'mt-1.5 h-2.5 w-2.5' : 'mt-1.5 h-2 w-2'} shrink-0 rounded-full`} style={{ backgroundColor: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-brand)' }}></span>
         <div className="min-w-0">
-          <p className={isNonDevnetHint ? 'text-sm font-bold' : 'text-xs font-semibold'} style={{ color: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-text-muted)' }}>
+          <p className={isNonDevnetHint ? 'text-sm ' : 'text-xs '} style={{ color: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-text-muted)' }}>
             {title}
           </p>
           <p className={isNonDevnetHint ? 'mt-1 text-xs leading-5 sm:text-sm sm:leading-6' : 'mt-0.5 text-xs leading-5'} style={{ color: isNonDevnetHint ? 'var(--kp-amber-text)' : 'var(--kp-text-soft)' }}>
