@@ -1,5 +1,5 @@
 {
-  "name": "lomba",
+  "name": "konek",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,6 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "node --test api/v1/payment/quote.test.js",
     "dev:check-env": "node scripts/check-env.mjs"
   },
   "dependencies": {

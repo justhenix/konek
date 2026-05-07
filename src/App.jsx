@@ -39,6 +39,7 @@ const PYTH_USD_IDR_FEED_ID = '0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b1
 const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
 const PHANTOM_DOWNLOAD_URL = 'https://phantom.com/download';
+const SOLANA_FAUCET_URL = 'https://faucet.solana.com/';
 const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
 const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
@@ -609,6 +610,146 @@ const MissingWalletModal = ({ onDismiss, t }) => (
   </div>
 );
 
+const DEVNET_MODAL_STEPS = ['modalStep1', 'modalStep2', 'modalStep3', 'modalStep4', 'modalStep5'];
+
+const DevnetBanner = ({ t, onHowToSwitch, onDismissBanner }) => (
+  <div
+    id="devnet-notice-banner"
+    className="kp-devnet-banner mx-auto w-full max-w-6xl border px-4 py-3 sm:px-5"
+    role="status"
+  >
+    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-sm font-bold" style={{ color: 'var(--kp-amber)' }}>
+          {t('devnet.bannerTitle')}
+        </p>
+        <p className="mt-1 text-xs leading-5" style={{ color: 'var(--kp-amber-text)' }}>
+          {t('devnet.bannerDesc')}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onHowToSwitch}
+          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        >
+          {t('devnet.bannerHowToSwitch')}
+        </button>
+        <a
+          href={SOLANA_FAUCET_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="kp-devnet-btn inline-flex min-h-11 items-center justify-center border px-4 py-2.5 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        >
+          {t('devnet.bannerGetSol')}
+        </a>
+        <button
+          type="button"
+          onClick={onDismissBanner}
+          className="kp-devnet-btn flex h-11 w-11 items-center justify-center border transition-colors hover:text-amber-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          aria-label="Close banner"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const DevnetHelpModal = ({ onDismiss, t }) => (
+  <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
+    <div
+      className="kp-panel relative w-full max-w-120 overflow-y-auto border p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
+      style={{ maxHeight: 'calc(100vh - 2rem)', borderColor: 'var(--kp-amber-border)' }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="devnet-help-title"
+    >
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="absolute right-4 top-4 grid h-11 w-11 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        style={{ minWidth: '44px', minHeight: '44px' }}
+        aria-label={t('devnet.closeLabel')}
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div className="mb-4 flex h-12 w-12 items-center justify-center border" style={{ borderColor: 'var(--kp-amber-border)', backgroundColor: 'var(--kp-amber-bg)' }}>
+        <svg className="h-6 w-6" style={{ color: 'var(--kp-amber)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+        </svg>
+      </div>
+
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--kp-amber)' }}>
+        {t('devnet.modalEyebrow')}
+      </p>
+      <h3 id="devnet-help-title" className="pr-12 text-2xl font-semibold text-(--kp-text)">
+        {t('devnet.modalTitle')}
+      </h3>
+      <p className="kp-muted mt-3 text-sm leading-7">
+        {t('devnet.modalBody')}
+      </p>
+
+      <ol className="mt-5 grid gap-2">
+        {DEVNET_MODAL_STEPS.map((stepKey, index) => (
+          <li key={stepKey} className="flex items-start gap-3 text-sm leading-6">
+            <span
+              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold"
+              style={{ backgroundColor: 'var(--kp-amber-bg)', border: '1px solid var(--kp-amber-border)', color: 'var(--kp-amber)' }}
+            >
+              {index + 1}
+            </span>
+            <span className="text-(--kp-text)">{t(`devnet.${stepKey}`)}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-5 border-l-2 pl-4" style={{ borderColor: 'var(--kp-amber-border)' }}>
+        <p className="kp-muted text-xs leading-5">
+          {t('devnet.modalTip')}
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <a
+          href={SOLANA_FAUCET_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="kp-devnet-btn-primary flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        >
+          {t('devnet.modalPrimary')}
+        </a>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+        >
+          {t('devnet.modalSecondary')}
+        </button>
+      </div>
+
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="kp-soft text-xs font-semibold underline underline-offset-2 transition-colors hover:text-(--kp-text) focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+        >
+          {t('devnet.modalAlreadySwitched')}
+        </button>
+      </div>
+
+      <p className="kp-soft mt-3 text-center text-[11px] leading-5">
+        {t('devnet.faucetHelper')}
+      </p>
+    </div>
+  </div>
+);
+
 const FaqSection = ({ t }) => (
   <section id="proof-section" className="scroll-mt-28 border-b border-white/10 bg-[#090c09]/70">
     <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[0.7fr_1fr] lg:px-8 lg:py-16">
@@ -772,6 +913,8 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isDevnetModalOpen, setIsDevnetModalOpen] = useState(false);
+  const [isDevnetBannerDismissed, setIsDevnetBannerDismissed] = useState(false);
   const [scannedData, setScannedData] = useState(null);
   const [parsedPaymentData, setParsedPaymentData] = useState(null);
   const [restoredPaymentQuote, setRestoredPaymentQuote] = useState(null);
@@ -1827,6 +1970,21 @@ function App() {
   }, [missingWalletModalOpen]);
 
   useEffect(() => {
+    if (!isDevnetModalOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsDevnetModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isDevnetModalOpen]);
+
+  useEffect(() => {
     const handlePopState = () => {
       const nextPage = getCurrentPage();
       setPage(nextPage);
@@ -2170,7 +2328,16 @@ function App() {
 
         {page === 'home' ? (
           <>
-        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-24 sm:px-6 md:pt-28 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-32" data-hero-section>
+        <div className="mx-auto w-full max-w-6xl px-4 pt-20 sm:px-6 md:pt-24 lg:px-8">
+        {!isDevnetBannerDismissed && (
+          <DevnetBanner 
+            t={t} 
+            onHowToSwitch={() => setIsDevnetModalOpen(true)} 
+            onDismissBanner={() => setIsDevnetBannerDismissed(true)} 
+          />
+        )}
+        </div>
+        <main className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 pt-4 sm:px-6 md:pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16 lg:pt-8" data-hero-section>
           <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
             <h1 className="hero-text text-4xl font-semibold leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
               {t('hero.headline')}
@@ -2302,6 +2469,13 @@ function App() {
       {missingWalletModalOpen && (
         <MissingWalletModal
           onDismiss={() => setMissingWalletModalOpen(false)}
+          t={t}
+        />
+      )}
+
+      {isDevnetModalOpen && (
+        <DevnetHelpModal
+          onDismiss={() => setIsDevnetModalOpen(false)}
           t={t}
         />
       )}

@@ -36,6 +36,11 @@
   --kp-control-bg-hover: rgba(247, 255, 249, 0.07);
   --kp-divider-bg: rgba(247, 255, 249, 0.10);
   --color-brand: var(--kp-brand);
+  --kp-amber: #fbbf24;
+  --kp-amber-text: #fde68a;
+  --kp-amber-border: rgba(251, 191, 36, 0.25);
+  --kp-amber-bg: rgba(251, 191, 36, 0.08);
+  --kp-amber-bg-hover: rgba(251, 191, 36, 0.14);
 }
 
 :root[data-theme="light"] {
@@ -67,6 +72,11 @@
   --kp-control-bg: rgba(6, 16, 10, 0.04);
   --kp-control-bg-hover: rgba(6, 16, 10, 0.07);
   --kp-divider-bg: rgba(6, 16, 10, 0.10);
+  --kp-amber: #d97706;
+  --kp-amber-text: #92400e;
+  --kp-amber-border: rgba(217, 119, 6, 0.28);
+  --kp-amber-bg: rgba(217, 119, 6, 0.08);
+  --kp-amber-bg-hover: rgba(217, 119, 6, 0.14);
 }
 
 @keyframes scan {
@@ -292,6 +302,32 @@ body {
 
 .protocol-node {
   clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+.kp-devnet-banner {
+  background-color: var(--kp-amber-bg);
+  border-color: var(--kp-amber-border);
+  color: var(--kp-amber-text);
+}
+
+.kp-devnet-btn {
+  background-color: var(--kp-amber-bg);
+  border-color: var(--kp-amber-border);
+  color: var(--kp-amber-text);
+}
+
+.kp-devnet-btn:hover {
+  background-color: var(--kp-amber-bg-hover);
+  border-color: var(--kp-amber);
+}
+
+.kp-devnet-btn-primary {
+  background-color: var(--kp-amber);
+  color: #1c1917;
+}
+
+.kp-devnet-btn-primary:hover {
+  filter: brightness(1.08);
 }
 
 .rail-scrollbar {

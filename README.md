@@ -21,22 +21,37 @@ code at a local cashier.
 This repository is an active prototype built for the Colosseum Frontier
 Hackathon, Superteam Indonesia track.
 
-Implemented:
+### Implemented
 
-- QRIS scanning in the browser with device camera support.
-- EMVCo TLV parsing for QRIS payloads.
-- Phantom wallet connection on desktop and mobile deeplink flow.
-- Phantom devnet transfer flow.
-- Live SOL/IDR quote endpoint using Pyth Hermes price feeds.
-- Server-side quote validation that parses QRIS Tag 54 directly.
-- Server-side Solana devnet transaction verification against the quote and treasury wallet.
-- Supabase server-only helper modules for transaction persistence.
+- Browser QRIS scanning with camera support.
+- Demo QRIS flow.
+- EMVCo TLV QRIS parsing.
+- Static QRIS manual IDR amount fallback when Tag 54 is missing.
+- Strict QRIS/manual amount validation.
+- Phantom desktop wallet flow.
+- Phantom mobile deeplink/session recovery flow.
+- Solana devnet transfer flow.
+- Live SOL/IDR quote endpoint using Pyth Hermes plus fallback FX source.
+- Backend quote signing.
+- Server-side Solana devnet transaction verification.
+- Payment proof UI.
+- Demo merchant payout record UI.
+- Unit tests for QRIS amount parsing, TLV extraction, and quote amount resolution.
 - Vercel serverless API structure.
+- Supabase server-only helper modules for transaction persistence.
 
-In progress:
+### Demo-only / simulated
 
-- Persisting full payment lifecycle states from quote to settlement.
-- Midtrans Iris disbursement integration for fiat merchant settlement.
+- Demo QRIS is synthetic (QRIS itself has no devnet).
+- Merchant rupiah settlement is simulated — no real IDR is disbursed.
+- No real Midtrans, Xendit, or DOKU payout is executed.
+
+### In progress / planned
+
+- Full persisted payment lifecycle from quote to verification to settlement record.
+- Real fiat payout integration after gateway onboarding.
+- More automated tests.
+- Production demo screenshots/video.
 
 ## How It Works
 
@@ -44,7 +59,8 @@ In progress:
 2. **Parse** - The app reads the EMVCo TLV payload and extracts merchant and amount data.
 3. **Quote** - The backend validates the QRIS payload and derives SOL/IDR from Pyth price feeds.
 4. **Review** - The user reviews the merchant, IDR amount, and quoted SOL amount.
-5. **Pay and settle** - The intended production flow signs on Solana, verifies the transaction, and settles IDR to the merchant.
+5. **Pay** - The user pays with Phantom on Solana devnet. The backend verifies the transaction against the signed quote, treasury wallet, and expected lamports.
+6. **Receipt** - The app shows a payment proof and a demo merchant payout record. Real rupiah settlement is an intended production path requiring licensed gateway onboarding.
 
 ## Tech Stack
 
@@ -56,7 +72,7 @@ In progress:
 | Pricing      | Pyth Network Hermes, USD/IDR fallback API         |
 | Backend      | Vercel Serverless Functions                       |
 | Database     | Supabase Postgres                                 |
-| Fiat gateway | Midtrans Iris API                                 |
+| Fiat gateway | Planned — Midtrans, Xendit, DOKU, or equivalent (requires business onboarding) |
 
 ## Project Structure
 
@@ -69,6 +85,7 @@ api/
   v1/
     payment/
       quote.js            POST /api/v1/payment/quote
+      quote.test.js       Unit tests for quote amount parsing
       verify.js           POST /api/v1/payment/verify
       settle-demo.js      POST /api/v1/payment/settle-demo
 
@@ -85,19 +102,59 @@ src/
   PaymentPage.jsx         QRIS review and payment flow
 ```
 
+## Hackathon Demo Notes
+
+- QRIS itself has no devnet.
+- Demo QRIS is a synthetic EMVCo QRIS payload used to simulate merchant QR data.
+- The Solana payment is real on devnet.
+- The backend verifies the submitted Solana transaction against the signed quote, treasury wallet, and expected lamports.
+- The merchant rupiah payout is represented as a demo settlement record.
+- Real QRIS payout through Midtrans, Xendit, DOKU, or similar providers requires merchant onboarding, KYC, and eligible business/legal-entity access.
+
+## Golden Demo Flow
+
+1. Open the deployed app.
+2. Connect Phantom on Solana devnet.
+3. Use Demo QRIS.
+4. Confirm the SOL/IDR quote.
+5. Pay with Phantom.
+6. Backend verifies the devnet transaction.
+7. App shows Payment Proof.
+8. App shows Demo Merchant Payout Record.
+9. Open the Solana Explorer receipt.
+
 ## API
 
 ### `POST /api/v1/payment/quote`
 
 Creates a short-lived SOL quote from a QRIS payload.
 
-Request:
+**Request with dynamic QRIS (Tag 54 present):**
 
 ```json
 {
   "qrisPayload": "000201..."
 }
 ```
+
+**Request with static QRIS (Tag 54 missing):**
+
+```json
+{
+  "qrisPayload": "000201...",
+  "idrAmount": "15000"
+}
+```
+
+**Rules:**
+
+- `qrisPayload` is required.
+- If QRIS Tag 54 exists, the Tag 54 amount wins; `idrAmount` is ignored.
+- `idrAmount` is only used when Tag 54 is missing.
+- Manual amount must be a strict whole IDR integer string.
+- Reject examples: `Rp 25.000`, `25,000`, `1e5`, `0`, `-1`, `15000abc`, `15000.50`.
+- The endpoint does not trust arbitrary client-provided fiat amounts for dynamic QRIS.
+- The endpoint returns a short-lived signed quote.
 
 Successful response:
 
@@ -112,9 +169,6 @@ Successful response:
   "createdAt": "2026-05-04T01:00:03.000Z"
 }
 ```
-
-The endpoint does not trust client-provided fiat amounts. It parses QRIS Tag 54
-on the server and rejects malformed, missing, or unsupported payloads.
 
 ### `POST /api/v1/payment/verify`
 
@@ -153,7 +207,7 @@ Common failures:
 ### `POST /api/v1/payment/settle-demo`
 
 Simulates fiat settlement for hackathon demo purposes. Does **not** call real
-Midtrans or Xendit APIs.
+Midtrans, Xendit, or DOKU APIs. No real IDR is disbursed.
 
 Request:
 
@@ -220,7 +274,7 @@ Fill in the values you need for the parts of the stack you are running.
 | `SOLANA_RPC_URL`                | Serverless payment verification          | Backend Solana devnet reads       | Secret     |
 | `TREASURY_WALLET`               | Serverless payment verification          | Expected payment destination      | Secret     |
 | `PAYMENT_QUOTE_SECRET`          | Serverless quote signing                 | Quote integrity checks            | Secret     |
-| `MIDTRANS_SERVER_KEY`           | Future settlement API                    | Midtrans Iris disbursement        | Secret     |
+| `MIDTRANS_SERVER_KEY`           | Future licensed gateway integration      | Planned fiat payout (not active)  | Secret     |
 
 ### Run the app
 
@@ -300,18 +354,19 @@ But `npm run dev:vercel` is the recommended path.
 5. Pay with Phantom on Solana devnet.
 6. Verify the Payment Verified page appears.
 7. Open the Explorer receipt.
-8. Click **Simulate Settlement** and confirm settlement status appears.
+8. Click **Create Demo Payout Record** and confirm the demo settlement status appears.
 
 ### Demo settlement
 
-> **Important:** The Solana payment verification in this prototype is **real**.
-> The settlement step is **simulated** for the hackathon demo. No real IDR is
-> disbursed. Real Midtrans/Xendit integration is on the roadmap.
+> **Important:** The Solana payment verification in this prototype is **real**
+> on devnet. The settlement step is **simulated** for the hackathon demo. No
+> real IDR is disbursed. Real fiat payout through a licensed gateway is on the
+> roadmap.
 
 Demo flow:
 
 ```text
-Demo QRIS → Pyth quote → Phantom devnet transfer → backend verification → demo settlement → Explorer receipt
+Demo QRIS → Pyth quote → Phantom devnet transfer → backend verification → demo settlement record → Explorer receipt
 ```
 
 ## Scripts
@@ -321,6 +376,7 @@ npm run dev            # Start the Vite development server
 npm run build          # Build the production frontend bundle
 npm run preview        # Preview the production build locally
 npm run lint           # Run ESLint
+npm test               # Run Node tests for payment quote parsing/amount resolution
 npm run dev:vercel     # Start Vercel dev with .env.local injected
 npm run dev:check-env  # Validate required env vars in .env.local
 ```
@@ -378,7 +434,7 @@ treasury wallet configuration error.
 4. Confirm the quote.
 5. Pay with Phantom.
 6. Verify payment.
-7. Simulate settlement.
+7. View demo merchant payout record.
 8. Open Explorer.
 
 ## QRIS Parser
@@ -395,9 +451,10 @@ manipulated by client-side state.
 
 ### QRIS test payloads
 
-QRIS does not have a Solana devnet. Use Midtrans Sandbox or Xendit Test Mode to
-generate QRIS test payloads. KonekPay uses the QRIS payload for merchant/amount
-parsing, then verifies the Solana devnet payment separately.
+QRIS does not have a devnet or sandbox. Standard Indonesian payment gateways
+(Midtrans, Xendit, DOKU) require registered legal business entities to access
+QRIS APIs, even in sandbox mode. KonekPay uses the QRIS payload for
+merchant/amount parsing, then verifies the Solana devnet payment separately.
 
 ### Demo QRIS (hackathon testing)
 
@@ -425,7 +482,7 @@ What happens when you click "Use Demo QRIS":
 What is **not** real (currently):
 
 - The demo QRIS does not represent a real merchant acquirer.
-- No IDR settlement occurs unless Midtrans/Xendit integration is completed.
+- No IDR settlement occurs. The merchant payout record is a demo simulation.
 - The "KANTIN 165 DEMO" merchant name is synthetic.
 
 You can also paste any valid EMVCo QRIS payload into the manual textarea in the
@@ -434,13 +491,33 @@ malformed.
 
 ## Roadmap
 
-- ~~Build the Solana transfer instruction and signature submission flow.~~
-- ~~Add backend transaction verification against the configured Solana RPC.~~
-- Persist quote, payment, verification, and settlement states in Supabase.
-- Replace demo settlement with real Midtrans Iris payout execution.
-- Add Xendit as an alternative fiat gateway.
-- Add automated parser and quote endpoint tests.
-- Add deployment screenshots and production demo links.
+### Demo readiness
+
+- [x] QRIS scanner and Demo QRIS flow
+- [x] Phantom desktop and mobile flow
+- [x] Live SOL/IDR quote endpoint
+- [x] Backend Solana devnet verification
+- [x] Demo merchant payout record
+- [x] Strict QRIS/manual amount validation
+- [x] Unit tests for quote amount parsing
+- [ ] Add production demo link, screenshots, or short walkthrough video
+
+### Post-hackathon prototype
+
+- [ ] Persist full payment lifecycle states in Supabase
+- [ ] Add settlement/reconciliation records
+- [ ] Add more endpoint tests for quote, verify, and settle-demo
+- [ ] Add E2E test for Demo QRIS to verified payment flow
+- [ ] Improve merchant-facing payout dashboard/state history
+
+### Production path
+
+- [ ] Complete business/legal onboarding for a QRIS-capable payment gateway
+- [ ] Replace demo settlement with real Midtrans, Xendit, DOKU, or equivalent payout execution
+- [ ] Add settlement reconciliation and failure handling
+- [ ] Add compliance, security review, and key-management hardening
+- [ ] Decide mainnet treasury/custody model
+- [ ] Add fee model and exchange-rate risk handling
 
 ## Acknowledgements
 
