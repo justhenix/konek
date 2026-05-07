@@ -499,7 +499,7 @@ export default function PaymentPage({
   ]);
   const headerTitle = {
     idle: t('payment.headerIdle'),
-    amount_required: t('payment.manualAmountTitle'),
+    amount_required: t('scanner.missingAmountTitle'),
     unsupported: t('payment.headerFailed'),
     parsed: t('payment.headerIdle'),
     quoting: t('payment.headerQuoting'),
@@ -879,8 +879,8 @@ export default function PaymentPage({
             {!(flowState === 'paid_verified' || flowState === 'settled') && showManualAmountForm && (
               <section className="-mx-3 space-y-5 border-y border-brand/20 bg-brand/6 p-3 sm:mx-0 sm:border sm:p-5">
                 <div>
-                  <h4 className="kp-text text-xl font-semibold">{t('payment.manualAmountTitle')}</h4>
-                  <p className="kp-muted mt-2 text-sm leading-6">{t('payment.manualAmountBody')}</p>
+                  <h4 className="kp-text text-xl font-semibold">{t('scanner.missingAmountTitle')}</h4>
+                  <p className="kp-muted mt-2 text-sm leading-6">{t('scanner.missingAmountBody')}</p>
                 </div>
 
                 <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 sm:border sm:p-4">
@@ -890,7 +890,7 @@ export default function PaymentPage({
 
                 <div>
                   <label htmlFor="manual-idr-amount" className="kp-text mb-2 block text-sm font-semibold">
-                    {t('payment.manualAmountLabel')}
+                    {t('scanner.paymentAmount')}
                   </label>
                   <input
                     id="manual-idr-amount"
@@ -910,7 +910,7 @@ export default function PaymentPage({
                         handleManualAmountContinue();
                       }
                     }}
-                    placeholder={t('payment.manualAmountPlaceholder')}
+                    placeholder={t('scanner.paymentAmountPlaceholder')}
                     aria-invalid={manualAmountError ? 'true' : 'false'}
                     aria-describedby="manual-idr-amount-helper"
                     className="kp-input min-h-12 w-full border px-4 py-3 text-base font-semibold outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/15"
@@ -985,7 +985,7 @@ export default function PaymentPage({
                   onClick={handleManualAmountContinue}
                   disabled={isBusy}
                 >
-                  {t('payment.manualAmountContinue')}
+                  {t('scanner.continue')}
                 </RailButton>
               ) : flowState === 'mobile_restored' ? (
                 <RailButton

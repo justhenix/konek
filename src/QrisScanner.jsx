@@ -83,11 +83,11 @@ const classifyCameraError = (error) => {
 const getCameraErrorContent = (status) => {
   switch (status) {
     case 'permission_denied':
-      return { titleKey: 'scanner.deniedTitle', descKey: 'scanner.deniedDesc', helperKey: 'scanner.deniedHelper', canRetry: true };
+      return { titleKey: 'scanner.cameraBlockedTitle', descKey: 'scanner.cameraBlockedBody', helperKey: null, canRetry: true };
     case 'insecure_context':
-      return { titleKey: 'scanner.insecureTitle', descKey: 'scanner.insecureDesc', helperKey: null, canRetry: false };
+      return { titleKey: 'scanner.securePageTitle', descKey: 'scanner.securePageBody', helperKey: null, canRetry: false };
     case 'unsupported':
-      return { titleKey: 'scanner.unsupportedBrowserTitle', descKey: 'scanner.unsupportedBrowserDesc', helperKey: null, canRetry: false };
+      return { titleKey: 'scanner.cameraUnsupportedTitle', descKey: 'scanner.cameraUnsupportedBody', helperKey: null, canRetry: false };
     case 'not_found':
       return { titleKey: 'scanner.notFoundTitle', descKey: 'scanner.notFoundDesc', helperKey: null, canRetry: true };
     case 'not_readable':
@@ -365,9 +365,9 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
           <div className="kp-panel-soft flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:p-5">
             <div className="min-w-0">
-              <h3 id="qris-scanner-title" className="kp-text text-xl font-semibold transition-colors">{t('scanner.title')}</h3>
+              <h3 id="qris-scanner-title" className="kp-text text-xl font-semibold transition-colors">{t('scanner.scanTitle')}</h3>
               <p className="kp-soft mt-1 text-xs font-semibold">
-                {cameraStatus === 'requesting' ? t('scanner.cameraRequesting') : cameraStatus === 'active' ? t('scanner.cameraReady') : t('scanner.cameraAuth')}
+                {cameraStatus === 'requesting' ? t('scanner.requestingCamera') : cameraStatus === 'active' ? t('scanner.scanSubtitle') : t('scanner.cameraPermissionTitle')}
               </p>
             </div>
             <button
@@ -386,9 +386,9 @@ export default function QrisScanner({ onClose, onResult, t }) {
               <div className="mb-4 flex h-12 w-12 items-center justify-center border border-brand/25 bg-brand/8">
                 <svg className="h-6 w-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
               </div>
-              <h4 className="kp-text mb-2 text-xl font-semibold">{t('scanner.promptTitle')}</h4>
-              <p className="kp-muted mb-5 max-w-sm text-sm leading-6">{t('scanner.promptDesc')}</p>
-              <button type="button" onClick={startCamera} className="min-h-12 w-full bg-brand px-5 py-3 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.enableBtn')}</button>
+              <h4 className="kp-text mb-2 text-xl font-semibold">{t('scanner.cameraPermissionTitle')}</h4>
+              <p className="kp-muted mb-5 max-w-sm text-sm leading-6">{t('scanner.cameraPermissionBody')}</p>
+              <button type="button" onClick={startCamera} className="min-h-12 w-full bg-brand px-5 py-3 text-sm font-bold text-black transition hover:bg-brand/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">{t('scanner.openCamera')}</button>
             </div>
           )}
 
@@ -413,7 +413,7 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 )}
                 {content.canRetry && (
                   <button type="button" onClick={startCamera} className="kp-button-secondary min-h-12 w-full border px-5 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-                    {t('scanner.tryAgainBtn')}
+                    {t('scanner.tryAgain')}
                   </button>
                 )}
               </div>
@@ -442,14 +442,14 @@ export default function QrisScanner({ onClose, onResult, t }) {
                 {showCameraPreview ? t('scanner.activeTitle') : t('scanner.demoTitle')}
               </p>
               <p className={`${showCameraPreview ? 'mb-3 text-xs leading-5' : 'mb-4 text-sm leading-6'} kp-muted`}>
-                {showCameraPreview ? t('scanner.activeDesc') : t('scanner.demoHint')}
+                {showCameraPreview ? t('scanner.activeBody') : t('scanner.demoHint')}
               </p>
 
               {/* Progressive scanner guidance */}
               {cameraStatus === 'active' && !scanResult && scanHint === 'idle' && (
                 <div className="mb-3 w-full border border-brand/15 bg-brand/5 p-3">
-                  <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.guidanceTitle')}</p>
-                  <p className="kp-muted text-xs leading-5">{t('scanner.guidanceBody')}</p>
+                  <p className="kp-text mb-1 text-xs font-semibold">{t('scanner.scanTipsTitle')}</p>
+                  <p className="kp-muted text-xs leading-5">{t('scanner.scanTipsBody')}</p>
                 </div>
               )}
 
@@ -462,8 +462,8 @@ export default function QrisScanner({ onClose, onResult, t }) {
 
               {cameraStatus === 'active' && !scanResult && scanHint === 'unreadable' && (
                 <div className="mb-3 w-full border border-amber-400/25 bg-amber-400/10 p-3 text-amber-800 dark:text-amber-100">
-                  <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">{t('scanner.errorReady')}</p>
-                  <p className="text-xs leading-5 text-current">{t('scanner.errorHelp')}</p>
+                  <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-200">{t('scanner.unreadableTitle')}</p>
+                  <p className="text-xs leading-5 text-current">{t('scanner.unreadableBody')}</p>
                 </div>
               )}
 
@@ -473,14 +473,14 @@ export default function QrisScanner({ onClose, onResult, t }) {
                   onClick={() => setShowDemoQr((prev) => !prev)}
                   className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
-                  {t('scanner.showDemoBtn')}
+                  {t('scanner.showDemo')}
                 </button>
                 <button
                   type="button"
                   onClick={handleUseDemoQris}
                   className={`${showCameraPreview ? 'min-h-10 px-3 py-2 text-xs' : 'min-h-12 px-4 py-3 text-sm'} kp-button-secondary flex-1 border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                 >
-                  {t('scanner.demoBtn')}
+                  {t('scanner.useDemo')}
                 </button>
               </div>
 
@@ -520,14 +520,14 @@ export default function QrisScanner({ onClose, onResult, t }) {
                   onClick={handleScanAnother}
                   className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  {t('scanner.scanAnotherBtn')}
+                  {t('scanner.scanAnother')}
                 </button>
                 <button
                   type="button"
                   onClick={handleUseDemoQris}
                   className="kp-button-secondary min-h-12 flex-1 border px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  {t('scanner.demoBtn')}
+                  {t('scanner.useDemo')}
                 </button>
               </div>
             </div>
