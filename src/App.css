@@ -587,6 +587,11 @@ body {
   outline-offset: -2px;
 }
 
+.kp-receipt-action-compact span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* Payment state transitions — fade content inside stable shell */
 @keyframes kp-state-enter {
   from {

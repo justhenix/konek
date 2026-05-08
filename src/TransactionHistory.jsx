@@ -371,7 +371,7 @@ export default function TransactionHistory({
   return (
     <section id="history-section" className="border-y border-white/10">
       {onBackToPayment && (
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-2 pt-2 sm:px-6 md:pb-8 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-2 pt-6 sm:px-6 md:pt-10 md:pb-8 lg:px-8">
           <button
             type="button"
             onClick={onBackToPayment}

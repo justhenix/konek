@@ -360,8 +360,8 @@ const QrisTypeBadge = ({ type, t }) => {
 };
 
 const SuccessCheckmark = () => (
-  <div className="receipt-checkmark grid h-16 w-16 shrink-0 place-items-center rounded-full border border-brand/30 bg-brand/12 text-brand shadow-[0_0_32px_rgba(20,241,149,0.18)]" aria-hidden="true">
-    <svg className="h-9 w-9" viewBox="0 0 48 48" fill="none">
+  <div className="receipt-checkmark grid h-12 w-12 shrink-0 place-items-center rounded-full border border-brand/30 bg-brand/12 text-brand shadow-[0_0_32px_rgba(20,241,149,0.18)]" aria-hidden="true">
+    <svg className="h-7 w-7" viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="3" opacity="0.22" />
       <path className="receipt-checkmark-path" d="M15 24.5L21.5 31L34 18" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -624,7 +624,7 @@ export default function PaymentPage({
     tx_submitted: t('payment.headerSubmitted'),
     verifying: t('payment.headerVerifying'),
     paid_verified: t('payment.headerPaid'),
-    settled: t('payment.headerSettled'),
+    settled: t('payment.headerPaid'),
     failed: t('payment.headerFailed'),
   }[flowState];
 
@@ -841,10 +841,6 @@ export default function PaymentPage({
     || payoutReference
     || `DEMO-PAYOUT-${(verifiedPayment?.signature || submittedPayment?.signature || '').slice(-8).toUpperCase()}`;
   const linkedSolanaTx = shortSignature(verifiedPayment?.signature);
-  const merchantRecordCreatedAt = settlementResult
-    ? formatPanelDateTime(settlementResult.settledAt || payoutSettlement.simulatedSettledAt, language, t)
-    : formatPanelDateTime(submittedPayment?.submittedAt || quote?.createdAt, language, t);
-  const payoutStatusLabel = t('payment.payoutStatusSimulated');
   const receiptQrisTypeLabel = isStaticQris ? t('payment.qrisTypeStatic') : t('payment.qrisTypeDynamic');
   const receiptIdrAmountLabel = quoteReview?.idrAmountLabel
     || (Number.isFinite(paymentAmount) ? formatIdrAmount(paymentAmount) : '');
@@ -892,49 +888,47 @@ export default function PaymentPage({
     payoutDestination.accountNumberMasked || '****1234',
   ].filter(Boolean).join(' ');
   const settlementWarning = t('payment.settlementSimulatorWarning');
+  const receiptSettlementDisplayLabel = settlementError
+    ? t('payment.settlementStatusFailed')
+    : isSettling
+      ? t('payment.settlementStatusSimulating')
+      : t('payment.receiptSettlementSimulated');
+  const receiptSettlementToneClass = settlementError
+    ? 'border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300'
+    : isSettling
+      ? 'border-amber-400/30 bg-amber-400/10 text-amber-700 dark:text-amber-300'
+      : 'border-brand/30 bg-brand/10 text-brand';
+  const settlementPayoutTimestamp = settlementResult
+    ? formatPanelDateTime(payoutSettlement.simulatedSettledAt || settlementResult.settledAt, language, t)
+    : '';
   const receiptSettlementStatusLabel = settlementResult?.status
     ? humanizePaymentLabel(settlementResult.status)
-    : '';
-  const receiptPayoutProviderLabel = payoutSettlement.provider
-    ? humanizePaymentLabel(payoutSettlement.provider)
     : '';
   const receiptSummary = useMemo(() => buildReceiptSummary({
     title: t('payment.receiptSummaryTitle'),
     fields: [
       { label: t('payment.lblStore'), value: merchantName },
-      { label: t('payment.lblCity'), value: merchantCity },
       { label: t('payment.lblQrisType'), value: receiptQrisTypeLabel },
       { label: t('payment.lblIdrAmount'), value: receiptIdrAmountLabel },
       { label: t('payment.lblSolPaid'), value: receiptSolAmountLabel },
       { label: t('payment.lblStatus'), value: receiptStatusLabel },
-      { label: t('payment.lblWallet'), value: receiptWalletAddress },
-      { label: t('payment.lblSignature'), value: fullPaymentSignature },
-      { label: t('payment.lblExplorerLink'), value: primaryExplorerUrl },
       { label: t('payment.receiptTimestamp'), value: receiptTimestamp },
-      { label: t('payment.lblQuoteId'), value: receiptQuoteId },
       { label: t('payment.lblNetwork'), value: t('payment.receiptNetwork') },
-      { label: t('payment.lblSettlementStatus'), value: receiptSettlementStatusLabel },
-      { label: t('payment.lblSettlementRef'), value: settlementReference },
-      { label: t('payment.lblPayoutProvider'), value: receiptPayoutProviderLabel },
-      { label: t('payment.lblPayoutReference'), value: payoutReference },
+      { label: t('payment.lblTransactionId'), value: fullPaymentSignature },
+      { label: t('payment.lblExplorerLink'), value: primaryExplorerUrl },
+      { label: t('payment.lblSettlementStatus'), value: receiptSettlementDisplayLabel },
     ],
-    disclaimer: `${t('payment.receiptVerifiedBody')} ${settlementWarning}`,
+    disclaimer: settlementWarning,
   }), [
     fullPaymentSignature,
-    merchantCity,
     merchantName,
     primaryExplorerUrl,
-    payoutReference,
     receiptIdrAmountLabel,
-    receiptPayoutProviderLabel,
     receiptQrisTypeLabel,
-    receiptQuoteId,
     receiptSolAmountLabel,
-    receiptSettlementStatusLabel,
+    receiptSettlementDisplayLabel,
     receiptStatusLabel,
     receiptTimestamp,
-    receiptWalletAddress,
-    settlementReference,
     settlementWarning,
     t,
   ]);
@@ -1303,76 +1297,43 @@ export default function PaymentPage({
 
                   <div className="grid gap-3 p-3 sm:p-4">
                     <div className="border border-(--kp-border) bg-(--kp-control-bg)">
-                      <div className="border-b border-(--kp-border) px-3 py-3 sm:px-4">
-                        <p className="text-sm kp-text">{t('payment.receiptOnchainSection')}</p>
-                      </div>
-                      <ReceiptField label={t('payment.lblStatus')} value={receiptStatusLabel} tone="success" />
+                      <ReceiptField label={t('payment.lblMerchant')} value={merchantName} title={merchantName} />
+                      <ReceiptField label={t('payment.lblQrisType')} value={receiptQrisTypeLabel} />
+                      <ReceiptField label={t('payment.receiptTimestamp')} value={receiptTimestamp} />
                       <ReceiptField label={t('payment.lblNetwork')} value={onchainNetworkLabel} tone="success" />
-                      <ReceiptField label={t('payment.lblSolPaid')} value={onchainAmountLabel} tone="success" />
-                      <ReceiptField label={t('payment.lblSignature')} value={truncateMiddle(fullPaymentSignature, 10, 10)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
-                        <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} aria-label={t('payment.btnCopySignature')}>
+                      <ReceiptField label={t('payment.lblTransactionId')} value={truncateMiddle(fullPaymentSignature, 8, 8)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
+                        <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))} aria-label={t('payment.btnCopyTxId')}>
                           {t('payment.btnCopy')}
-                        </InlineActionButton>
-                      ) : null} />
-                      <ReceiptField label={t('payment.lblTreasuryWallet')} value={truncateMiddle(receiptTreasuryWallet)} mono title={receiptTreasuryWallet} />
-                      <ReceiptField label={t('payment.lblExplorerLink')} value={primaryExplorerUrl ? t('payment.receiptExplorerValue') : ''} title={primaryExplorerUrl} action={primaryExplorerUrl ? (
-                        <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
-                          {t('payment.btnViewExplorer')}
                         </InlineActionButton>
                       ) : null} />
                     </div>
 
-                    <div className="border border-(--kp-border) bg-(--kp-control-bg)">
-                      <div className="border-b border-(--kp-border) px-3 py-3 sm:px-4">
-                        <p className="text-sm kp-text">{t('payment.receiptSettlementSection')}</p>
+                    <div className="border border-(--kp-border) bg-(--kp-control-bg) p-3 sm:p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex border px-2.5 py-1 text-[11px]  uppercase tracking-[0.12em] ${receiptSettlementToneClass}`}>
+                          {receiptSettlementDisplayLabel}
+                        </span>
                       </div>
-                      <ReceiptField label={t('payment.lblStatus')} value={settlementStatusLabel} tone={settlementResult ? 'success' : 'muted'} />
+                      <p className="mt-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                        {settlementWarning}
+                      </p>
                       {settlementError && (
-                        <div className="border-b border-(--kp-border) p-3 sm:p-4">
-                          <AppNotice variant="danger" title={t('payment.errorTitle')}>
-                            <p>{settlementError.message || t('payment.errorBody')}</p>
-                          </AppNotice>
-                          {!isSettling && (
-                            <RailButton onClick={handleSettleDemo} variant="secondary" className="mt-3">
-                              {t('payment.btnCreatePayoutRecord')}
-                            </RailButton>
-                          )}
-                        </div>
-                      )}
-                      <ReceiptField label={t('payment.lblOfframpProvider')} value={offRampProvider} />
-                      <ReceiptField label={t('payment.lblOfframpStatus')} value={offRampStatus} tone={settlementResult ? 'success' : 'muted'} />
-                      <ReceiptField label={t('payment.lblAssetConversion')} value={conversionLabel} />
-                      <ReceiptField label={t('payment.lblRate')} value={settlementRateLabel} />
-                      <ReceiptField label={t('payment.lblPayoutProvider')} value={payoutProvider} />
-                      <ReceiptField label={t('payment.lblPayoutStatus')} value={payoutStatus} tone={settlementResult ? 'success' : 'muted'} />
-                      <ReceiptField label={t('payment.lblMerchant')} value={payoutDestination.merchantName || merchantName} title={payoutDestination.merchantName || merchantName} />
-                      <ReceiptField label={t('payment.lblMerchantBank')} value={merchantBankLabel} mono />
-                      <ReceiptField label={t('payment.lblBankName')} value={payoutDestination.bankName || 'Bank Central Asia'} />
-                      <ReceiptField label={t('payment.lblAccountHolder')} value={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} title={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} />
-                      <ReceiptField label={t('payment.lblIdrAmount')} value={payoutAmountLabel} />
-                      <ReceiptField label={t('payment.lblSettlementRef')} value={settlementReference} mono title={settlementReference} />
-                      <ReceiptField label={t('payment.lblPayoutReference')} value={payoutReference} mono title={payoutReference} />
-                      <div className="border-t border-amber-400/20 bg-amber-400/8 px-3 py-3 sm:px-4">
-                        <p className="text-xs leading-5 text-amber-700 dark:text-amber-300">
-                          {settlementWarning}
+                        <p className="mt-2 text-xs leading-5 text-red-700 dark:text-red-300">
+                          {settlementError.message || t('payment.errorBody')}
                         </p>
-                      </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Actions area */}
-                  <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
-                    <p className="text-xs  text-amber-700 dark:text-amber-300">
-                      {settlementWarning}
-                    </p>
-
+                  <div className="border-t border-brand/20 bg-brand/5 p-3 sm:p-4">
                     {receiptActionMessage && (
-                      <p className="mt-2 text-sm  text-brand" role="status">
+                      <p className="text-sm  text-brand" role="status">
                         {receiptActionMessage}
                       </p>
                     )}
 
-                    <div className="mt-3 grid gap-2">
+                    <div className={`${receiptActionMessage ? 'mt-3 ' : ''}grid gap-2`}>
                       {primaryExplorerUrl && (
                         <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer">
                           {t('payment.btnViewExplorer')}
@@ -1430,102 +1391,78 @@ export default function PaymentPage({
                 {/* Collapsed Technical Details */}
                 <TechnicalDetails label={t('payment.technicalDetailsTitle')}>
                   <ReceiptField label={t('payment.lblCity')} value={merchantCity} />
-                  <ReceiptField label={t('payment.lblIdrAmount')} value={receiptIdrAmountLabel} />
-                  <ReceiptField label={t('payment.lblSolPaid')} value={receiptSolAmountLabel} tone="success" />
                   <ReceiptField label={t('payment.lblWallet')} value={truncateMiddle(receiptWalletAddress)} mono title={receiptWalletAddress} action={receiptWalletAddress ? (
                     <InlineActionButton onClick={() => handleCopyReceiptValue(receiptWalletAddress, t('payment.walletCopied'))} aria-label={t('payment.btnCopyWallet')}>
                       {t('payment.btnCopy')}
                     </InlineActionButton>
                   ) : null} />
-                  <ReceiptField label={t('payment.lblTransactionId')} value={truncateMiddle(fullPaymentSignature, 10, 10)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
-                    <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} aria-label={t('payment.btnCopySignature')}>
+                  <ReceiptField label={t('payment.lblTreasuryWallet')} value={truncateMiddle(receiptTreasuryWallet)} mono title={receiptTreasuryWallet} />
+                  <ReceiptField label={t('payment.lblTransactionId')} value={fullPaymentSignature} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
+                    <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))} aria-label={t('payment.btnCopyTxId')}>
                       {t('payment.btnCopy')}
                     </InlineActionButton>
                   ) : null} />
-                  <ReceiptField label={t('payment.lblExplorerLink')} value={primaryExplorerUrl ? t('payment.receiptExplorerValue') : ''} title={primaryExplorerUrl} action={primaryExplorerUrl ? (
-                    <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
-                      {t('payment.btnViewExplorer')}
-                    </InlineActionButton>
-                  ) : null} />
-                  <ReceiptField label={t('payment.lblQuoteId')} value={truncateMiddle(receiptQuoteId, 12, 10)} mono title={receiptQuoteId} action={receiptQuoteId ? (
+                  <ReceiptField label={t('payment.lblSignature')} value={fullPaymentSignature} mono title={fullPaymentSignature} />
+                  <ReceiptField label={t('payment.lblQuoteId')} value={receiptQuoteId} mono title={receiptQuoteId} action={receiptQuoteId ? (
                     <InlineActionButton onClick={() => handleCopyReceiptValue(receiptQuoteId, t('payment.referenceCopied'))} aria-label={t('payment.btnCopyReference')}>
                       {t('payment.btnCopy')}
                     </InlineActionButton>
                   ) : null} />
-                  <ReceiptField label={t('payment.lblStatus')} value={receiptStatusLabel} />
+                  <ReceiptField label={t('payment.lblExplorerUrl')} value={primaryExplorerUrl} mono title={primaryExplorerUrl} action={primaryExplorerUrl ? (
+                    <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
+                      {t('payment.btnViewExplorer')}
+                    </InlineActionButton>
+                  ) : null} />
+                  <ReceiptField label={t('payment.lblSolPaid')} value={onchainAmountLabel} tone="success" />
+                  <ReceiptField label={t('payment.lblRate')} value={settlementRateLabel || quoteReview?.exchangeRateLabel} />
+                  <ReceiptField label={t('payment.lblNetwork')} value={onchainNetworkLabel} tone="success" />
+                  <ReceiptField label={t('payment.lblPaymentStatus')} value={verificationStatus} mono />
+                  <ReceiptField label={t('payment.lblSettlementStatus')} value={settlementResult?.status || settlementStatusLabel} mono />
                 </TechnicalDetails>
 
-                {/* Collapsed Demo Merchant Record */}
-                <details className="group border border-(--kp-border) bg-(--kp-control-bg)">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-3 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-4">
-                    <div className="min-w-0">
-                      <p className="text-sm  kp-muted">{t('payment.merchantDemoTitle')}</p>
-                      <p className="kp-soft mt-1 text-xs leading-5">{t('payment.merchantDemoSummary')}</p>
+                {/* Collapsed Demo Settlement Details */}
+                <TechnicalDetails label={t('payment.demoSettlementDetailsTitle')}>
+                  {settlementError && (
+                    <div className="border-b border-(--kp-border) p-3 sm:p-4">
+                      <AppNotice variant="danger" title={t('payment.errorTitle')}>
+                        <p>{settlementError.message || t('payment.errorBody')}</p>
+                      </AppNotice>
                     </div>
-                    <svg className="h-4 w-4 shrink-0 kp-soft transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
-
-                  <div className="border-t border-(--kp-border)">
-                    <div className="border-b border-(--kp-border) bg-amber-500/6 px-3 py-3 sm:px-4">
-                      <p className="text-sm  text-amber-700 dark:text-amber-300">{t('payment.merchantDemoExpandedTitle')}</p>
-                      <p className="kp-muted mt-1 text-xs leading-5">{t('payment.merchantDemoExpandedBody')}</p>
+                  )}
+                  {isSettling && (
+                    <div className="flex items-center gap-3 border-b border-(--kp-border) px-3 py-3">
+                      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
+                      <span className="text-sm  text-amber-700 dark:text-amber-400">{t('payment.btnSettling')}</span>
                     </div>
+                  )}
+                  <ReceiptField label={t('payment.lblSettlementStatus')} value={receiptSettlementStatusLabel || settlementStatusLabel} tone={settlementResult ? 'success' : 'muted'} />
+                  <ReceiptField label={t('payment.lblOfframpProvider')} value={offRampProvider} />
+                  <ReceiptField label={t('payment.lblOfframpStatus')} value={offRampStatus} tone={settlementResult ? 'success' : 'muted'} />
+                  <ReceiptField label={t('payment.lblAssetConversion')} value={conversionLabel} />
+                  <ReceiptField label={t('payment.lblRate')} value={settlementRateLabel} />
+                  <ReceiptField label={t('payment.lblPayoutProvider')} value={payoutProvider} />
+                  <ReceiptField label={t('payment.lblPayoutStatus')} value={payoutStatus} tone={settlementResult ? 'success' : 'muted'} />
+                  <ReceiptField label={t('payment.lblPayoutReference')} value={payoutReference} mono title={payoutReference} />
+                  <ReceiptField label={t('payment.lblSettlementRef')} value={settlementReference} mono title={settlementReference} />
+                  <ReceiptField label={t('payment.lblMerchant')} value={payoutDestination.merchantName || merchantName} title={payoutDestination.merchantName || merchantName} />
+                  <ReceiptField label={t('payment.lblMerchantBank')} value={merchantBankLabel} mono />
+                  <ReceiptField label={t('payment.lblBankCode')} value={payoutDestination.bankCode || 'BCA'} mono />
+                  <ReceiptField label={t('payment.lblBankName')} value={payoutDestination.bankName || 'Bank Central Asia'} />
+                  <ReceiptField label={t('payment.lblAccountNumber')} value={payoutDestination.accountNumberMasked || '****1234'} mono />
+                  <ReceiptField label={t('payment.lblAccountHolder')} value={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} title={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} />
+                  <ReceiptField label={t('payment.lblIdrAmount')} value={payoutAmountLabel} />
+                  <ReceiptField label={t('payment.lblSettledAt')} value={settlementPayoutTimestamp} />
+                  <ReceiptField label={t('payment.lblDemoRef')} value={demoReference} mono title={demoReference} />
+                  <ReceiptField label={t('payment.lblLinkedSolanaTx')} value={linkedSolanaTx} mono title={verifiedPayment.signature} />
 
-                    {settlementError && (
-                      <div className="p-3">
-                        <AppNotice variant="danger" title={t('payment.errorTitle')}>
-                          <p>{t('payment.errorBody')}</p>
-                        </AppNotice>
-                      </div>
-                    )}
-
-                    {isSettling && (
-                      <div className="flex items-center gap-3 border-b border-(--kp-border) px-3 py-3">
-                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500"></span>
-                        <span className="text-sm  text-amber-700 dark:text-amber-400">{t('payment.btnSettling')}</span>
-                      </div>
-                    )}
-
-                    <DetailRow label={t('payment.lblStore')} value={merchantName} title={merchantName} />
-                    <DetailRow label={t('payment.lblTotalPay')} value={quoteReview?.idrAmountLabel || amountLabel} />
-                    <DetailRow
-                      label={t('payment.lblPayoutStatus')}
-                      value={payoutStatusLabel}
-                      tone="success"
-                    />
-                    <DetailRow
-                      label={t('payment.lblDemoRef')}
-                      value={demoReference}
-                      mono
-                      truncateValue
-                    />
-                    <DetailRow
-                      label={t('payment.lblLinkedSolanaTx')}
-                      value={linkedSolanaTx}
-                      mono
-                      title={verifiedPayment.signature}
-                      truncateValue
-                    />
-                    <DetailRow
-                      label={t('payment.lblCreatedAt')}
-                      value={merchantRecordCreatedAt}
-                    />
-
-                    <div className="border-t border-(--kp-border) px-3 py-3 sm:px-4">
-                      <p className="text-xs font-medium leading-5 text-amber-700 dark:text-amber-400/80">
-                        {t('payment.payoutDemoNote')}
-                      </p>
-
-                      {!settlementResult && !isSettling && (
-                        <RailButton onClick={handleSettleDemo} variant="secondary" className="mt-3 w-full border-amber-500/30 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300">
-                          {t('payment.btnCreatePayoutRecord')}
-                        </RailButton>
-                      )}
+                  {!settlementResult && !isSettling && (
+                    <div className="border-t border-(--kp-border) p-3 sm:p-4">
+                      <RailButton onClick={handleSettleDemo} variant="secondary" className="w-full border-amber-500/30 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300">
+                        {t('payment.btnCreatePayoutRecord')}
+                      </RailButton>
                     </div>
-                  </div>
-                </details>
+                  )}
+                </TechnicalDetails>
               </section>
             )}
 

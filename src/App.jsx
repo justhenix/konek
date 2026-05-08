@@ -2418,7 +2418,7 @@ function App() {
                 <LandingTeamPreview t={t} onMeetTeam={navigateToTeam} />
               </>
             ) : (
-              <main id="tabpanel-history" role="tabpanel" aria-labelledby="desktop-tab-history mobile-tab-history" className={`pt-20 md:pt-24${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-0!' : ''}`}>
+              <main id="tabpanel-history" role="tabpanel" aria-labelledby="desktop-tab-history mobile-tab-history" className={`pt-24 md:pt-28${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-0!' : ''}`}>
                 <TransactionHistory
                   walletAddress={userProfile.address}
                   language={lang}
