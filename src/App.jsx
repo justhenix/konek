@@ -14,7 +14,8 @@ import {
   RiQrCodeFill,
   RiWallet3Line,
   RiWallet3Fill,
-  RiCloseLine
+  RiCloseLine,
+  RiGithubFill
 } from '@remixicon/react';
 
 import logoKonekPayColor from './assets/konekpay-color.svg';
@@ -54,6 +55,7 @@ const USD_IDR_FALLBACK_URL = 'https://open.er-api.com/v6/latest/USD';
 const PHANTOM_CONNECT_URL = 'https://phantom.app/ul/v1/connect';
 const PHANTOM_DOWNLOAD_URL = 'https://phantom.com/download';
 const SOLANA_FAUCET_URL = 'https://faucet.solana.com/';
+const KONEK_GITHUB_URL = 'https://github.com/justhenix/konek';
 const PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY = 'phantom_dapp_secret_key';
 const PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY = 'phantom_dapp_encryption_public_key';
 const PHANTOM_PUBLIC_KEY_STORAGE_KEY = 'phantom_public_key';
@@ -859,6 +861,149 @@ const TeamPage = ({ t, onBackToHome, language }) => (
     </section>
   </main>
 );
+
+const footerProductLinks = [
+  { key: 'linkHome', target: 'top' },
+  { key: 'linkFlow', target: 'workflow-flow' },
+  { key: 'linkFaq', target: 'proof-section' },
+  { key: 'linkTeam', target: 'team-page' },
+];
+
+const footerProjectLinks = [
+  { key: 'linkDocs', href: null, disabled: true },
+  { key: 'linkGitHub', href: KONEK_GITHUB_URL },
+  { key: 'linkRoadmap', href: null, disabled: true },
+];
+
+const footerLegalLinks = [
+  { key: 'linkDisclaimer' },
+  { key: 'linkPrivacy' },
+  { key: 'linkTerms' },
+];
+
+const AppFooter = ({ t, scrollToSection, isLoggedIn, isScannerOpen, scannedData }) => {
+  const needsBottomPad = isLoggedIn && !isScannerOpen && !scannedData;
+
+  return (
+    <footer
+      id="kp-footer"
+      className={`kp-footer border-t${needsBottomPad ? ' kp-has-bottom-tabs md:pb-0!' : ''}`}
+      style={{ borderColor: 'var(--kp-border)' }}
+    >
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* ── Top: columns ── */}
+        <div className="kp-footer-grid gap-y-10 gap-x-6 py-12 md:py-14">
+          {/* Brand column */}
+          <div className="kp-footer-brand min-w-0">
+            <button
+              type="button"
+              onClick={() => scrollToSection('top')}
+              className="kp-footer-wordmark group inline-flex items-center gap-2"
+            >
+              <KonekLogo className="h-7 w-7" />
+              <span className="text-lg" style={{ color: 'var(--kp-text)' }}>
+                Konek<span className="kp-wordmark-accent">Pay</span>
+              </span>
+            </button>
+            <p className="mt-3 max-w-xs text-sm leading-6" style={{ color: 'var(--kp-text-muted)' }}>
+              {t('footer.tagline')}
+            </p>
+            {/* GitHub social icon */}
+            <a
+              href={KONEK_GITHUB_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="KonekPay on GitHub"
+              className="kp-footer-social mt-5 inline-flex h-9 w-9 items-center justify-center border transition-colors"
+            >
+              <RiGithubFill className="h-4 w-4" />
+            </a>
+          </div>
+
+          {/* Product links */}
+          <div className="min-w-0">
+            <p className="kp-footer-heading mb-4 text-[11px] uppercase tracking-[0.18em]">
+              {t('footer.productHeading')}
+            </p>
+            <ul className="grid gap-2.5">
+              {footerProductLinks.map((link) => (
+                <li key={link.key}>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection(link.target)}
+                    className="kp-footer-link text-sm transition-colors"
+                  >
+                    {t(`footer.${link.key}`)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Project links */}
+          <div className="min-w-0">
+            <p className="kp-footer-heading mb-4 text-[11px] uppercase tracking-[0.18em]">
+              {t('footer.projectHeading')}
+            </p>
+            <ul className="grid gap-2.5">
+              {footerProjectLinks.map((link) => (
+                <li key={link.key}>
+                  {link.href ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="kp-footer-link text-sm transition-colors"
+                    >
+                      {t(`footer.${link.key}`)}
+                    </a>
+                  ) : (
+                    <span className="kp-footer-link kp-footer-link--disabled text-sm">
+                      {t(`footer.${link.key}`)}
+                      <span className="kp-footer-soon ml-1.5 text-[10px]">
+                        {t(`footer.${link.key}Helper`)}
+                      </span>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal links */}
+          <div className="min-w-0">
+            <p className="kp-footer-heading mb-4 text-[11px] uppercase tracking-[0.18em]">
+              {t('footer.legalHeading')}
+            </p>
+            <ul className="grid gap-2.5">
+              {footerLegalLinks.map((link) => (
+                <li key={link.key}>
+                  <span className="kp-footer-link kp-footer-link--disabled text-sm">
+                    {t(`footer.${link.key}`)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* ── Bottom row ── */}
+        <div
+          className="flex flex-col gap-3 border-t py-6 text-xs sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderColor: 'var(--kp-border-soft)' }}
+        >
+          <p className="kp-footer-disclaimer inline-flex items-center gap-1.5">
+            <span className="kp-footer-disclaimer-dot h-1.5 w-1.5 shrink-0 rounded-full"></span>
+            {t('footer.disclaimer')}
+          </p>
+          <p style={{ color: 'var(--kp-text-faint)' }}>
+            {t('footer.copyright')}
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -2438,13 +2583,13 @@ function App() {
         )}
 
         {(!page || activeTab === 'pay') && (
-          <footer className={`mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-10 text-sm  text-zinc-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-10!' : ''}`}>
-            <button type="button" className="flex items-center gap-2 text-white" onClick={() => scrollToSection('top')}>
-              <KonekLogo className="h-6 w-6" />
-              <span aria-hidden="true">Konek<span className="kp-wordmark-accent">Pay</span></span>
-            </button>
-            <p>{t('footer.builtFor')}</p>
-          </footer>
+          <AppFooter
+            t={t}
+            scrollToSection={scrollToSection}
+            isLoggedIn={userProfile.isLoggedIn}
+            isScannerOpen={isScannerOpen}
+            scannedData={scannedData}
+          />
         )}
       </div>
 

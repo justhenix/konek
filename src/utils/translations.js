@@ -156,6 +156,26 @@ export const translations = {
     footer: {
       builtFor:
         "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
+      tagline:
+        "KonekPay bridges QRIS payments with Solana Devnet proof.",
+      productHeading: "Product",
+      projectHeading: "Project",
+      legalHeading: "Legal",
+      linkHome: "Home",
+      linkFlow: "Flow",
+      linkFaq: "FAQ",
+      linkTeam: "Team",
+      linkDocs: "Docs",
+      linkDocsHelper: "Coming soon",
+      linkGitHub: "GitHub",
+      linkRoadmap: "Roadmap",
+      linkRoadmapHelper: "Coming soon",
+      linkDisclaimer: "Disclaimer",
+      linkPrivacy: "Privacy Policy",
+      linkTerms: "Terms",
+      disclaimer:
+        "Demo only. No real IDR settlement is performed.",
+      copyright: "© 2026 KonekPay",
     },
     language: {
       label: "Language",
@@ -681,6 +701,26 @@ export const translations = {
     footer: {
       builtFor:
         "Dibuat untuk Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
+      tagline:
+        "KonekPay menghubungkan pembayaran QRIS dengan bukti transaksi Solana Devnet.",
+      productHeading: "Produk",
+      projectHeading: "Proyek",
+      legalHeading: "Legal",
+      linkHome: "Beranda",
+      linkFlow: "Alur",
+      linkFaq: "FAQ",
+      linkTeam: "Tim",
+      linkDocs: "Docs",
+      linkDocsHelper: "Segera hadir",
+      linkGitHub: "GitHub",
+      linkRoadmap: "Roadmap",
+      linkRoadmapHelper: "Segera hadir",
+      linkDisclaimer: "Disclaimer",
+      linkPrivacy: "Kebijakan Privasi",
+      linkTerms: "Ketentuan",
+      disclaimer:
+        "Hanya demo. Tidak ada settlement IDR sungguhan.",
+      copyright: "© 2026 KonekPay",
     },
     language: {
       label: "Bahasa",

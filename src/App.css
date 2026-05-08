@@ -919,3 +919,114 @@ body {
     transition: none;
   }
 }
+
+/* ===== App Footer ===== */
+
+.kp-footer {
+  background-color: var(--kp-panel-3);
+  color: var(--kp-text-muted);
+}
+
+.kp-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .kp-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .kp-footer-grid {
+    grid-template-columns: 1.6fr repeat(3, 1fr);
+  }
+}
+
+.kp-footer-wordmark {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: filter 0.25s;
+}
+
+.kp-footer-wordmark:hover {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--kp-brand) 40%, transparent));
+}
+
+.kp-footer-wordmark:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: 4px;
+}
+
+.kp-footer-heading {
+  color: var(--kp-text);
+  font-weight: 500;
+}
+
+.kp-footer-link {
+  color: var(--kp-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.kp-footer-link:hover {
+  color: var(--kp-brand);
+}
+
+.kp-footer-link:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: 2px;
+}
+
+.kp-footer-link--disabled {
+  color: var(--kp-text-faint);
+  cursor: default;
+}
+
+.kp-footer-link--disabled:hover {
+  color: var(--kp-text-faint);
+}
+
+.kp-footer-soon {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: 1px solid var(--kp-border-soft);
+  background-color: var(--kp-control-bg);
+  color: var(--kp-text-faint);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+.kp-footer-social {
+  border-color: var(--kp-border);
+  background-color: var(--kp-control-bg);
+  color: var(--kp-text-muted);
+}
+
+.kp-footer-social:hover {
+  border-color: var(--kp-border-strong);
+  background-color: var(--kp-control-bg-hover);
+  color: var(--kp-brand);
+}
+
+.kp-footer-social:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: 2px;
+}
+
+.kp-footer-disclaimer {
+  color: var(--kp-amber-text);
+}
+
+.kp-footer-disclaimer-dot {
+  background-color: var(--kp-amber);
+}
