@@ -572,6 +572,93 @@ export const translations = {
       insufficientSecondary: "Try Again",
       closeLabel: "Close Devnet setup",
     },
+    docs: {
+      backToHome: "Back to Home",
+      eyebrow: "Documentation",
+      heading: "How KonekPay Works",
+      intro:
+        "A technical overview of the KonekPay demo, what is real, what is simulated, and how each piece fits together.",
+      whatTitle: "What is KonekPay?",
+      whatBody1:
+        "KonekPay is a Solana × QRIS demo payment bridge. Users scan a QRIS code, receive a live SOL/IDR quote, pay with Phantom on Solana Devnet, and get verified on-chain proof.",
+      whatBody2:
+        "It demonstrates how crypto wallets could connect to Indonesia's QRIS payment network using Solana for fast, low-cost settlement.",
+      whatDisclaimer:
+        "This is a hackathon/demo MVP. No real IDR settlement or merchant payout is performed.",
+      howTitle: "How the Payment Flow Works",
+      howIntro:
+        "Each KonekPay payment goes through these steps from scan to receipt:",
+      flow_scanQris: "Scan a QRIS code with the camera or use a demo QRIS.",
+      flow_parseData: "Parse merchant name, ID, city, and payment amount from the EMVCo payload.",
+      flow_getQuote: "Get a live SOL/IDR quote using Pyth Network price feeds.",
+      flow_payPhantom: "Approve the SOL transfer in Phantom on Solana Devnet.",
+      flow_backendVerify: "Backend verifies the transaction signature, amount, and treasury destination.",
+      flow_receiptHistory: "A verified receipt is generated and saved to wallet-scoped history.",
+      flow_settlementSim: "Merchant settlement is simulated, no real IDR is disbursed.",
+      qrisTitle: "Static QRIS vs Dynamic QRIS",
+      staticLabel: "Static QRIS",
+      staticBody:
+        "No embedded amount. The user enters the IDR payment amount manually. Common for small merchants with a printed QR code.",
+      dynamicLabel: "Dynamic QRIS",
+      dynamicBody:
+        "Includes a locked amount from the QR payload. The amount is read directly from the code and cannot be changed.",
+      qrisBothSupported:
+        "KonekPay supports both static and dynamic QRIS.",
+      realTitle: "What is Real in This Demo",
+      real_qrisParsing: "QRIS EMVCo payload parsing",
+      real_solIdrQuote: "SOL/IDR quote from Pyth Network",
+      real_phantomPayment: "Phantom wallet payment approval",
+      real_solanaDevnetTx: "Solana Devnet transaction",
+      real_backendVerification: "Backend payment verification",
+      real_receiptGeneration: "Receipt generation with Explorer link",
+      real_walletHistory: "Wallet-scoped transaction history",
+      simTitle: "What is Simulated",
+      sim_idrSettlement: "Real IDR merchant settlement",
+      sim_qrisProvider: "QRIS provider / acquirer integration",
+      sim_offRamp: "Off-ramp / bank payout",
+      sim_compliance: "Production compliance (KYC/AML)",
+      simNote:
+        "These features require licensed payment partners and are outside the scope of a hackathon demo.",
+      archTitle: "Architecture Overview",
+      archIntro:
+        "KonekPay connects a React frontend to Solana Devnet through these components:",
+      arch_frontend: "React Frontend",
+      archDesc_frontend: "UI, scanner, payment flow",
+      arch_qrisParser: "QRIS Parser",
+      archDesc_qrisParser: "EMVCo tag reader",
+      arch_quoteApi: "Quote API",
+      archDesc_quoteApi: "Pyth SOL/IDR pricing",
+      arch_phantom: "Phantom Wallet",
+      archDesc_phantom: "Transaction signing",
+      arch_solanaDevnet: "Solana Devnet",
+      archDesc_solanaDevnet: "On-chain settlement",
+      arch_verifyApi: "Verify API",
+      archDesc_verifyApi: "Signature + amount check",
+      arch_supabase: "Supabase",
+      archDesc_supabase: "Transaction history",
+      arch_receiptUi: "Receipt UI",
+      archDesc_receiptUi: "Proof + Explorer link",
+      archFlowHint: "Data flows left-to-right, top-to-bottom through the system.",
+      securityTitle: "Security & Verification",
+      security1:
+        "The frontend is not trusted as the source of payment truth. All verification happens server-side.",
+      security2:
+        "The backend verifies the transaction signature, SOL amount, treasury destination, and quote validity.",
+      security3:
+        "Solana Devnet is used so the payment flow can be tested safely without real funds.",
+      security4:
+        "Mainnet payments are not enabled or intended for this demo.",
+      prodTitle: "Production Requirements",
+      prodIntro:
+        "Moving KonekPay from a demo to production would require:",
+      prod_licensedPartner: "Licensed QRIS or payment partner for merchant settlement",
+      prod_settlementPartner: "Real settlement and off-ramp partner for SOL-to-IDR conversion",
+      prod_reconciliation: "Transaction reconciliation and accounting infrastructure",
+      prod_compliance: "KYC/AML compliance depending on jurisdiction",
+      prod_monitoring: "Production monitoring, audit logs, and incident response",
+      prodNote:
+        "This demo focuses on proving the QRIS-to-Solana payment flow. Production readiness is a separate milestone.",
+    },
   },
   id: {
     navbar: {
@@ -1120,6 +1207,93 @@ export const translations = {
       insufficientPrimary: "Ambil SOL Devnet",
       insufficientSecondary: "Coba Lagi",
       closeLabel: "Tutup pengaturan Devnet",
+    },
+    docs: {
+      backToHome: "Kembali ke Beranda",
+      eyebrow: "Dokumentasi",
+      heading: "Cara Kerja KonekPay",
+      intro:
+        "Penjelasan teknis tentang demo KonekPay, apa yang nyata, apa yang disimulasikan, dan bagaimana setiap bagian terhubung.",
+      whatTitle: "Apa itu KonekPay?",
+      whatBody1:
+        "KonekPay adalah demo bridge pembayaran Solana × QRIS. User scan QRIS, dapat kuotasi SOL/IDR langsung, bayar lewat Phantom di Solana Devnet, lalu dapat bukti pembayaran on-chain.",
+      whatBody2:
+        "Demo ini menunjukkan bagaimana wallet crypto bisa terhubung ke jaringan pembayaran QRIS Indonesia menggunakan Solana untuk settlement yang cepat dan murah.",
+      whatDisclaimer:
+        "Ini adalah MVP demo/hackathon. Tidak ada settlement IDR sungguhan atau pencairan ke merchant.",
+      howTitle: "Cara Kerja Alur Pembayaran",
+      howIntro:
+        "Setiap pembayaran KonekPay melewati langkah-langkah berikut dari scan hingga bukti bayar:",
+      flow_scanQris: "Scan kode QRIS dengan kamera atau pakai QRIS demo.",
+      flow_parseData: "Baca nama merchant, ID, kota, dan nominal dari payload EMVCo.",
+      flow_getQuote: "Ambil kuotasi SOL/IDR langsung dari Pyth Network.",
+      flow_payPhantom: "Setujui transfer SOL di Phantom pada Solana Devnet.",
+      flow_backendVerify: "Backend memverifikasi signature transaksi, nominal, dan tujuan treasury.",
+      flow_receiptHistory: "Bukti bayar terverifikasi dibuat dan disimpan ke riwayat per wallet.",
+      flow_settlementSim: "Settlement merchant disimulasikan, tidak ada IDR sungguhan yang dikirim.",
+      qrisTitle: "QRIS Statis vs QRIS Dinamis",
+      staticLabel: "QRIS Statis",
+      staticBody:
+        "Tidak ada nominal tertanam. User memasukkan nominal pembayaran IDR secara manual. Umum untuk merchant kecil dengan QR cetak.",
+      dynamicLabel: "QRIS Dinamis",
+      dynamicBody:
+        "Sudah termasuk nominal terkunci dari payload QR. Nominal dibaca langsung dari kode dan tidak bisa diubah.",
+      qrisBothSupported:
+        "KonekPay mendukung QRIS statis maupun dinamis.",
+      realTitle: "Yang Nyata di Demo Ini",
+      real_qrisParsing: "Parsing payload EMVCo QRIS",
+      real_solIdrQuote: "Kuotasi SOL/IDR dari Pyth Network",
+      real_phantomPayment: "Persetujuan pembayaran lewat Phantom",
+      real_solanaDevnetTx: "Transaksi Solana Devnet",
+      real_backendVerification: "Verifikasi pembayaran di backend",
+      real_receiptGeneration: "Pembuatan bukti bayar dengan link Explorer",
+      real_walletHistory: "Riwayat transaksi per wallet",
+      simTitle: "Yang Disimulasikan",
+      sim_idrSettlement: "Settlement IDR sungguhan ke merchant",
+      sim_qrisProvider: "Integrasi provider/acquirer QRIS",
+      sim_offRamp: "Off-ramp / pencairan ke bank",
+      sim_compliance: "Kepatuhan produksi (KYC/AML)",
+      simNote:
+        "Fitur-fitur ini membutuhkan partner pembayaran berizin dan di luar cakupan demo hackathon.",
+      archTitle: "Gambaran Arsitektur",
+      archIntro:
+        "KonekPay menghubungkan frontend React ke Solana Devnet melalui komponen-komponen ini:",
+      arch_frontend: "Frontend React",
+      archDesc_frontend: "UI, scanner, alur bayar",
+      arch_qrisParser: "Parser QRIS",
+      archDesc_qrisParser: "Pembaca tag EMVCo",
+      arch_quoteApi: "Quote API",
+      archDesc_quoteApi: "Harga Pyth SOL/IDR",
+      arch_phantom: "Phantom Wallet",
+      archDesc_phantom: "Tanda tangan transaksi",
+      arch_solanaDevnet: "Solana Devnet",
+      archDesc_solanaDevnet: "Settlement on-chain",
+      arch_verifyApi: "Verify API",
+      archDesc_verifyApi: "Cek signature + nominal",
+      arch_supabase: "Supabase",
+      archDesc_supabase: "Riwayat transaksi",
+      arch_receiptUi: "UI Bukti Bayar",
+      archDesc_receiptUi: "Bukti + link Explorer",
+      archFlowHint: "Data mengalir dari kiri ke kanan, atas ke bawah melalui sistem.",
+      securityTitle: "Keamanan & Verifikasi",
+      security1:
+        "Frontend tidak dipercaya sebagai sumber kebenaran pembayaran. Semua verifikasi terjadi di sisi server.",
+      security2:
+        "Backend memverifikasi signature transaksi, nominal SOL, tujuan treasury, dan validitas kuotasi.",
+      security3:
+        "Solana Devnet dipakai supaya alur pembayaran bisa diuji dengan aman tanpa dana sungguhan.",
+      security4:
+        "Pembayaran mainnet tidak diaktifkan dan tidak ditujukan untuk demo ini.",
+      prodTitle: "Persyaratan Produksi",
+      prodIntro:
+        "Membawa KonekPay dari demo ke produksi membutuhkan:",
+      prod_licensedPartner: "Partner QRIS atau pembayaran berizin untuk settlement merchant",
+      prod_settlementPartner: "Partner settlement dan off-ramp sungguhan untuk konversi SOL ke IDR",
+      prod_reconciliation: "Infrastruktur rekonsiliasi transaksi dan akuntansi",
+      prod_compliance: "Kepatuhan KYC/AML tergantung yurisdiksi",
+      prod_monitoring: "Monitoring produksi, audit log, dan penanganan insiden",
+      prodNote:
+        "Demo ini fokus membuktikan alur pembayaran QRIS-ke-Solana. Kesiapan produksi adalah milestone terpisah.",
     },
   },
 };

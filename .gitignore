@@ -31,3 +31,4 @@ dist-ssr
 .vercel
 .playwright-cli
 todo.md
+.agents

@@ -32,6 +32,7 @@ import PaymentPage from './PaymentPage';
 import TransactionHistory from './TransactionHistory';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import ProtocolFlow from './components/ProtocolFlow';
+import DocsSection from './components/DocsSection';
 import { saveVerifiedReceiptToHistory } from './utils/history';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
@@ -436,9 +437,12 @@ const KonekLogo = ({ className = "w-8 h-8" }) => (
 
 const faqItems = ['realQris', 'merchantRupiah', 'simulatedPayout', 'afterPayment', 'staticQris', 'whyDevnet'];
 
-const getCurrentPage = () => (
-  window.location.pathname.replace(/\/+$/, '') === '/team' ? 'team' : 'home'
-);
+const getCurrentPage = () => {
+  const path = window.location.pathname.replace(/\/+$/, '');
+  if (path === '/team') return 'team';
+  if (path === '/docs' || window.location.hash === '#docs') return 'docs';
+  return 'home';
+};
 
 const getInitialScrollTarget = () => (
   getCurrentPage() === 'home'
@@ -870,7 +874,7 @@ const footerProductLinks = [
 ];
 
 const footerProjectLinks = [
-  { key: 'linkDocs', href: null, disabled: true },
+  { key: 'linkDocs', target: 'docs' },
   { key: 'linkGitHub', href: KONEK_GITHUB_URL },
   { key: 'linkRoadmap', href: null, disabled: true },
 ];
@@ -948,7 +952,15 @@ const AppFooter = ({ t, scrollToSection, isLoggedIn, isScannerOpen, scannedData 
             <ul className="grid gap-2.5">
               {footerProjectLinks.map((link) => (
                 <li key={link.key}>
-                  {link.href ? (
+                  {link.target ? (
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection(link.target)}
+                      className="kp-footer-link text-sm transition-colors"
+                    >
+                      {t(`footer.${link.key}`)}
+                    </button>
+                  ) : link.href ? (
                     <a
                       href={link.href}
                       target="_blank"
@@ -2235,9 +2247,23 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const navigateToDocs = useCallback(() => {
+    if (`${window.location.pathname}${window.location.hash}` !== '/#docs') {
+      window.history.pushState({}, '', '/#docs');
+    }
+    setActiveTab('pay');
+    setPage('docs');
+    setPendingScrollTarget(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const scrollToSection = useCallback((target) => {
     if (target === 'team-page') {
       navigateToTeam();
+      return;
+    }
+    if (target === 'docs') {
+      navigateToDocs();
       return;
     }
 
@@ -2248,7 +2274,7 @@ function App() {
     setActiveTab('pay');
     setPage('home');
     setPendingScrollTarget(target);
-  }, [navigateToTeam]);
+  }, [navigateToTeam, navigateToDocs]);
 
   const handleAppTabChange = useCallback((nextTab) => {
     setActiveTab(nextTab);
@@ -2574,6 +2600,11 @@ function App() {
               </main>
             )}
           </>
+        ) : page === 'docs' ? (
+          <DocsSection 
+            t={t} 
+            onBackToHome={() => handleAppTabChange('pay')} 
+          />
         ) : (
           <TeamPage 
             t={t} 

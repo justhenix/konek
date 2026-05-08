@@ -1030,3 +1030,245 @@ body {
 .kp-footer-disclaimer-dot {
   background-color: var(--kp-amber);
 }
+
+/* ===== Docs Section ===== */
+
+.kp-docs {
+  border-top: 1px solid var(--kp-border);
+  background-color: var(--kp-bg-soft);
+}
+
+.kp-docs-card {
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-panel);
+  padding: 24px;
+}
+
+@media (min-width: 640px) {
+  .kp-docs-card {
+    padding: 32px;
+  }
+}
+
+.kp-docs-card-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--kp-text);
+  margin: 0 0 12px;
+}
+
+@media (min-width: 640px) {
+  .kp-docs-card-title {
+    font-size: 20px;
+  }
+}
+
+.kp-docs-card-body {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--kp-text-muted);
+  margin: 0;
+}
+
+/* Callout boxes */
+.kp-docs-callout {
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.kp-docs-callout--amber {
+  border: 1px solid var(--kp-amber-border);
+  background-color: var(--kp-amber-bg);
+  color: var(--kp-amber-text);
+}
+
+.kp-docs-callout--green {
+  border: 1px solid color-mix(in srgb, var(--kp-brand) 28%, transparent);
+  background-color: var(--kp-green-soft);
+  color: var(--kp-brand);
+}
+
+.kp-docs-callout--purple {
+  border: 1px solid color-mix(in srgb, var(--kp-purple) 28%, transparent);
+  background-color: var(--kp-purple-soft);
+  color: var(--kp-purple);
+}
+
+/* 2-column grid */
+.kp-docs-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .kp-docs-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Sub-cards (inside a card) */
+.kp-docs-sub-card {
+  padding: 16px;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-panel-3);
+}
+
+.kp-docs-sub-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kp-brand);
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Flow list (numbered steps) */
+.kp-docs-flow-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.kp-docs-flow-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-panel-3);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--kp-text-muted);
+}
+
+.kp-docs-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--kp-brand) 30%, transparent);
+  background-color: var(--kp-green-soft);
+  color: var(--kp-brand);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.kp-docs-flow-text {
+  color: var(--kp-text);
+}
+
+/* Check/sim icon lists */
+.kp-docs-check-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.kp-docs-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--kp-text-muted);
+}
+
+.kp-docs-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.kp-docs-icon--green {
+  color: var(--kp-brand);
+}
+
+.kp-docs-icon--amber {
+  color: var(--kp-amber);
+}
+
+/* Bullet list (security section) */
+.kp-docs-bullet-list {
+  margin: 0;
+  padding: 0 0 0 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.kp-docs-bullet-list li {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--kp-text-muted);
+}
+
+.kp-docs-bullet-list li::marker {
+  color: var(--kp-brand);
+}
+
+/* Architecture grid */
+.kp-docs-arch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .kp-docs-arch-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kp-docs-arch-node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-panel-3);
+  transition: border-color 0.2s;
+}
+
+.kp-docs-arch-node:hover {
+  border-color: var(--kp-border-strong);
+}
+
+.kp-docs-arch-node--purple {
+  border-color: color-mix(in srgb, var(--kp-purple) 22%, transparent);
+}
+
+.kp-docs-arch-node--purple:hover {
+  border-color: color-mix(in srgb, var(--kp-purple) 50%, transparent);
+}
+
+.kp-docs-arch-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--kp-text-faint);
+}
+
+.kp-docs-arch-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--kp-text);
+}
+
+.kp-docs-arch-node--purple .kp-docs-arch-label {
+  color: var(--kp-purple);
+}
+
+.kp-docs-arch-node--green .kp-docs-arch-label {
+  color: var(--kp-brand);
+}
+
+.kp-docs-arch-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--kp-text-faint);
+}
