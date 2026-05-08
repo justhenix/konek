@@ -46,6 +46,10 @@ export const translations = {
     hero: {
       badge: "Colosseum Frontier Hackathon 2026",
       headline: "Pay QRIS with Solana",
+      headlinePre: "Pay ",
+      headlineQRIS: "QRIS",
+      headlineMid: " with ",
+      headlineSolana: "Solana",
       headlineAccent: "Solana",
       subtitle:
         "Scan a QRIS code, get a live SOL price from Pyth, pay with Phantom, and receive an on-chain receipt.",
@@ -731,6 +735,10 @@ export const translations = {
     hero: {
       badge: "Colosseum Frontier Hackathon 2026",
       headline: "Bayar QRIS pakai Solana",
+      headlinePre: "Bayar ",
+      headlineQRIS: "QRIS",
+      headlineMid: " pakai ",
+      headlineSolana: "Solana",
       headlineAccent: "Solana",
       subtitle:
         "Scan QRIS, ambil harga SOL dari Pyth, bayar lewat Phantom, lalu dapat bukti bayar on-chain.",

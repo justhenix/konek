@@ -3244,12 +3244,15 @@ function App() {
                     </div>
                   )}
                   <section className="min-w-0 max-w-3xl">
-                    <h1
-                      className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl"
-                      data-hero-word
-                    >
-                      {t("hero.headline")}
-                    </h1>
+                      <h1
+                        className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl"
+                        data-hero-word
+                      >
+                        {t("hero.headlinePre")}
+                        <span className="text-brand">{t("hero.headlineQRIS")}</span>
+                        {t("hero.headlineMid")}
+                        <span className="text-solana">{t("hero.headlineSolana")}</span>
+                      </h1>
                     <p
                       className="hero-text mt-5 max-w-2xl text-base leading-8 text-zinc-400 md:text-lg"
                       data-hero-copy

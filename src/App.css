@@ -3,6 +3,7 @@
 
 @theme {
   --color-brand: var(--kp-brand);
+  --color-solana: var(--kp-purple);
 }
 
 :root,
