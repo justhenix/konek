@@ -1458,6 +1458,19 @@ function App() {
     }
   }, [addToast, clearPendingPhantomPayment, connected, disconnect, publicKey, t]);
 
+  // ── Startup cleanup: remove expired pending Phantom payment records ──
+  // Prevents stale payment state from lingering after timed-out deeplinks.
+  useEffect(() => {
+    try {
+      const pendingPayment = readPendingPhantomPayment();
+      if (pendingPayment && isPendingPhantomPaymentExpired(pendingPayment)) {
+        clearPendingPhantomPayment(pendingPayment.paymentResumeId);
+      }
+    } catch {
+      // Non-critical cleanup — swallow errors silently.
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const phantomAction = params.get(PHANTOM_PAYMENT_ACTION_PARAM);

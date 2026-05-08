@@ -14,11 +14,33 @@ const base64UrlDecode = (value) => (
   Buffer.from(value, 'base64url').toString('utf8')
 );
 
-const getQuoteSigningSecret = () => (
-  process.env.PAYMENT_QUOTE_SECRET
-  || process.env.SUPABASE_SERVICE_ROLE_KEY
-  || DEMO_ONLY_QUOTE_SECRET
-);
+/**
+ * Return the HMAC signing secret for payment quotes.
+ *
+ * - Production / preview: PAYMENT_QUOTE_SECRET is required.
+ * - Development / test:   Falls back to a demo-only constant so
+ *   local dev works without configuring the secret.
+ *
+ * SUPABASE_SERVICE_ROLE_KEY is intentionally NOT used here.
+ * Quote signing and Supabase auth are separate concerns.
+ */
+const getQuoteSigningSecret = () => {
+  if (process.env.PAYMENT_QUOTE_SECRET) {
+    return process.env.PAYMENT_QUOTE_SECRET;
+  }
+
+  const env = (process.env.VERCEL_ENV || process.env.NODE_ENV || '').toLowerCase();
+  const isProductionLike = env === 'production' || env === 'preview';
+
+  if (isProductionLike) {
+    throw new Error(
+      '[PAYMENT_QUOTE_SECRET] PAYMENT_QUOTE_SECRET is required in production/preview. '
+      + 'Set it in Vercel Environment Variables.'
+    );
+  }
+
+  return DEMO_ONLY_QUOTE_SECRET;
+};
 
 const signQuotePayload = (encodedPayload) => (
   crypto

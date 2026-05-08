@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test api/v1/payment/quote.test.js api/v1/payment/history.test.js api/lib/transactions.test.js src/utils/parseEmvcoQris.test.js src/utils/dateFormat.test.js src/utils/receipt.test.js src/utils/history.test.js",
+    "test": "node --test api/v1/payment/quote.test.js api/v1/payment/verify.test.js api/v1/payment/settle-demo.test.js api/v1/payment/history.test.js api/lib/transactions.test.js src/utils/parseEmvcoQris.test.js src/utils/dateFormat.test.js src/utils/receipt.test.js src/utils/history.test.js",
     "dev:check-env": "node scripts/check-env.mjs"
   },
   "dependencies": {

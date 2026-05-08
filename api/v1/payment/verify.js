@@ -211,6 +211,7 @@ export default async function handler(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
 
   if (req.method !== 'POST') {
     return jsonFailure(res, 405, 'METHOD_NOT_ALLOWED', 'Only POST is accepted.');

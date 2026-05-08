@@ -362,12 +362,22 @@ export default async function handler(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
 
   // Method guard
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: 'METHOD_NOT_ALLOWED',
       message: 'Only POST is accepted.',
+    });
+  }
+
+  // Body size guard (defense-in-depth alongside Vercel's own limit)
+  const contentLength = Number(req.headers?.['content-length']);
+  if (Number.isFinite(contentLength) && contentLength > 8192) {
+    return res.status(413).json({
+      error: 'PAYLOAD_TOO_LARGE',
+      message: 'Request body exceeds maximum allowed size.',
     });
   }
 
