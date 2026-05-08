@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildReceiptSummary, cleanReceiptValue, truncateMiddle } from './receipt.js';
-import { translations } from './translations.js';
+import { humanizePaymentLabel, translations } from './translations.js';
 
 describe('receipt utilities', () => {
   it('truncates long identifiers without changing short values', () => {
@@ -37,6 +37,19 @@ describe('receipt utilities', () => {
         'Devnet demo only.',
       ].join('\n')
     );
+  });
+
+  it('humanizes payment and settlement enum labels for receipt UI', () => {
+    assert.equal(humanizePaymentLabel('PAID_VERIFIED'), 'Payment verified');
+    assert.equal(humanizePaymentLabel('SETTLED_SIMULATED'), 'Settlement simulated');
+    assert.equal(humanizePaymentLabel('PAYOUT_SIMULATED_SUCCESS'), 'Payout simulation complete');
+    assert.equal(humanizePaymentLabel('IDR_FLOAT_CREDITED'), 'Simulated IDR balance credited');
+    assert.equal(humanizePaymentLabel('MOCK_OFFRAMP'), 'Demo off-ramp');
+    assert.equal(humanizePaymentLabel('MOCK_PAYOUT'), 'Demo payout rail');
+    assert.equal(humanizePaymentLabel('SOL_DEVNET'), 'SOL on Solana Devnet');
+    assert.equal(humanizePaymentLabel('IDR_SIMULATED'), 'Simulated IDR');
+    assert.equal(humanizePaymentLabel('UNKNOWN_STATUS'), 'Unknown Status');
+    assert.equal(humanizePaymentLabel(null), 'Not available');
   });
 
   it('has English and Indonesian receipt translations', () => {

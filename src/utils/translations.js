@@ -1,3 +1,32 @@
+export const humanizePaymentLabel = (value) => {
+  const labels = {
+    PAID_VERIFIED: 'Payment verified',
+    SETTLED_SIMULATED: 'Settlement simulated',
+    PAYOUT_SIMULATED_SUCCESS: 'Payout simulation complete',
+    IDR_FLOAT_CREDITED: 'Simulated IDR balance credited',
+    OFFRAMP_SIMULATED: 'Conversion simulated',
+    MOCK_OFFRAMP: 'Demo off-ramp',
+    MOCK_PAYOUT: 'Demo payout rail',
+    SOL_DEVNET: 'SOL on Solana Devnet',
+    IDR_SIMULATED: 'Simulated IDR',
+  };
+
+  if (value === null || value === undefined || value === '') {
+    return 'Not available';
+  }
+
+  const normalizedValue = String(value);
+
+  if (labels[normalizedValue]) {
+    return labels[normalizedValue];
+  }
+
+  return normalizedValue
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 export const translations = {
   "en": {
     "navbar": {
@@ -329,7 +358,7 @@ export const translations = {
       "lblTransactionId": "Transaction ID",
       "receiptVerifiedBody": "Payment verified on Solana Devnet.",
       "receiptSettlementDemoNote": "Merchant settlement is simulated for this demo.",
-      "settlementSimulatorWarning": "This is a hackathon settlement simulator. No real IDR was disbursed. Production requires a licensed crypto off-ramp and licensed payout/payment provider.",
+      "settlementSimulatorWarning": "No real IDR was disbursed. This demo simulates the licensed settlement rail required in production.",
       "receiptDevnetBadge": "Devnet",
       "receiptOnchainSection": "On-chain Payment",
       "receiptSettlementSection": "Fiat Settlement Simulation",
@@ -354,6 +383,7 @@ export const translations = {
       "lblAssetConversion": "Asset Conversion",
       "lblPayoutProvider": "Payout Provider",
       "lblPayoutReference": "Payout Reference",
+      "lblMerchantBank": "Merchant bank",
       "lblBankCode": "Bank Code",
       "lblBankName": "Bank Name",
       "lblAccountNumber": "Account Number",
@@ -407,11 +437,11 @@ export const translations = {
       "exportFailed": "Could not export history.",
       "printUnavailable": "Print is unavailable in this browser.",
       "itemCount": "{count} payments",
-      "statusPaidVerified": "PAID_VERIFIED",
-      "statusPending": "PENDING",
-      "statusFailed": "FAILED",
-      "statusSettled": "SETTLED",
-      "statusUnknown": "UNKNOWN",
+      "statusPaidVerified": "Payment verified",
+      "statusPending": "Pending",
+      "statusFailed": "Failed",
+      "statusSettled": "Settled",
+      "statusUnknown": "Unknown",
       "useWalletButton": "Use the wallet button above to connect."
     },
     "devnet": {
@@ -775,7 +805,7 @@ export const translations = {
       "lblTransactionId": "ID Transaksi",
       "receiptVerifiedBody": "Pembayaran terverifikasi di Solana Devnet.",
       "receiptSettlementDemoNote": "Settlement merchant disimulasikan untuk demo ini.",
-      "settlementSimulatorWarning": "This is a hackathon settlement simulator. No real IDR was disbursed. Production requires a licensed crypto off-ramp and licensed payout/payment provider.",
+      "settlementSimulatorWarning": "No real IDR was disbursed. This demo simulates the licensed settlement rail required in production.",
       "receiptDevnetBadge": "Devnet",
       "receiptOnchainSection": "Pembayaran On-chain",
       "receiptSettlementSection": "Simulasi Settlement Fiat",
@@ -800,6 +830,7 @@ export const translations = {
       "lblAssetConversion": "Konversi Aset",
       "lblPayoutProvider": "Provider Pencairan",
       "lblPayoutReference": "Referensi Pencairan",
+      "lblMerchantBank": "Bank merchant",
       "lblBankCode": "Kode Bank",
       "lblBankName": "Nama Bank",
       "lblAccountNumber": "Nomor Rekening",
@@ -856,7 +887,7 @@ export const translations = {
       "statusPaidVerified": "TERVERIFIKASI",
       "statusPending": "MENUNGGU",
       "statusFailed": "GAGAL",
-      "statusSettled": "SETTLED",
+      "statusSettled": "SELESAI",
       "statusUnknown": "TIDAK DIKETAHUI",
       "useWalletButton": "Gunakan tombol wallet di atas untuk menghubungkan."
     },

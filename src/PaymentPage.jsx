@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { parseEmvcoQris } from './utils/parseEmvcoQris';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import { formatDateTime } from './utils/dateFormat';
+import { humanizePaymentLabel } from './utils/translations';
 import {
   buildReceiptSummary,
   cleanReceiptValue,
@@ -867,21 +868,36 @@ export default function PaymentPage({
   const settlementStatusLabel = settlementError
     ? t('payment.settlementStatusFailed')
     : settlementResult?.status
-      || (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
-  const offRampProvider = offrampSettlement.provider || 'MOCK_OFFRAMP';
-  const offRampStatus = offrampSettlement.status || (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
-  const conversionLabel = `${offrampSettlement.fromAsset || 'SOL_DEVNET'} -> ${offrampSettlement.toAsset || 'IDR_SIMULATED'}`;
+      ? humanizePaymentLabel(settlementResult.status)
+      : (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
+  const offRampProvider = humanizePaymentLabel(offrampSettlement.provider || 'MOCK_OFFRAMP');
+  const offRampStatus = offrampSettlement.status
+    ? humanizePaymentLabel(offrampSettlement.status)
+    : (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
+  const conversionLabel = `${humanizePaymentLabel(offrampSettlement.fromAsset || 'SOL_DEVNET')} -> ${humanizePaymentLabel(offrampSettlement.toAsset || 'IDR_SIMULATED')}`;
   const settlementRate = Number(offrampSettlement.exchangeRate || quote?.exchangeRate);
   const settlementRateLabel = Number.isFinite(settlementRate) && settlementRate > 0
     ? `${formatIdrAmount(settlementRate)} / SOL`
     : '';
-  const payoutProvider = payoutSettlement.provider || 'MOCK_PAYOUT';
-  const payoutStatus = payoutSettlement.status || (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
+  const payoutProvider = humanizePaymentLabel(payoutSettlement.provider || 'MOCK_PAYOUT');
+  const payoutStatus = payoutSettlement.status
+    ? humanizePaymentLabel(payoutSettlement.status)
+    : (isSettling ? t('payment.settlementStatusSimulating') : t('payment.settlementStatusPending'));
   const payoutAmount = Number(payoutSettlement.amount);
   const payoutAmountLabel = Number.isFinite(payoutAmount)
     ? formatIdrAmount(payoutAmount)
     : receiptIdrAmountLabel;
+  const merchantBankLabel = [
+    payoutDestination.bankCode || 'BCA',
+    payoutDestination.accountNumberMasked || '****1234',
+  ].filter(Boolean).join(' ');
   const settlementWarning = t('payment.settlementSimulatorWarning');
+  const receiptSettlementStatusLabel = settlementResult?.status
+    ? humanizePaymentLabel(settlementResult.status)
+    : '';
+  const receiptPayoutProviderLabel = payoutSettlement.provider
+    ? humanizePaymentLabel(payoutSettlement.provider)
+    : '';
   const receiptSummary = useMemo(() => buildReceiptSummary({
     title: t('payment.receiptSummaryTitle'),
     fields: [
@@ -897,9 +913,9 @@ export default function PaymentPage({
       { label: t('payment.receiptTimestamp'), value: receiptTimestamp },
       { label: t('payment.lblQuoteId'), value: receiptQuoteId },
       { label: t('payment.lblNetwork'), value: t('payment.receiptNetwork') },
-      { label: t('payment.lblSettlementStatus'), value: settlementResult?.status },
+      { label: t('payment.lblSettlementStatus'), value: receiptSettlementStatusLabel },
       { label: t('payment.lblSettlementRef'), value: settlementReference },
-      { label: t('payment.lblPayoutProvider'), value: payoutSettlement.provider },
+      { label: t('payment.lblPayoutProvider'), value: receiptPayoutProviderLabel },
       { label: t('payment.lblPayoutReference'), value: payoutReference },
     ],
     disclaimer: `${t('payment.receiptVerifiedBody')} ${settlementWarning}`,
@@ -909,16 +925,16 @@ export default function PaymentPage({
     merchantName,
     primaryExplorerUrl,
     payoutReference,
-    payoutSettlement.provider,
     receiptIdrAmountLabel,
+    receiptPayoutProviderLabel,
     receiptQrisTypeLabel,
     receiptQuoteId,
     receiptSolAmountLabel,
+    receiptSettlementStatusLabel,
     receiptStatusLabel,
     receiptTimestamp,
     receiptWalletAddress,
     settlementReference,
-    settlementResult?.status,
     settlementWarning,
     t,
   ]);
@@ -1330,9 +1346,8 @@ export default function PaymentPage({
                       <ReceiptField label={t('payment.lblPayoutProvider')} value={payoutProvider} />
                       <ReceiptField label={t('payment.lblPayoutStatus')} value={payoutStatus} tone={settlementResult ? 'success' : 'muted'} />
                       <ReceiptField label={t('payment.lblMerchant')} value={payoutDestination.merchantName || merchantName} title={payoutDestination.merchantName || merchantName} />
-                      <ReceiptField label={t('payment.lblBankCode')} value={payoutDestination.bankCode || 'BCA'} />
+                      <ReceiptField label={t('payment.lblMerchantBank')} value={merchantBankLabel} mono />
                       <ReceiptField label={t('payment.lblBankName')} value={payoutDestination.bankName || 'Bank Central Asia'} />
-                      <ReceiptField label={t('payment.lblAccountNumber')} value={payoutDestination.accountNumberMasked || '****1234'} mono />
                       <ReceiptField label={t('payment.lblAccountHolder')} value={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} title={payoutDestination.accountHolderName || payoutDestination.merchantName || merchantName} />
                       <ReceiptField label={t('payment.lblIdrAmount')} value={payoutAmountLabel} />
                       <ReceiptField label={t('payment.lblSettlementRef')} value={settlementReference} mono title={settlementReference} />
