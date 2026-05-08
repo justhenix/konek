@@ -33,6 +33,7 @@ import TransactionHistory from './TransactionHistory';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
 import ProtocolFlow from './components/ProtocolFlow';
 import DocsSection from './components/DocsSection';
+import RoadmapSection from './components/RoadmapSection';
 import { saveVerifiedReceiptToHistory } from './utils/history';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
@@ -441,6 +442,7 @@ const getCurrentPage = () => {
   const path = window.location.pathname.replace(/\/+$/, '');
   if (path === '/team') return 'team';
   if (path === '/docs' || window.location.hash === '#docs') return 'docs';
+  if (path === '/roadmap' || window.location.hash === '#roadmap') return 'roadmap';
   return 'home';
 };
 
@@ -876,7 +878,7 @@ const footerProductLinks = [
 const footerProjectLinks = [
   { key: 'linkDocs', target: 'docs' },
   { key: 'linkGitHub', href: KONEK_GITHUB_URL },
-  { key: 'linkRoadmap', href: null, disabled: true },
+  { key: 'linkRoadmap', target: 'roadmap' },
 ];
 
 const footerLegalLinks = [
@@ -2257,6 +2259,16 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const navigateToRoadmap = useCallback(() => {
+    if (`${window.location.pathname}${window.location.hash}` !== '/#roadmap') {
+      window.history.pushState({}, '', '/#roadmap');
+    }
+    setActiveTab('pay');
+    setPage('roadmap');
+    setPendingScrollTarget(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const scrollToSection = useCallback((target) => {
     if (target === 'team-page') {
       navigateToTeam();
@@ -2264,6 +2276,10 @@ function App() {
     }
     if (target === 'docs') {
       navigateToDocs();
+      return;
+    }
+    if (target === 'roadmap') {
+      navigateToRoadmap();
       return;
     }
 
@@ -2274,7 +2290,7 @@ function App() {
     setActiveTab('pay');
     setPage('home');
     setPendingScrollTarget(target);
-  }, [navigateToTeam, navigateToDocs]);
+  }, [navigateToTeam, navigateToDocs, navigateToRoadmap]);
 
   const handleAppTabChange = useCallback((nextTab) => {
     setActiveTab(nextTab);
@@ -2602,6 +2618,11 @@ function App() {
           </>
         ) : page === 'docs' ? (
           <DocsSection 
+            t={t} 
+            onBackToHome={() => handleAppTabChange('pay')} 
+          />
+        ) : page === 'roadmap' ? (
+          <RoadmapSection 
             t={t} 
             onBackToHome={() => handleAppTabChange('pay')} 
           />
