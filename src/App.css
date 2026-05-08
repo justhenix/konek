@@ -236,6 +236,18 @@ body {
 
   .hero-without-devnet-banner {
     padding-top: 8rem;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-without-devnet-banner .hero-content {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .hero-without-devnet-banner .kp-scroll-cue {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 }
 

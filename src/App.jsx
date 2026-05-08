@@ -2944,7 +2944,7 @@ function App() {
 
             <div
               id="mobile-navbar-menu"
-              className={`absolute left-0 right-0 top-full mt-2 border border-white/10 bg-[#080b08]/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 md:hidden ${isMobileMenuOpen ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none -translate-y-2 opacity-0"}`}
+              className={`absolute left-0 right-0 top-full mt-2 border border-white/10 bg-[#080b08] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 md:hidden ${isMobileMenuOpen ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none -translate-y-2 opacity-0"}`}
             >
               <div className="grid gap-2 border-b border-white/10 pb-3">
                 {navItems.map((item) => (
@@ -3243,7 +3243,7 @@ function App() {
                       />
                     </div>
                   )}
-                  <section className="min-w-0 max-w-3xl">
+                  <section className="hero-content min-w-0 max-w-3xl">
                       <h1
                         className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl"
                         data-hero-word
@@ -3287,20 +3287,25 @@ function App() {
                       </div>
                     </div>
                   </section>
-                </main>
 
-                {/* Scroll cue between hero and flow */}
-                <div className="kp-scroll-cue" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M4 7l6 6 6-6"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+                  {/* Scroll cue between hero and flow */}
+                  <div className="kp-scroll-cue" aria-hidden="true">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        d="M4 7l6 6 6-6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </main>
 
                 <section
                   id="workflow-flow"
