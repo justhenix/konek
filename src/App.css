@@ -531,3 +531,39 @@ body {
     clip-path: none;
   }
 }
+
+/* Receipt: compact secondary action buttons */
+.kp-receipt-action-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-control-bg);
+  color: var(--kp-text-muted);
+  font-size: 11px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.3;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kp-receipt-action-compact:hover {
+  background-color: var(--kp-control-bg-hover);
+  border-color: var(--kp-border-strong);
+  color: var(--kp-brand);
+}
+
+.kp-receipt-action-compact:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kp-receipt-action-compact:focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: -2px;
+}

@@ -814,7 +814,7 @@ export default function PaymentPage({
     || (Number.isFinite(paymentAmount) ? formatIdrAmount(paymentAmount) : '');
   const receiptSolAmountLabel = quoteReview?.solAmountLabel
     || (quote?.solAmount ? formatQuoteSolAmount(quote.solAmount) : '');
-  const receiptStatusLabel = t('payment.receiptStatusPaidVerified') || verifiedPayment?.status || t('payment.statusPaid');
+  const receiptStatusLabel = t('payment.receiptStatusVerified') || t('payment.statusPaid');
   const receiptWalletAddress = submittedPayment?.walletAddress || verifiedPayment?.walletAddress || '';
   const receiptQuoteId = quote?.quoteId || submittedPayment?.quote?.quoteId || verifiedPayment?.quoteId || '';
   const receiptTimestamp = formatPanelDateTime(
@@ -1085,13 +1085,18 @@ export default function PaymentPage({
                             </span>
                           </div>
                           <h4 className="kp-text mt-2 text-2xl ">{t('payment.receiptTitle')}</h4>
-                          <p className="kp-muted mt-2 text-sm leading-6">{t('payment.receiptVerifiedBody')}</p>
+                          <p className="kp-muted mt-1 text-sm leading-6">{receiptStatusLabel}</p>
                         </div>
                       </div>
-                      <div className="min-w-0 border border-brand/20 bg-brand/10 px-3 py-2 text-left sm:text-right">
-                        <p className="kp-soft text-[11px]  uppercase tracking-[0.12em]">{t('payment.lblStatus')}</p>
-                        <p className="mt-1 wrap-break-word font-mono text-sm  text-brand">{receiptStatusLabel}</p>
-                      </div>
+                      {receiptIdrAmountLabel && (
+                        <div className="min-w-0 text-left sm:text-right">
+                          <p className="kp-soft text-[11px]  uppercase tracking-[0.12em]">{t('payment.lblIdrAmount')}</p>
+                          <p className="mt-1 text-2xl  text-brand sm:text-3xl">{receiptIdrAmountLabel}</p>
+                          {receiptSolAmountLabel && (
+                            <p className="kp-muted mt-1 text-xs ">{receiptSolAmountLabel}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1142,19 +1147,50 @@ export default function PaymentPage({
                           {t('payment.btnViewExplorer')}
                         </RailButton>
                       )}
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <RailButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} disabled={!fullPaymentSignature} variant="secondary">
-                          {t('payment.btnCopySignature')}
-                        </RailButton>
-                        <RailButton onClick={handleShareReceipt} variant="secondary">
-                          {receiptShareButtonLabel}
-                        </RailButton>
-                        <RailButton onClick={handleDownloadReceipt} variant="secondary">
-                          {t('payment.btnDownloadReceipt')}
-                        </RailButton>
-                        <RailButton onClick={showScanAnother ? onScanAnother : onCancel} disabled={isBusy && !showScanAnother} variant="secondary">
-                          {showScanAnother ? t('payment.btnScanAnother') : t('payment.btnCancel')}
-                        </RailButton>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))}
+                          disabled={!fullPaymentSignature}
+                          className="kp-receipt-action-compact"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2" />
+                          </svg>
+                          <span>{t('payment.btnCopyTxId')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleShareReceipt}
+                          className="kp-receipt-action-compact"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          <span>{receiptShareButtonLabel}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDownloadReceipt}
+                          className="kp-receipt-action-compact"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          <span>{t('payment.btnDownloadReceipt')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={showScanAnother ? onScanAnother : onCancel}
+                          disabled={isBusy && !showScanAnother}
+                          className="kp-receipt-action-compact"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4" />
+                          </svg>
+                          <span>{showScanAnother ? t('payment.btnNewScan') : t('payment.btnCancel')}</span>
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -46,6 +46,10 @@ describe('receipt utilities', () => {
       'btnCopySignature',
       'btnDownloadReceipt',
       'receiptSummaryTitle',
+      'receiptStatusVerified',
+      'btnCopyTxId',
+      'txIdCopied',
+      'btnNewScan',
     ];
 
     requiredKeys.forEach((key) => {
