@@ -148,7 +148,7 @@
 
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -163,6 +163,7 @@ body {
 .kp-page {
   background-color: var(--kp-bg);
   color: var(--kp-text);
+  overflow-x: clip;
 }
 
 .kp-grid-bg {
@@ -365,9 +366,6 @@ body {
   border-color: rgba(246, 248, 245, 0.95);
 }
 
-.protocol-node {
-  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
-}
 
 .kp-devnet-banner {
   background-color: var(--kp-amber-bg);
@@ -526,11 +524,7 @@ body {
   }
 }
 
-@media (max-width: 420px) {
-  .protocol-node {
-    clip-path: none;
-  }
-}
+
 
 /* Receipt: compact secondary action buttons */
 .kp-receipt-action-compact {
@@ -601,33 +595,60 @@ body {
   }
 }
 
-/* ===== Protocol Flow (Sui-inspired vertical visualization) ===== */
+/* ===== Payment Flow Timeline ===== */
 
-.pf-root {
-  --pf-spine-x: 50%;
-  --pf-card-max: 380px;
-  --pf-glow-green: var(--kp-brand);
-  --pf-glow-purple: var(--kp-purple);
-  --pf-border: var(--kp-border);
-  --pf-border-active: var(--kp-border-strong);
-  --pf-card-bg: var(--kp-panel);
-  --pf-marker-size: 12px;
-  --pf-elbow-len: 40px;
-
-  position: relative;
-  width: 100%;
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 40px 0;
+.sf-section {
+  padding: 56px 0 64px;
 }
 
-/* ---- center dotted spine ---- */
-.pf-spine {
+.sf-header-container {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.sf-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kp-brand);
+  margin: 0 0 12px;
+}
+
+.sf-heading {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--kp-text);
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .sf-heading {
+    font-size: 30px;
+  }
+}
+
+/* Timeline container */
+.sf-timeline {
+  position: relative;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* Center rail */
+.sf-rail {
   position: absolute;
-  left: var(--pf-spine-x);
+  left: 50%;
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 2px;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.sf-rail-line {
+  position: absolute;
+  inset: 0;
   background-image: repeating-linear-gradient(
     180deg,
     var(--kp-text-faint) 0px,
@@ -635,313 +656,201 @@ body {
     transparent 4px,
     transparent 12px
   );
-  transform: translateX(-0.5px);
+  opacity: 0.6;
 }
 
-/* ---- each step row ---- */
-.pf-step {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-.pf-step:last-child {
-  margin-bottom: 0;
-}
-
-/* right cards: card sits to the right of spine */
-.pf-step--right {
-  justify-content: flex-start;
-  padding-left: calc(var(--pf-spine-x) + var(--pf-elbow-len));
-}
-
-/* left cards: card sits to the left of spine */
-.pf-step--left {
-  justify-content: flex-end;
-  padding-right: calc(100% - var(--pf-spine-x) + var(--pf-elbow-len));
-}
-
-/* ---- square marker on the spine ---- */
-.pf-marker {
+.sf-rail-marker {
   position: absolute;
-  left: var(--pf-spine-x);
-  top: 24px;
-  width: var(--pf-marker-size);
-  height: var(--pf-marker-size);
-  background-color: var(--kp-control-bg);
-  border: 1px solid var(--pf-border);
-  transform: translate(-50%, 0);
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background-color: var(--kp-brand);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--kp-brand) 50%, transparent),
+    0 0 24px color-mix(in srgb, var(--kp-brand) 20%, transparent);
   z-index: 2;
-  transition: border-color 0.4s, background-color 0.4s, box-shadow 0.4s;
-}
-.pf-marker--active {
-  background-color: var(--pf-glow-green);
-  border-color: var(--pf-glow-green);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--pf-glow-green) 40%, transparent);
-  animation: pf-pulse 2s ease-in-out infinite;
+  will-change: top;
+  transition: opacity 0.3s;
 }
 
-@keyframes pf-pulse {
-  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--pf-glow-green) 30%, transparent); }
-  50% { box-shadow: 0 0 16px color-mix(in srgb, var(--pf-glow-green) 55%, transparent); }
-}
-
-/* ---- elbow connector from spine to card ---- */
-.pf-elbow {
-  position: absolute;
-  top: calc(24px + var(--pf-marker-size) / 2);
-  height: 1px;
-  width: var(--pf-elbow-len);
-  background-color: var(--pf-border);
-  z-index: 1;
-}
-
-.pf-step--right .pf-elbow {
-  left: calc(var(--pf-spine-x) + var(--pf-marker-size) / 2);
-}
-
-.pf-step--left .pf-elbow {
-  right: calc(100% - var(--pf-spine-x) + var(--pf-marker-size) / 2);
-}
-
-/* ---- card ---- */
-.pf-card {
+/* Steps list — normal flow */
+.sf-steps {
   position: relative;
+  z-index: 2;
+}
+
+/* Each step row */
+.sf-step-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Individual step */
+.sf-step {
   width: 100%;
-  max-width: var(--pf-card-max);
-  border: 1px solid var(--pf-border);
-  background-color: var(--pf-card-bg);
-  padding: 16px 18px 14px;
-  transition: border-color 0.4s, box-shadow 0.4s;
+  display: flex;
+  padding: 0 0 0 0;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  opacity: 0.38;
+  transform: translateY(8px) scale(0.97);
+  will-change: opacity, transform;
 }
 
-.pf-card--active {
-  border-color: var(--pf-border-active);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--pf-glow-green) 12%, transparent),
-              inset 0 0 30px color-mix(in srgb, var(--pf-glow-green) 4%, transparent);
+.sf-step--active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
-/* ---- number badge ---- */
-.pf-num {
+/* Right-side card (even steps) */
+.sf-step--right {
+  justify-content: flex-end;
+  padding-right: 0;
+  padding-left: calc(50% + 28px);
+}
+
+/* Left-side card (odd steps) */
+.sf-step--left {
+  justify-content: flex-start;
+  padding-left: 0;
+  padding-right: calc(50% + 28px);
+}
+
+.sf-step--left .sf-step-card {
+  text-align: right;
+}
+
+.sf-step--left .sf-step-header {
+  justify-content: flex-end;
+}
+
+/* Card */
+.sf-step-card {
+  width: 100%;
+  max-width: 340px;
+  border: 1px solid var(--kp-border);
+  background-color: var(--kp-panel);
+  padding: 24px;
+  transition:
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.sf-step--active .sf-step-card {
+  border-color: var(--kp-border-strong);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--kp-brand) 12%, transparent),
+    0 0 40px color-mix(in srgb, var(--kp-brand) 5%, transparent);
+}
+
+/* Card header */
+.sf-step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sf-step-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--pf-border);
-  background-color: var(--kp-control-bg);
-  color: var(--kp-text-soft);
-  font-size: 11px;
-  font-family: 'Courier New', ui-monospace, monospace;
-  font-weight: 400;
-  line-height: 1;
-  margin-bottom: 10px;
-  transition: border-color 0.3s, color 0.3s;
-}
-.pf-card--active .pf-num {
-  border-color: var(--pf-glow-green);
-  color: var(--pf-glow-green);
-}
-
-/* ---- title ---- */
-.pf-title {
+  border: 1px solid var(--kp-border);
+  color: var(--kp-text-muted);
   font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  transition: border-color 0.4s, color 0.4s;
+}
+
+.sf-step-num--active {
+  border-color: var(--kp-brand);
+  color: var(--kp-brand);
+}
+
+.sf-step-title {
+  font-size: 17px;
+  font-weight: 500;
   color: var(--kp-text);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  transition: color 0.3s;
+}
+
+.sf-step-desc {
+  font-size: 14px;
+  color: var(--kp-text-muted);
   margin: 0;
-  font-family: 'Courier New', ui-monospace, monospace;
-}
-
-/* ---- helper text ---- */
-.pf-helper {
-  font-size: 12px;
-  color: var(--kp-text-muted);
-  margin: 6px 0 0;
-  line-height: 1.5;
-}
-
-/* ---- illustration zone ---- */
-.pf-illust-zone {
-  margin: 14px 0 10px;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ---- bottom label strip ---- */
-.pf-label-strip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--pf-border);
-}
-.pf-label-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--kp-text-faint);
-}
-.pf-label-text {
-  font-size: 11px;
-  color: var(--kp-text-soft);
-  letter-spacing: 0.04em;
-}
-.pf-card--active .pf-label-icon {
-  color: var(--pf-glow-green);
-}
-.pf-card--active .pf-label-text {
-  color: var(--kp-text-muted);
-}
-
-/* ===== Wireframe illustrations ===== */
-.pf-illust {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-/* app window */
-.pf-illust-window {
-  width: 100%;
-  max-width: 180px;
-  border: 1px solid var(--pf-border);
-  padding: 0;
-}
-.pf-illust-window-bar {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--pf-border);
-}
-.pf-illust-window-bar span {
-  width: 6px;
-  height: 6px;
-  border: 1px solid var(--kp-text-faint);
-}
-.pf-illust-window-body {
-  padding: 10px 12px;
-}
-
-/* generic line elements */
-.pf-illust-line {
-  height: 3px;
-  background-color: var(--pf-border);
-  margin-top: 6px;
-}
-.pf-illust-line:first-child {
-  margin-top: 0;
-}
-
-/* wallet card */
-.pf-illust-card {
-  width: 100%;
-  max-width: 160px;
-  border: 1px solid var(--pf-border);
-  padding: 12px 14px;
-}
-.pf-illust-card-chip {
-  width: 20px;
-  height: 14px;
-  border: 1px solid var(--kp-text-faint);
-}
-
-/* QR scanner */
-.pf-illust-qr {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.pf-qr-corner {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-color: var(--kp-text-faint);
-  border-style: solid;
-  border-width: 0;
-}
-.pf-qr-corner.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
-.pf-qr-corner.tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
-.pf-qr-corner.bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
-.pf-qr-corner.br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
-.pf-qr-inner {
-  display: grid;
-  grid-template-columns: repeat(3, 10px);
-  gap: 4px;
-}
-.pf-qr-block {
-  width: 10px;
-  height: 10px;
-  background-color: var(--kp-text-faint);
-}
-.pf-qr-block.sm {
-  background-color: transparent;
-  border: 1px solid var(--kp-text-faint);
-}
-
-/* approval panel */
-.pf-illust-panel {
-  width: 100%;
-  max-width: 180px;
-  border: 1px solid var(--pf-border);
-  padding: 12px 14px;
-}
-.pf-illust-btn {
-  height: 16px;
-  width: 60px;
-  background-color: color-mix(in srgb, var(--pf-glow-green) 20%, transparent);
-  border: 1px solid color-mix(in srgb, var(--pf-glow-green) 35%, transparent);
-}
-
-/* receipt */
-.pf-illust-receipt {
-  width: 100%;
-  max-width: 140px;
-  border: 1px solid var(--pf-border);
-  padding: 10px 14px;
-  text-align: center;
-}
-.pf-illust-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--pf-glow-green);
+  line-height: 1.6;
 }
 
 /* ===== Responsive: mobile ===== */
 @media (max-width: 767px) {
-  .pf-root {
-    --pf-spine-x: 20px;
-    --pf-elbow-len: 20px;
-    --pf-card-max: none;
-    padding: 24px 0;
+  .sf-section {
+    padding: 40px 0 48px;
   }
-  .pf-step--right,
-  .pf-step--left {
-    justify-content: flex-start;
-    padding-left: calc(var(--pf-spine-x) + var(--pf-elbow-len));
+
+  .sf-header-container {
+    text-align: left;
+    margin-bottom: 36px;
+  }
+
+  .sf-rail {
+    left: 8px;
+    transform: none;
+  }
+
+  .sf-step--right,
+  .sf-step--left {
+    padding-left: 32px;
     padding-right: 0;
+    justify-content: flex-start;
   }
-  .pf-step--left .pf-elbow {
-    right: auto;
-    left: calc(var(--pf-spine-x) + var(--pf-marker-size) / 2);
+
+  .sf-step--left .sf-step-card {
+    text-align: left;
   }
-  .pf-card {
-    max-width: none;
+
+  .sf-step--left .sf-step-header {
+    justify-content: flex-start;
   }
-  .pf-illust-zone {
-    min-height: 48px;
+
+  .sf-step-card {
+    max-width: 100%;
+    padding: 20px;
+  }
+
+  .sf-arrow {
+    justify-content: flex-start;
+    padding-left: 32px;
   }
 }
 
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
-  .pf-marker--active {
-    animation: none;
+  .sf-step {
+    transition: none;
+    opacity: 0.5;
+    transform: none;
+  }
+
+  .sf-step--active {
+    opacity: 1;
+  }
+
+  .sf-step-card {
+    transition: none;
+  }
+
+  .sf-rail-marker {
+    transition: none;
+  }
+
+  .sf-arrow {
+    transition: none;
   }
 }

@@ -1,164 +1,144 @@
-import { useState, useEffect } from 'react';
-import {
-  RiHome5Line,
-  RiWallet3Line,
-  RiQrScan2Line,
-  RiCheckboxCircleLine,
-  RiShieldCheckLine,
-} from '@remixicon/react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { animate } from 'animejs';
 
 const STEP_COUNT = 5;
-const CYCLE_INTERVAL_MS = 7000;
-
-const stepIcons = [
-  RiHome5Line,
-  RiWallet3Line,
-  RiQrScan2Line,
-  RiCheckboxCircleLine,
-  RiShieldCheckLine,
-];
-
-/* ---- CSS wireframe illustrations per step ---- */
-
-const IllustrationOpen = () => (
-  <div className="pf-illust" aria-hidden="true">
-    <div className="pf-illust-window">
-      <div className="pf-illust-window-bar">
-        <span /><span /><span />
-      </div>
-      <div className="pf-illust-window-body">
-        <div className="pf-illust-line w-3/4" />
-        <div className="pf-illust-line w-1/2" />
-      </div>
-    </div>
-  </div>
-);
-
-const IllustrationConnect = () => (
-  <div className="pf-illust" aria-hidden="true">
-    <div className="pf-illust-card">
-      <div className="pf-illust-card-chip" />
-      <div className="pf-illust-line w-2/3 mt-3" />
-      <div className="pf-illust-line w-1/3 mt-1" />
-    </div>
-  </div>
-);
-
-const IllustrationScan = () => (
-  <div className="pf-illust" aria-hidden="true">
-    <div className="pf-illust-qr">
-      <span className="pf-qr-corner tl" />
-      <span className="pf-qr-corner tr" />
-      <span className="pf-qr-corner bl" />
-      <span className="pf-qr-corner br" />
-      <div className="pf-qr-inner">
-        <div className="pf-qr-block" />
-        <div className="pf-qr-block" />
-        <div className="pf-qr-block sm" />
-        <div className="pf-qr-block" />
-        <div className="pf-qr-block sm" />
-        <div className="pf-qr-block" />
-      </div>
-    </div>
-  </div>
-);
-
-const IllustrationAccept = () => (
-  <div className="pf-illust" aria-hidden="true">
-    <div className="pf-illust-panel">
-      <div className="pf-illust-line w-full" />
-      <div className="pf-illust-line w-2/3 mt-2" />
-      <div className="pf-illust-btn mt-3" />
-    </div>
-  </div>
-);
-
-const IllustrationProof = () => (
-  <div className="pf-illust" aria-hidden="true">
-    <div className="pf-illust-receipt">
-      <div className="pf-illust-line w-3/4" />
-      <div className="pf-illust-line w-1/2 mt-1" />
-      <div className="pf-illust-check mt-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
-    </div>
-  </div>
-);
-
-const illustrations = [
-  IllustrationOpen,
-  IllustrationConnect,
-  IllustrationScan,
-  IllustrationAccept,
-  IllustrationProof,
-];
 
 const ProtocolFlow = ({ t }) => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(-1);
+  const sectionRef = useRef(null);
+  const railRef = useRef(null);
+  const markerRef = useRef(null);
+  const cardRefs = useRef([]);
+  const markerAnimRef = useRef(null);
+  const lastMarkerStep = useRef(-1);
+  const prefersReduced = useRef(false);
+
+  const setCardRef = useCallback((el, index) => {
+    cardRefs.current[index] = el;
+  }, []);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return undefined;
+    prefersReduced.current = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-    const timer = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % STEP_COUNT);
-    }, CYCLE_INTERVAL_MS);
+    const cards = cardRefs.current;
+    if (!cards.length) return;
 
-    return () => clearInterval(timer);
+    // IntersectionObserver: determine which card is closest to viewport center
+    const findActiveStep = () => {
+      const viewportCenter = window.innerHeight / 2;
+      let closest = -1;
+      let closestDist = Infinity;
+
+      for (let i = 0; i < STEP_COUNT; i++) {
+        const card = cards[i];
+        if (!card) continue;
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenter - viewportCenter);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = i;
+        }
+      }
+
+      // Only activate if at least partially visible
+      if (closest >= 0) {
+        const rect = cards[closest].getBoundingClientRect();
+        const inView = rect.bottom > 0 && rect.top < window.innerHeight;
+        if (!inView) closest = -1;
+      }
+
+      return closest;
+    };
+
+    let rafId = null;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const step = findActiveStep();
+        setActiveStep(step);
+
+        // Animate marker
+        if (markerRef.current && railRef.current && step >= 0 && step !== lastMarkerStep.current) {
+          lastMarkerStep.current = step;
+          const railRect = railRef.current.getBoundingClientRect();
+          const cardEl = cards[step];
+          if (!cardEl) return;
+          const cardRect = cardEl.getBoundingClientRect();
+          const cardCenterY = cardRect.top + cardRect.height / 2 - railRect.top;
+          const targetTop = Math.max(0, Math.min(railRect.height - 12, cardCenterY - 6));
+
+          markerAnimRef.current?.cancel();
+          if (prefersReduced.current) {
+            markerRef.current.style.top = `${targetTop}px`;
+          } else {
+            markerAnimRef.current = animate(markerRef.current, {
+              top: `${targetTop}px`,
+              duration: 380,
+              ease: 'out(3)',
+            });
+          }
+        }
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Initial calc
+    onScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+      markerAnimRef.current?.cancel();
+    };
   }, []);
 
   return (
-    <div className="pf-root" role="list" aria-label={t('flow.ariaLabel')}>
-      {/* center spine */}
-      <div className="pf-spine" aria-hidden="true" />
+    <div className="sf-section" ref={sectionRef}>
+      <div className="sf-header-container">
+        <p className="sf-eyebrow">{t('flow.ariaLabel')}</p>
+        <h2 className="sf-heading">{t('howItWorks.heading')}</h2>
+      </div>
 
-      {Array.from({ length: STEP_COUNT }, (_, i) => {
-        const isActive = i === activeStep;
-        const side = i % 2 === 0 ? 'right' : 'left';
-        const StepIcon = stepIcons[i];
-        const Illust = illustrations[i];
-        const num = String(i + 1).padStart(2, '0');
+      <div className="sf-timeline">
+        {/* Center rail */}
+        <div className="sf-rail" ref={railRef} aria-hidden="true">
+          <div className="sf-rail-line" />
+          <div className="sf-rail-marker" ref={markerRef} />
+        </div>
 
-        return (
-          <div
-            key={i}
-            className={`pf-step pf-step--${side}${isActive ? ' pf-step--active' : ''}`}
-            role="listitem"
-            aria-current={isActive ? 'step' : undefined}
-          >
-            {/* marker on spine */}
-            <div className={`pf-marker${isActive ? ' pf-marker--active' : ''}`} aria-hidden="true" />
+        {/* Cards in normal flow */}
+        <div className="sf-steps" role="list">
+          {Array.from({ length: STEP_COUNT }, (_, i) => {
+            const isActive = i === activeStep;
+            const side = i % 2 === 0 ? 'sf-step--right' : 'sf-step--left';
+            const num = String(i + 1).padStart(2, '0');
 
-            {/* connector elbow from spine to card */}
-            <div className="pf-elbow" aria-hidden="true" />
+            return (
+              <div key={i} className="sf-step-row">
+                <div
+                  className={`sf-step ${side} ${isActive ? 'sf-step--active' : ''}`}
+                  ref={(el) => setCardRef(el, i)}
+                  role="listitem"
+                  aria-current={isActive ? 'step' : undefined}
+                >
+                  <div className="sf-step-card">
+                    <div className="sf-step-header">
+                      <span className={`sf-step-num ${isActive ? 'sf-step-num--active' : ''}`}>
+                        {num}
+                      </span>
+                    </div>
+                    <h3 className="sf-step-title">{t(`flow.step${i + 1}Title`)}</h3>
+                    <p className="sf-step-desc">{t(`flow.step${i + 1}Helper`)}</p>
+                  </div>
+                </div>
 
-            {/* card */}
-            <div className={`pf-card${isActive ? ' pf-card--active' : ''}`}>
-              {/* number badge */}
-              <div className="pf-num">{num}</div>
-
-              {/* title */}
-              <h3 className="pf-title">{t(`flow.step${i + 1}Title`)}</h3>
-
-              {/* helper */}
-              <p className="pf-helper">{t(`flow.step${i + 1}Helper`)}</p>
-
-              {/* illustration */}
-              <div className="pf-illust-zone">
-                <Illust />
               </div>
-
-              {/* bottom mini label */}
-              <div className="pf-label-strip">
-                <StepIcon className="pf-label-icon" aria-hidden="true" />
-                <span className="pf-label-text">{t(`flow.step${i + 1}Label`)}</span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };

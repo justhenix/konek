@@ -1191,7 +1191,7 @@ export default function PaymentPage({
                       href={primaryExplorerUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                      className="kp-receipt-action-compact flex-1 min-w-30"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -1203,7 +1203,7 @@ export default function PaymentPage({
                     <button
                       type="button"
                       onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))}
-                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                      className="kp-receipt-action-compact flex-1 min-w-30"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2" />
@@ -1244,7 +1244,7 @@ export default function PaymentPage({
                         href={primaryExplorerUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                        className="kp-receipt-action-compact flex-1 min-w-30"
                       >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -1255,7 +1255,7 @@ export default function PaymentPage({
                     <button
                       type="button"
                       onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))}
-                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                      className="kp-receipt-action-compact flex-1 min-w-30"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2" />
