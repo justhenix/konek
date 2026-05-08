@@ -27,7 +27,7 @@ export default function DevnetSafetyNotice({ t, rpcEndpoint, className = '' }) {
       role={isNonDevnetHint ? 'alert' : 'status'}
     >
       <div className="flex min-w-0 items-start gap-2.5">
-        <span className={`${isNonDevnetHint ? 'mt-1.5 h-2.5 w-2.5' : 'mt-1.5 h-2 w-2'} shrink-0 rounded-full`} style={{ backgroundColor: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-brand)' }}></span>
+        <span className={`${isNonDevnetHint ? 'mt-1.5 h-2.5 w-2.5' : 'mt-1.5 h-2 w-2'} shrink-0 rounded-full`} style={{ backgroundColor: 'var(--kp-amber)' }}></span>
         <div className="min-w-0">
           <p className={isNonDevnetHint ? 'text-sm ' : 'text-xs '} style={{ color: isNonDevnetHint ? 'var(--kp-amber)' : 'var(--kp-text-muted)' }}>
             {title}

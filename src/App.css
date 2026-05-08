@@ -198,6 +198,31 @@ body {
   color: var(--kp-text);
 }
 
+/* ===== Hero Section Spacing Fix ===== */
+.hero-section {
+  width: 100%;
+}
+
+/* Base states */
+.hero-with-devnet-banner {
+  padding-top: clamp(6rem, 10vw, 8rem); /* Clearing fixed navbar (~72-80px) + space */
+}
+
+.hero-without-devnet-banner {
+  padding-top: clamp(10rem, 15vw, 14rem); /* Strong breathing room for premium feel */
+}
+
+/* Mobile overrides (below 768px) */
+@media (max-width: 767px) {
+  .hero-with-devnet-banner {
+    padding-top: 5.5rem; /* Ensure clear on mobile */
+  }
+
+  .hero-without-devnet-banner {
+    padding-top: 8rem;
+  }
+}
+
 .kp-text {
   color: var(--kp-text);
 }
@@ -592,6 +617,41 @@ body {
 @media (min-width: 640px) {
   .kp-payment-body-stable {
     min-height: 360px;
+  }
+}
+
+/* ===== Scroll Cue Arrow ===== */
+
+@keyframes kp-scroll-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+.kp-scroll-cue {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0 24px;
+  color: var(--kp-brand);
+  opacity: 0.45;
+  animation: kp-scroll-float 2.4s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .kp-scroll-cue {
+    padding: 56px 0 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kp-scroll-cue {
+    padding: 72px 0 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kp-scroll-cue {
+    animation: none;
   }
 }
 

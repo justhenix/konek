@@ -390,7 +390,7 @@ const uspItems = ['wallet', 'price', 'receipt'];
 const uspAccentClasses = {
   wallet: 'border-purple-400/35 bg-purple-500/10 text-purple-300',
   price: 'border-brand/30 bg-brand/8 text-brand',
-  receipt: 'border-purple-400/35 bg-purple-500/10 text-purple-300',
+  receipt: 'border-brand/30 bg-brand/8 text-brand',
 };
 const teamMembers = [
   {
@@ -2297,7 +2297,7 @@ function App() {
                         setIsProfileMenuOpen(false);
                         handleAppTabChange('history');
                       }}
-                      className="w-full border-b border-white/10 px-3 py-2.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      className="w-full border-b border-white/10 px-3 py-2.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                       role="menuitem"
                     >
                       {t('history.transactionHistory')}
@@ -2341,19 +2341,18 @@ function App() {
 
         {page === 'home' ? (
           <>
-            {activeTab === 'pay' && !isDevnetBannerDismissed && (
-              <div className="mx-auto w-full max-w-6xl px-4 pt-20 sm:px-6 md:pt-24 lg:px-8">
-                <DevnetBanner 
-                  t={t} 
-                  onHowToSwitch={() => setIsDevnetModalOpen(true)} 
-                  onDismissBanner={() => setIsDevnetBannerDismissed(true)} 
-                />
-              </div>
-            )}
-
             {activeTab === 'pay' ? (
               <>
-                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16${isDevnetBannerDismissed ? ' pt-20 md:pt-24' : ' pt-4 md:pt-6'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
+                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16 hero-section ${isDevnetBannerDismissed ? 'hero-without-devnet-banner' : 'hero-with-devnet-banner'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
+                  {!isDevnetBannerDismissed && (
+                    <div className="mb-8 md:mb-12">
+                      <DevnetBanner 
+                        t={t} 
+                        onHowToSwitch={() => setIsDevnetModalOpen(true)} 
+                        onDismissBanner={() => setIsDevnetBannerDismissed(true)} 
+                      />
+                    </div>
+                  )}
                   <section className="min-w-0 max-w-3xl">
                     <h1 className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
                       {t('hero.headline')}
@@ -2379,7 +2378,14 @@ function App() {
           </section>
         </main>
 
-        <section id="workflow-flow" className="scroll-mt-28 border-b border-white/10" aria-label={t('flow.ariaLabel')}>
+        {/* Scroll cue between hero and flow */}
+        <div className="kp-scroll-cue" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 7l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <section id="workflow-flow" className="scroll-mt-28 border-b border-white/10 pt-8 sm:pt-12 lg:pt-16" aria-label={t('flow.ariaLabel')}>
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             <ProtocolFlow t={t} />
           </div>
@@ -2535,7 +2541,7 @@ function App() {
                     setIsMobileWalletOpen(false);
                     handleAppTabChange('history');
                   }}
-                  className="w-full border-b border-white/10 px-3 py-3.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  className="w-full border-b border-white/10 px-3 py-3.5 text-left text-sm  text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
                 >
                   {t('history.transactionHistory')}
                 </button>
