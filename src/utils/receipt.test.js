@@ -50,6 +50,8 @@ describe('receipt utilities', () => {
       'btnCopyTxId',
       'txIdCopied',
       'btnNewScan',
+      'technicalDetailsTitle',
+      'lblTransactionId',
     ];
 
     requiredKeys.forEach((key) => {

@@ -1073,75 +1073,52 @@ export default function PaymentPage({
               <section className="flex w-full flex-col gap-5">
 
                 <div className="flex flex-col overflow-hidden border border-brand/25 bg-(--kp-control-bg)">
+                  {/* Receipt header: checkmark + title + amount */}
                   <div className="border-b border-brand/20 bg-brand/8 p-4 sm:p-5">
-                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-4">
-                        <SuccessCheckmark />
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs  uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
-                            <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
-                              {t('payment.receiptDevnetBadge')}
-                            </span>
-                          </div>
-                          <h4 className="kp-text mt-2 text-2xl ">{t('payment.receiptTitle')}</h4>
-                          <p className="kp-muted mt-1 text-sm leading-6">{receiptStatusLabel}</p>
+                    <div className="flex min-w-0 items-start gap-4">
+                      <SuccessCheckmark />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs  uppercase tracking-wider text-brand">{t('payment.receiptEyebrow')}</p>
+                          <span className="inline-flex border border-brand/30 bg-brand/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
+                            {t('payment.receiptDevnetBadge')}
+                          </span>
                         </div>
+                        <h4 className="kp-text mt-1 text-xl sm:text-2xl">{t('payment.receiptTitle')}</h4>
+                        <p className="kp-muted mt-0.5 text-sm">{receiptStatusLabel}</p>
                       </div>
-                      {receiptIdrAmountLabel && (
-                        <div className="min-w-0 text-left sm:text-right">
-                          <p className="kp-soft text-[11px]  uppercase tracking-[0.12em]">{t('payment.lblIdrAmount')}</p>
-                          <p className="mt-1 text-2xl  text-brand sm:text-3xl">{receiptIdrAmountLabel}</p>
-                          {receiptSolAmountLabel && (
-                            <p className="kp-muted mt-1 text-xs ">{receiptSolAmountLabel}</p>
-                          )}
-                        </div>
-                      )}
                     </div>
+                    {receiptIdrAmountLabel && (
+                      <div className="mt-4 border-t border-brand/15 pt-4">
+                        <p className="text-2xl  text-brand sm:text-3xl">{receiptIdrAmountLabel}</p>
+                        {receiptSolAmountLabel && (
+                          <p className="kp-muted mt-1 text-xs ">{receiptSolAmountLabel}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
+                  {/* Compact summary rows — only non-duplicated essential fields */}
                   <div className="p-0">
                     <ReceiptField label={t('payment.lblStore')} value={merchantName} title={merchantName} />
-                    <ReceiptField label={t('payment.lblCity')} value={merchantCity} />
                     <ReceiptField label={t('payment.lblQrisType')} value={receiptQrisTypeLabel} />
-                    <ReceiptField label={t('payment.lblIdrAmount')} value={receiptIdrAmountLabel} />
-                    <ReceiptField label={t('payment.lblSolPaid')} value={receiptSolAmountLabel} tone="success" />
-                    <ReceiptField label={t('payment.lblWallet')} value={truncateMiddle(receiptWalletAddress)} mono title={receiptWalletAddress} action={receiptWalletAddress ? (
-                      <InlineActionButton onClick={() => handleCopyReceiptValue(receiptWalletAddress, t('payment.walletCopied'))} aria-label={t('payment.btnCopyWallet')}>
-                        {t('payment.btnCopy')}
-                      </InlineActionButton>
-                    ) : null} />
-                    <ReceiptField label={t('payment.lblSignature')} value={truncateMiddle(fullPaymentSignature, 10, 10)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
-                      <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} aria-label={t('payment.btnCopySignature')}>
-                        {t('payment.btnCopy')}
-                      </InlineActionButton>
-                    ) : null} />
-                    <ReceiptField label={t('payment.lblExplorerLink')} value={primaryExplorerUrl ? t('payment.receiptExplorerValue') : ''} title={primaryExplorerUrl} action={primaryExplorerUrl ? (
-                      <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
-                        {t('payment.btnViewExplorer')}
-                      </InlineActionButton>
-                    ) : null} />
                     <ReceiptField label={t('payment.receiptTimestamp')} value={receiptTimestamp} />
-                    <ReceiptField label={t('payment.lblQuoteId')} value={truncateMiddle(receiptQuoteId, 12, 10)} mono title={receiptQuoteId} action={receiptQuoteId ? (
-                      <InlineActionButton onClick={() => handleCopyReceiptValue(receiptQuoteId, t('payment.referenceCopied'))} aria-label={t('payment.btnCopyReference')}>
-                        {t('payment.btnCopy')}
-                      </InlineActionButton>
-                    ) : null} />
                     <ReceiptField label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} tone="success" />
                   </div>
 
+                  {/* Actions area */}
                   <div className="border-t border-brand/20 bg-brand/5 p-4 sm:p-5">
-                    <p className="text-sm  text-amber-700 dark:text-amber-300">
+                    <p className="text-xs  text-amber-700 dark:text-amber-300">
                       {t('payment.receiptSettlementDemoNote')}
                     </p>
 
                     {receiptActionMessage && (
-                      <p className="mt-3 text-sm  text-brand" role="status">
+                      <p className="mt-2 text-sm  text-brand" role="status">
                         {receiptActionMessage}
                       </p>
                     )}
 
-                    <div className="mt-4 grid gap-3">
+                    <div className="mt-3 grid gap-2">
                       {primaryExplorerUrl && (
                         <RailButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer">
                           {t('payment.btnViewExplorer')}
@@ -1195,6 +1172,34 @@ export default function PaymentPage({
                     </div>
                   </div>
                 </div>
+
+                {/* Collapsed Technical Details */}
+                <TechnicalDetails label={t('payment.technicalDetailsTitle')}>
+                  <ReceiptField label={t('payment.lblCity')} value={merchantCity} />
+                  <ReceiptField label={t('payment.lblIdrAmount')} value={receiptIdrAmountLabel} />
+                  <ReceiptField label={t('payment.lblSolPaid')} value={receiptSolAmountLabel} tone="success" />
+                  <ReceiptField label={t('payment.lblWallet')} value={truncateMiddle(receiptWalletAddress)} mono title={receiptWalletAddress} action={receiptWalletAddress ? (
+                    <InlineActionButton onClick={() => handleCopyReceiptValue(receiptWalletAddress, t('payment.walletCopied'))} aria-label={t('payment.btnCopyWallet')}>
+                      {t('payment.btnCopy')}
+                    </InlineActionButton>
+                  ) : null} />
+                  <ReceiptField label={t('payment.lblTransactionId')} value={truncateMiddle(fullPaymentSignature, 10, 10)} mono title={fullPaymentSignature} action={fullPaymentSignature ? (
+                    <InlineActionButton onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.signatureCopied'))} aria-label={t('payment.btnCopySignature')}>
+                      {t('payment.btnCopy')}
+                    </InlineActionButton>
+                  ) : null} />
+                  <ReceiptField label={t('payment.lblExplorerLink')} value={primaryExplorerUrl ? t('payment.receiptExplorerValue') : ''} title={primaryExplorerUrl} action={primaryExplorerUrl ? (
+                    <InlineActionButton as="a" href={primaryExplorerUrl} target="_blank" rel="noreferrer" aria-label={t('payment.btnViewExplorer')}>
+                      {t('payment.btnViewExplorer')}
+                    </InlineActionButton>
+                  ) : null} />
+                  <ReceiptField label={t('payment.lblQuoteId')} value={truncateMiddle(receiptQuoteId, 12, 10)} mono title={receiptQuoteId} action={receiptQuoteId ? (
+                    <InlineActionButton onClick={() => handleCopyReceiptValue(receiptQuoteId, t('payment.referenceCopied'))} aria-label={t('payment.btnCopyReference')}>
+                      {t('payment.btnCopy')}
+                    </InlineActionButton>
+                  ) : null} />
+                  <ReceiptField label={t('payment.lblStatus')} value={receiptStatusLabel} />
+                </TechnicalDetails>
 
                 {/* Collapsed Demo Merchant Record */}
                 <details className="group border border-(--kp-border) bg-(--kp-control-bg)">
