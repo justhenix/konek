@@ -981,7 +981,7 @@ export default function PaymentPage({
             </button>
           </div>
           
-          <div className="rail-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:p-5">
+          <div className={`rail-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:p-5${submittedPayment ? ' kp-payment-body-stable' : ''}`}>
             {!canReviewPayment && !showManualAmountForm && (
               <AppNotice variant="warning" title={qrisReadNotice.title}>
                 <p>{qrisReadNotice.body}</p>
@@ -1054,23 +1054,140 @@ export default function PaymentPage({
               </AppNotice>
             )}
 
-            {flowState === 'tx_submitted' && submittedPayment && (
-              <AppNotice variant="success" title={t('payment.statusTxSub')}>
-                <p>{t('payment.statusTxSubDesc')}</p>
-                <TechnicalDetails label={t('payment.detailsTitle')} className="mt-4">
-                  <DetailRow label={t('payment.lblSignature')} value={submittedPayment.signature} mono title={submittedPayment.signature} />
-                </TechnicalDetails>
-              </AppNotice>
+            {/* Dedicated verification panel for tx_submitted + verifying */}
+            {(flowState === 'tx_submitted' || flowState === 'verifying') && submittedPayment && (
+              <section className="kp-state-fade flex w-full flex-col gap-4">
+                <div className="border border-brand/25 bg-(--kp-control-bg) p-4 sm:p-5">
+                  <p className="kp-muted text-sm leading-6">{t('payment.verifyingSubtitle')}</p>
+
+                  {/* Step progress */}
+                  <div className="mt-4 flex flex-col gap-0">
+                    {[
+                      { label: t('payment.verifyStepSubmitted'), done: true },
+                      { label: t('payment.verifyStepChecking'), done: false, active: true },
+                      { label: t('payment.verifyStepReceipt'), done: false },
+                    ].map((step, i) => (
+                      <div key={i} className="flex items-center gap-3 py-2">
+                        <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] ${
+                          step.done
+                            ? 'bg-brand text-black'
+                            : step.active
+                              ? 'animate-pulse border border-brand/50 bg-brand/15 text-brand'
+                              : 'border border-(--kp-border) bg-(--kp-control-bg) kp-soft'
+                        }`}>
+                          {step.done ? '✓' : i + 1}
+                        </span>
+                        <span className={`text-sm ${step.done ? 'text-brand' : step.active ? 'kp-text' : 'kp-soft'}`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Compact verification summary */}
+                <div className="kp-surface overflow-hidden border">
+                  <DetailRow label={t('payment.lblMerchant')} value={merchantName} />
+                  {receiptIdrAmountLabel && (
+                    <DetailRow label={t('payment.lblIdrAmount')} value={receiptIdrAmountLabel} />
+                  )}
+                  {receiptSolAmountLabel && (
+                    <DetailRow label={t('payment.lblSolPaid')} value={receiptSolAmountLabel} tone="success" />
+                  )}
+                  <DetailRow label={t('payment.lblTransactionId')} value={truncateMiddle(fullPaymentSignature, 8, 8)} mono title={fullPaymentSignature} />
+                  <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} tone="success" />
+                </div>
+
+                {/* Secondary actions during verification */}
+                <div className="flex flex-wrap gap-2">
+                  {primaryExplorerUrl && (
+                    <a
+                      href={primaryExplorerUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      <span>{t('payment.btnViewExplorer')}</span>
+                    </a>
+                  )}
+                  {fullPaymentSignature && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))}
+                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2" />
+                      </svg>
+                      <span>{t('payment.btnCopyTxId')}</span>
+                    </button>
+                  )}
+                </div>
+
+                {receiptActionMessage && (
+                  <p className="text-sm text-brand" role="status">{receiptActionMessage}</p>
+                )}
+              </section>
             )}
 
-            {flowState === 'verifying' && submittedPayment && (
-              <AppNotice variant="success" title={t('payment.statusVerifying')} pulse>
-                <p>{t('payment.statusChecking')}</p>
-              </AppNotice>
+            {/* Failed verification panel */}
+            {flowState === 'failed' && submittedPayment && fullPaymentSignature && (
+              <section className="kp-state-fade flex w-full flex-col gap-4">
+                <div className="border border-red-500/25 bg-red-500/5 p-4 sm:p-5">
+                  <h4 className="text-base text-red-700 dark:text-red-300">{t('payment.verifyFailedTitle')}</h4>
+                  <p className="kp-muted mt-2 text-sm leading-6">{t('payment.verifyFailedBody')}</p>
+                </div>
+
+                <div className="kp-surface overflow-hidden border">
+                  <DetailRow label={t('payment.lblMerchant')} value={merchantName} />
+                  <DetailRow label={t('payment.lblTransactionId')} value={truncateMiddle(fullPaymentSignature, 8, 8)} mono title={fullPaymentSignature} />
+                  <DetailRow label={t('payment.lblNetwork')} value={t('payment.receiptNetwork')} tone="success" />
+                </div>
+
+                <div className="grid gap-2">
+                  <RailButton onClick={handleTryAgain} disabled={isBusy}>
+                    {t('payment.btnRetryVerification')}
+                  </RailButton>
+                  <div className="flex flex-wrap gap-2">
+                    {primaryExplorerUrl && (
+                      <a
+                        href={primaryExplorerUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <span>{t('payment.btnViewExplorer')}</span>
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleCopyReceiptValue(fullPaymentSignature, t('payment.txIdCopied'))}
+                      className="kp-receipt-action-compact flex-1 min-w-[120px]"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2" />
+                      </svg>
+                      <span>{t('payment.btnCopyTxId')}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {receiptActionMessage && (
+                  <p className="text-sm text-brand" role="status">{receiptActionMessage}</p>
+                )}
+              </section>
             )}
 
             {(flowState === 'paid_verified' || flowState === 'settled') && verifiedPayment && (
-              <section className="flex w-full flex-col gap-5">
+              <section className="kp-state-fade flex w-full flex-col gap-5">
 
                 <div className="flex flex-col overflow-hidden border border-brand/25 bg-(--kp-control-bg)">
                   {/* Receipt header: checkmark + title + amount */}
@@ -1343,7 +1460,7 @@ export default function PaymentPage({
               </section>
             )}
 
-            {!(flowState === 'paid_verified' || flowState === 'settled') && !showManualAmountForm && canReviewPayment && (
+            {!(flowState === 'paid_verified' || flowState === 'settled' || flowState === 'verifying' || flowState === 'tx_submitted' || (flowState === 'failed' && submittedPayment && fullPaymentSignature)) && !showManualAmountForm && canReviewPayment && (
               <div className="space-y-4">
                 <div className="border-y border-(--kp-border) bg-(--kp-control-bg) p-3 transition-colors sm:border sm:p-4">
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1402,7 +1519,7 @@ export default function PaymentPage({
             )}
           </div>
 
-          {!(flowState === 'paid_verified' || flowState === 'settled') && (
+          {!(flowState === 'paid_verified' || flowState === 'settled' || flowState === 'verifying' || flowState === 'tx_submitted' || (flowState === 'failed' && submittedPayment && fullPaymentSignature)) && (
             <div className="shrink-0 border-t border-(--kp-border) p-3 sm:p-5">
               {quoteReview && !submittedPayment && flowState !== 'unsupported' && (
                 <DevnetSafetyNotice

@@ -567,3 +567,36 @@ body {
   outline: 2px solid var(--kp-brand);
   outline-offset: -2px;
 }
+
+/* Payment state transitions — fade content inside stable shell */
+@keyframes kp-state-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kp-state-fade {
+  animation: kp-state-enter 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kp-state-fade {
+    animation: none;
+  }
+}
+
+/* Stable min-height for payment modal body during post-approval states */
+.kp-payment-body-stable {
+  min-height: 320px;
+}
+
+@media (min-width: 640px) {
+  .kp-payment-body-stable {
+    min-height: 360px;
+  }
+}

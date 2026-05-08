@@ -52,6 +52,13 @@ describe('receipt utilities', () => {
       'btnNewScan',
       'technicalDetailsTitle',
       'lblTransactionId',
+      'verifyingSubtitle',
+      'verifyStepSubmitted',
+      'verifyStepChecking',
+      'verifyStepReceipt',
+      'verifyFailedTitle',
+      'verifyFailedBody',
+      'btnRetryVerification',
     ];
 
     requiredKeys.forEach((key) => {
