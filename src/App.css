@@ -123,6 +123,20 @@
   animation: loadingDots 1.5s infinite steps(4, end);
 }
 
+/* Price pill flash on rate update */
+@keyframes kp-price-pulse {
+  0% { border-color: rgba(20, 241, 149, 0.5); box-shadow: 0 0 8px rgba(20, 241, 149, 0.12); }
+  100% { border-color: rgba(247, 255, 249, 0.10); box-shadow: none; }
+}
+
+.kp-price-pill {
+  transition: border-color 0.3s;
+}
+
+.kp-price-flash {
+  animation: kp-price-pulse 400ms ease-out forwards;
+}
+
 .receipt-checkmark {
   animation: receiptCheckPop 360ms ease-out both;
 }
@@ -137,7 +151,8 @@
   .animate-fade-in,
   .receipt-checkmark,
   .receipt-checkmark-path,
-  .kp-animate-notice {
+  .kp-animate-notice,
+  .kp-price-flash {
     animation: none;
   }
 
@@ -953,7 +968,9 @@ body {
 }
 
 .kp-footer-wordmark:hover {
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--kp-brand) 40%, transparent));
+  filter:
+    drop-shadow(0 0 6px color-mix(in srgb, var(--kp-brand) 35%, transparent))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--kp-brand) 15%, transparent));
 }
 
 .kp-footer-wordmark:focus-visible {

@@ -57,7 +57,7 @@ const PhaseCard = ({ phase, phaseIndex, t }) => {
   const statusLabel = t(`roadmap.status_${phase.status}`);
 
   return (
-    <div className={`kp-roadmap-phase kp-roadmap-phase--${phase.accent}`}>
+    <div className={`kp-roadmap-phase kp-roadmap-phase--${phase.accent} scroll-animate opacity-0`}>
       {/* Timeline connector */}
       <div className="kp-roadmap-connector" aria-hidden="true">
         <div className={`kp-roadmap-dot kp-roadmap-dot--${phase.accent}`} />

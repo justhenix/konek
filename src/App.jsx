@@ -1023,6 +1023,8 @@ function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const root = useRef(null);
   const scope = useRef(null);
+  const priceRef = useRef(null);
+  const solPriceInitial = useRef(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -2213,9 +2215,18 @@ function App() {
 
   useEffect(() => {
     let observer;
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
     scope.current = createScope({ root }).add(() => {
       animate('.nav-item', { translateY: [-30, 0], opacity: [0, 1], duration: 800, delay: stagger(100), ease: 'out(3)' });
+
+      // Hero stagger entrance (only on home)
+      if (page === 'home' && !prefersReduced) {
+        animate('[data-hero-word]', { opacity: [0, 1], translateY: [24, 0], duration: 400, delay: 80, ease: 'out(3)' });
+        animate('[data-hero-copy]', { opacity: [0, 1], translateY: [18, 0], duration: 350, delay: 200, ease: 'out(3)' });
+        animate('[data-hero-cta]', { opacity: [0, 1], translateY: [14, 0], duration: 300, delay: 320, ease: 'out(3)' });
+      }
+
       observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -2238,6 +2249,20 @@ function App() {
       if (observer) observer.disconnect();
     };
   }, [page]);
+
+  // Price pill subtle flash on update
+  useEffect(() => {
+    if (!solPrice || !priceRef.current) return;
+    if (solPriceInitial.current) {
+      solPriceInitial.current = false;
+      return;
+    }
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    priceRef.current.classList.remove('kp-price-flash');
+    // Force reflow to restart the animation
+    void priceRef.current.offsetWidth;
+    priceRef.current.classList.add('kp-price-flash');
+  }, [solPrice]);
 
   const navigateToTeam = useCallback(() => {
     if (window.location.pathname !== '/team') {
@@ -2554,7 +2579,7 @@ function App() {
               >
                 {t('hero.ctaBtn')}
               </button>
-              <div className="inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/3.5 px-4 py-3 text-sm sm:justify-start">
+              <div ref={priceRef} className="kp-price-pill inline-flex min-h-12 min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-white/10 bg-white/3.5 px-4 py-3 text-sm sm:justify-start">
                 <span className="h-2 w-2 rounded-full bg-brand"></span>
                 <span className="text-xs  text-zinc-500">{t('hero.pythRate')}</span>
                 <span className=" text-white">1 SOL</span>
