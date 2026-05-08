@@ -636,7 +636,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px 0 24px;
+  padding: 16px 0 24px;
   color: var(--kp-brand);
   opacity: 0.45;
   animation: kp-scroll-float 2.4s ease-in-out infinite;
@@ -644,13 +644,13 @@ body {
 
 @media (min-width: 640px) {
   .kp-scroll-cue {
-    padding: 56px 0 32px;
+    padding: 24px 0 32px;
   }
 }
 
 @media (min-width: 1024px) {
   .kp-scroll-cue {
-    padding: 72px 0 40px;
+    padding: 32px 0 40px;
   }
 }
 

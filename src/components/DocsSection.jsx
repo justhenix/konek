@@ -67,13 +67,12 @@ const DocsSection = ({ t, onBackToHome }) => (
       {/* Back button */}
       <button
         onClick={onBackToHome}
-        className="mb-8 inline-flex items-center gap-2 text-sm transition-colors hover:text-white"
-        style={{ color: 'var(--kp-text-muted)' }}
+        className="mb-8 inline-flex w-fit items-center gap-2 border border-white/10 px-4 py-2 text-sm text-zinc-400 transition hover:border-white/20 hover:text-white"
       >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        {t('docs.backToHome')}
+        {t('appNav.homeTab')}
       </button>
 
       {/* Header */}

@@ -2514,7 +2514,7 @@ function App() {
           <>
             {activeTab === 'pay' ? (
               <>
-                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16 hero-section ${isDevnetBannerDismissed ? 'hero-without-devnet-banner' : 'hero-with-devnet-banner'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
+                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto w-full max-w-6xl px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8 hero-section ${isDevnetBannerDismissed ? 'hero-without-devnet-banner' : 'hero-with-devnet-banner'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-12!' : ''}`} data-hero-section>
                   {!isDevnetBannerDismissed && (
                     <div className="mb-8 md:mb-12">
                       <DevnetBanner 
