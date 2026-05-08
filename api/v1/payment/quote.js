@@ -318,6 +318,7 @@ const transactionsModulePromise = import('../../lib/transactions.js').catch(() =
 
 const createPersistedTransactionQuote = async ({
   qrisPayload,
+  qrisMetadata,
   fiatAmount,
   solAmount,
   walletAddress,
@@ -332,9 +333,9 @@ const createPersistedTransactionQuote = async ({
     if (!mod?.createTransactionIntent) {
       return null;
     }
-    const qrisMetadata = readQrisQuoteMetadata(qrisPayload);
+    const quoteMetadata = qrisMetadata || readQrisQuoteMetadata(qrisPayload);
     const transaction = await mod.createTransactionIntent({
-      ...qrisMetadata,
+      ...quoteMetadata,
       idr_amount: fiatAmount,
       sol_amount: Number(solAmount),
       user_wallet: walletAddress.trim(),
@@ -422,6 +423,7 @@ export default async function handler(req, res) {
 
     // Cap at 9 decimal places (SOL = 9 lamport decimals)
     const solAmountStr = solAmount.toDecimalPlaces(9, Decimal.ROUND_UP).toString();
+    const qrisMetadata = readQrisQuoteMetadata(qrisPayload);
 
     // ── Generate Quote ────────────────────────────────
     const internalQuoteId = crypto.randomUUID();
@@ -436,9 +438,13 @@ export default async function handler(req, res) {
       fiatCurrency: 'IDR',
       expiresAt,
       createdAt,
+      merchantName: qrisMetadata.merchant_name,
+      merchantCity: qrisMetadata.merchant_city,
+      qrisType: qrisMetadata.qris_type,
     });
     const persistedTransaction = await createPersistedTransactionQuote({
       qrisPayload,
+      qrisMetadata,
       fiatAmount,
       solAmount: solAmountStr,
       walletAddress,

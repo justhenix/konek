@@ -43,6 +43,9 @@ export const createDemoQuoteId = ({
   fiatCurrency = 'IDR',
   expiresAt,
   createdAt,
+  merchantName = '',
+  merchantCity = '',
+  qrisType = '',
 }) => {
   const payload = {
     v: 1,
@@ -53,6 +56,9 @@ export const createDemoQuoteId = ({
     fiatCurrency,
     expiresAt,
     createdAt,
+    merchantName,
+    merchantCity,
+    qrisType,
     source: 'DEMO_SIGNED_FALLBACK',
   };
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
@@ -89,6 +95,9 @@ const readDemoQuoteId = (quoteId) => {
     expiresAt: payload.expiresAt,
     createdAt: payload.createdAt,
     source: 'DEMO_SIGNED_FALLBACK',
+    merchantName: payload.merchantName || '',
+    merchantCity: payload.merchantCity || '',
+    qrisType: payload.qrisType || '',
   };
 };
 

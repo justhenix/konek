@@ -44,7 +44,7 @@ Hackathon, Superteam Indonesia track.
 
 - Demo QRIS is synthetic (QRIS itself has no devnet).
 - Merchant rupiah settlement is simulated — no real IDR is disbursed.
-- No real Midtrans, Xendit, or DOKU payout is executed.
+- No real Indodax/Tokocrypto trading, Midtrans/Xendit/DOKU payout, bank API, or Solana mainnet flow is executed.
 
 ### In progress / planned
 
@@ -79,6 +79,9 @@ Hackathon, Superteam Indonesia track.
 ```text
 api/
   lib/
+    settlement/
+      mockOfframp.js      Demo-only SOL_DEVNET to IDR_SIMULATED adapter
+      mockPayout.js       Demo-only merchant bank payout adapter
     supabaseAdmin.js      Server-only Supabase client
     transactions.js       Transaction database helpers
     paymentQuotes.js      Quote generation and HMAC signing
@@ -111,6 +114,15 @@ src/
 - The merchant rupiah payout is represented as a demo settlement record.
 - Real QRIS payout through Midtrans, Xendit, DOKU, or similar providers requires merchant onboarding, KYC, and eligible business/legal-entity access.
 
+## Settlement model
+
+KonekPay currently performs real Solana devnet payment verification. The SOL-to-IDR conversion and merchant bank payout are simulated through provider-style adapters, because real production settlement requires a licensed crypto off-ramp and payment gateway. In production, MockOfframp becomes Indodax/Tokocrypto/etc., and MockPayout becomes Xendit/DOKU/Midtrans/etc.
+
+- Demo: real Solana devnet payment verification plus simulated SOL-to-IDR conversion and simulated merchant bank payout.
+- Production: replace `MockOfframpProvider` with a licensed crypto off-ramp/exchange partner such as Indodax, Tokocrypto, or an equivalent regulated provider.
+- Production: replace `MockPayoutProvider` with a licensed payout/payment gateway partner such as Xendit, DOKU, Midtrans, or a bank partner.
+- KonekPay does not bypass QRIS/payment regulation.
+
 ## Golden Demo Flow
 
 1. Open the deployed app.
@@ -120,7 +132,7 @@ src/
 5. Pay with Phantom.
 6. Backend verifies the devnet transaction.
 7. App shows Payment Proof.
-8. App shows Demo Merchant Payout Record.
+8. App shows simulated SOL-to-IDR and merchant bank payout records.
 9. Open the Solana Explorer receipt.
 
 ## API
@@ -207,7 +219,8 @@ Common failures:
 ### `POST /api/v1/payment/settle-demo`
 
 Simulates fiat settlement for hackathon demo purposes. Does **not** call real
-Midtrans, Xendit, or DOKU APIs. No real IDR is disbursed.
+Indodax, Tokocrypto, Midtrans, Xendit, DOKU, or bank APIs. No real IDR is
+disbursed.
 
 Request:
 
@@ -222,10 +235,32 @@ Successful response:
 
 ```json
 {
-  "status": "SETTLEMENT_SIMULATED",
+  "status": "SETTLED_SIMULATED",
   "settlementReference": "DEMO-SETTLEMENT-A1B2C3D4",
-  "message": "Settlement simulated for hackathon demo. No real IDR was disbursed.",
-  "settledAt": "2026-05-05T00:00:00.000Z"
+  "quoteId": "demo_quote_v1....",
+  "signature": "5zy...",
+  "onchain": {
+    "network": "solana-devnet",
+    "status": "PAID_VERIFIED",
+    "asset": "SOL_DEVNET",
+    "amount": "0.012345678"
+  },
+  "offramp": {
+    "provider": "MOCK_OFFRAMP",
+    "status": "IDR_FLOAT_CREDITED",
+    "fromAsset": "SOL_DEVNET",
+    "toAsset": "IDR_SIMULATED"
+  },
+  "payout": {
+    "provider": "MOCK_PAYOUT",
+    "status": "PAYOUT_SIMULATED_SUCCESS",
+    "destination": {
+      "bankCode": "BCA",
+      "bankName": "Bank Central Asia",
+      "accountNumberMasked": "****1234"
+    }
+  },
+  "disclaimer": "No real IDR was disbursed. This simulates the licensed settlement rail for hackathon review."
 }
 ```
 
@@ -354,7 +389,7 @@ But `npm run dev:vercel` is the recommended path.
 5. Pay with Phantom on Solana devnet.
 6. Verify the Payment Verified page appears.
 7. Open the Explorer receipt.
-8. Click **Create Demo Payout Record** and confirm the demo settlement status appears.
+8. Confirm the simulated off-ramp and merchant bank payout sections appear.
 
 ### Demo settlement
 
@@ -366,7 +401,7 @@ But `npm run dev:vercel` is the recommended path.
 Demo flow:
 
 ```text
-Demo QRIS → Pyth quote → Phantom devnet transfer → backend verification → demo settlement record → Explorer receipt
+Demo QRIS → Pyth quote → Phantom devnet transfer → backend verification → simulated off-ramp → simulated merchant bank payout → Explorer receipt
 ```
 
 ## Scripts

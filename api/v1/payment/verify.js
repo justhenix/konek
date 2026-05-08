@@ -350,6 +350,7 @@ export default async function handler(req, res) {
       signature: trimmedSignature,
       explorerUrl: buildExplorerUrl(trimmedSignature),
       walletAddress: matchingTransfer.source,
+      treasuryWallet: expectedDestination,
       quoteId: quote.quoteId,
       verifiedAt: new Date().toISOString(),
     });
