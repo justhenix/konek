@@ -30,6 +30,7 @@ import QrisScanner from './QrisScanner';
 import PaymentPage from './PaymentPage';
 import TransactionHistory from './TransactionHistory';
 import DevnetSafetyNotice from './components/DevnetSafetyNotice';
+import ProtocolFlow from './components/ProtocolFlow';
 import { saveVerifiedReceiptToHistory } from './utils/history';
 import { isQuoteExpired, normalizeApiError } from './utils/payment';
 import {
@@ -380,7 +381,7 @@ const fetchSolIdrRateFromPyth = async () => {
 const navItems = [
   { key: 'navbar.home', target: 'top' },
   { key: 'navbar.usp', target: 'usp-section' },
-  { key: 'navbar.howItWorks', target: 'workflow-section' },
+  { key: 'navbar.howItWorks', target: 'workflow-flow' },
   { key: 'navbar.faq', target: 'proof-section' },
   { key: 'navbar.team', target: 'team-page' },
 ];
@@ -391,13 +392,6 @@ const uspAccentClasses = {
   price: 'border-brand/30 bg-brand/8 text-brand',
   receipt: 'border-purple-400/35 bg-purple-500/10 text-purple-300',
 };
-const workflowAccentClasses = [
-  'text-brand',
-  'text-brand',
-  'text-purple-300',
-  'text-brand',
-  'text-purple-300',
-];
 const teamMembers = [
   {
     id: 'henix',
@@ -437,13 +431,6 @@ const KonekLogo = ({ className = "w-8 h-8" }) => (
   <img src={logoKonekPayColor} alt="KonekPay" className={`kp-brand-logo ${className}`} />
 );
 
-const protocolNodeAccents = [
-  { border: 'border-brand/50', text: 'text-brand', connector: 'bg-brand/35' },
-  { border: 'border-brand/70', text: 'text-brand', connector: 'bg-linear-to-b from-brand/40 to-purple-400/35' },
-  { border: 'border-purple-400/70', text: 'text-purple-400', connector: 'bg-linear-to-b from-purple-400/40 to-brand/35' },
-  { border: 'border-brand/50', text: 'text-brand', connector: 'bg-linear-to-b from-brand/35 to-purple-400/35' },
-  { border: 'border-purple-400/50', text: 'text-purple-400', connector: '' },
-];
 
 const faqItems = ['realQris', 'merchantRupiah', 'simulatedPayout', 'afterPayment', 'staticQris', 'whyDevnet'];
 
@@ -471,39 +458,6 @@ const getInitialTheme = () => {
   return 'dark';
 };
 
-const ProtocolDiagram = ({ t }) => {
-  const nodes = [1, 2, 3, 4, 5].map((n, i) => ({
-    label: t(`protocol.node${n}Label`),
-    sub: t(`protocol.node${n}Sub`),
-    accent: protocolNodeAccents[i],
-  }));
-
-  return (
-    <div className="relative mx-auto w-full max-w-136 lg:mx-0" data-hero-diagram>
-      <div className="relative grid gap-3 sm:gap-4">
-        {nodes.map((node, index) => (
-          <div
-            key={index}
-            className={`protocol-node hero-text relative min-w-0 border ${node.accent.border} bg-[#111411]/85 p-4 backdrop-blur-sm sm:p-5`}
-          >
-            {index < nodes.length - 1 && (
-              <div className={`absolute left-8 top-full h-3 w-px sm:left-9 sm:h-4 ${node.accent.connector}`} aria-hidden="true"></div>
-            )}
-            <div className="flex min-w-0 items-start gap-4">
-              <div className={`kp-control flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs  ${node.accent.text}`}>
-                0{index + 1}
-              </div>
-              <div className="min-w-0 pt-1.5">
-                <p className="wrap-break-word text-sm  text-white sm:text-base">{node.label}</p>
-                <p className="mt-1 text-[11px]  text-zinc-500">{node.sub}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 const SectionHeader = ({ eyebrow, title, children, className = '' }) => (
   <div className={`min-w-0 max-w-3xl ${className}`}>
     {eyebrow && (
@@ -2399,8 +2353,8 @@ function App() {
 
             {activeTab === 'pay' ? (
               <>
-                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-8 px-4 pb-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:items-center lg:px-8 lg:pb-16${isDevnetBannerDismissed ? ' pt-20 md:pt-24' : ' pt-4 md:pt-6'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
-                  <section className="min-w-0 max-w-3xl lg:pr-14 xl:pr-16">
+                <main id="tabpanel-pay" role="tabpanel" aria-labelledby="desktop-tab-pay mobile-tab-pay" className={`mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16${isDevnetBannerDismissed ? ' pt-20 md:pt-24' : ' pt-4 md:pt-6'}${userProfile.isLoggedIn && !isScannerOpen && !scannedData ? ' kp-has-bottom-tabs md:pb-16!' : ''}`} data-hero-section>
+                  <section className="min-w-0 max-w-3xl">
                     <h1 className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl" data-hero-word>
                       {t('hero.headline')}
                     </h1>
@@ -2423,12 +2377,13 @@ function App() {
               </div>
             </div>
           </section>
-
-          <section className="hero-text w-full min-w-0">
-            <ProtocolDiagram t={t} />
-          </section>
         </main>
 
+        <section id="workflow-flow" className="scroll-mt-28 border-b border-white/10" aria-label={t('flow.ariaLabel')}>
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+            <ProtocolFlow t={t} />
+          </div>
+        </section>
 
         <section id="usp-section" className="scroll-mt-28 border-b border-white/10">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
@@ -2451,22 +2406,6 @@ function App() {
           </div>
         </section>
 
-        <section id="workflow-section" className="scroll-mt-28 border-b border-white/10" data-how-section>
-          <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
-            <div className="scroll-animate opacity-0 mb-9">
-              <SectionHeader title={t('howItWorks.heading')} />
-            </div>
-            <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-5" data-how-track>
-              {[1, 2, 3, 4, 5].map((n, index) => (
-                <article key={n} className="scroll-animate min-w-0 bg-[#080b08] p-5 opacity-0 md:p-6" data-how-card>
-                  <p className={`text-[11px]  ${workflowAccentClasses[index]}`}>{String(n).padStart(2, '0')}</p>
-                  <h3 className="mt-5 text-lg  leading-6 text-white lg:min-h-12">{t(`howItWorks.step${n}Title`)}</h3>
-                  <p className="mt-4 text-sm leading-6 text-zinc-500">{t(`howItWorks.step${n}Desc`)}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-                </section>
 
                 <FaqSection t={t} />
 

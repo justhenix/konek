@@ -64,6 +64,24 @@ export const translations = {
       "node5Label": "View receipt",
       "node5Sub": "KonekPay checks the transaction"
     },
+    "flow": {
+      "ariaLabel": "KonekPay payment flow",
+      "step1Title": "OPEN KONEKPAY",
+      "step1Helper": "Start the payment flow from the KonekPay app.",
+      "step1Label": "KonekPay",
+      "step2Title": "CONNECT PHANTOM",
+      "step2Helper": "Use a Devnet wallet for the demo payment.",
+      "step2Label": "Phantom",
+      "step3Title": "SCAN QRIS",
+      "step3Helper": "Read static or dynamic QRIS merchant data.",
+      "step3Label": "QRIS",
+      "step4Title": "ACCEPT PAYMENT",
+      "step4Helper": "Approve the SOL transfer in Phantom.",
+      "step4Label": "Solana Devnet",
+      "step5Title": "RECEIVE PROOF",
+      "step5Helper": "Get a verified on-chain payment receipt.",
+      "step5Label": "Receipt"
+    },
     "usp": {
       "heading": "Why KonekPay",
       "intro": "QRIS is already part of everyday payments in Indonesia. But when funds are in a crypto wallet, paying at local checkout is still not as simple as scan and pay.",
@@ -510,6 +528,24 @@ export const translations = {
       "node4Sub": "Pembayaran dikirim ke Solana Devnet",
       "node5Label": "Lihat bukti bayar",
       "node5Sub": "KonekPay mengecek transaksi"
+    },
+    "flow": {
+      "ariaLabel": "Alur pembayaran KonekPay",
+      "step1Title": "BUKA KONEKPAY",
+      "step1Helper": "Mulai alur pembayaran dari aplikasi KonekPay.",
+      "step1Label": "KonekPay",
+      "step2Title": "HUBUNGKAN PHANTOM",
+      "step2Helper": "Gunakan wallet Devnet untuk pembayaran demo.",
+      "step2Label": "Phantom",
+      "step3Title": "PINDAI QRIS",
+      "step3Helper": "Baca data merchant dari QRIS statis atau dinamis.",
+      "step3Label": "QRIS",
+      "step4Title": "SETUJUI PEMBAYARAN",
+      "step4Helper": "Setujui transfer SOL di Phantom.",
+      "step4Label": "Solana Devnet",
+      "step5Title": "TERIMA BUKTI",
+      "step5Helper": "Dapatkan bukti pembayaran on-chain yang terverifikasi.",
+      "step5Label": "Bukti Bayar"
     },
     "usp": {
       "heading": "Kenapa KonekPay",
