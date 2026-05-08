@@ -156,8 +156,7 @@ export const translations = {
     footer: {
       builtFor:
         "Built for Colosseum Frontier Hackathon 2026 x Superteam Indonesia National Campus Hackathon",
-      tagline:
-        "KonekPay bridges QRIS payments with Solana Devnet proof.",
+      tagline: "KonekPay bridges QRIS payments with Solana Devnet proof.",
       productHeading: "Product",
       projectHeading: "Project",
       legalHeading: "Legal",
@@ -173,8 +172,7 @@ export const translations = {
       linkDisclaimer: "Disclaimer",
       linkPrivacy: "Privacy Policy",
       linkTerms: "Terms",
-      disclaimer:
-        "Demo only. No real IDR settlement is performed.",
+      disclaimer: "Demo only. No real IDR settlement is performed.",
       copyright: "© 2026 KonekPay",
     },
     language: {
@@ -226,8 +224,13 @@ export const translations = {
     },
     theme: {
       label: "Theme",
+      system: "System",
       dark: "Dark",
       light: "Light",
+      currentSystem: "System theme",
+      currentDark: "Dark theme",
+      currentLight: "Light theme",
+      openMenu: "Open theme menu",
       switchToLight: "Switch to light mode",
       switchToDark: "Switch to dark mode",
     },
@@ -589,12 +592,16 @@ export const translations = {
       howIntro:
         "Each KonekPay payment goes through these steps from scan to receipt:",
       flow_scanQris: "Scan a QRIS code with the camera or use a demo QRIS.",
-      flow_parseData: "Parse merchant name, ID, city, and payment amount from the EMVCo payload.",
+      flow_parseData:
+        "Parse merchant name, ID, city, and payment amount from the EMVCo payload.",
       flow_getQuote: "Get a live SOL/IDR quote using Pyth Network price feeds.",
       flow_payPhantom: "Approve the SOL transfer in Phantom on Solana Devnet.",
-      flow_backendVerify: "Backend verifies the transaction signature, amount, and treasury destination.",
-      flow_receiptHistory: "A verified receipt is generated and saved to wallet-scoped history.",
-      flow_settlementSim: "Merchant settlement is simulated, no real IDR is disbursed.",
+      flow_backendVerify:
+        "Backend verifies the transaction signature, amount, and treasury destination.",
+      flow_receiptHistory:
+        "A verified receipt is generated and saved to wallet-scoped history.",
+      flow_settlementSim:
+        "Merchant settlement is simulated, no real IDR is disbursed.",
       qrisTitle: "Static QRIS vs Dynamic QRIS",
       staticLabel: "Static QRIS",
       staticBody:
@@ -602,8 +609,7 @@ export const translations = {
       dynamicLabel: "Dynamic QRIS",
       dynamicBody:
         "Includes a locked amount from the QR payload. The amount is read directly from the code and cannot be changed.",
-      qrisBothSupported:
-        "KonekPay supports both static and dynamic QRIS.",
+      qrisBothSupported: "KonekPay supports both static and dynamic QRIS.",
       realTitle: "What is Real in This Demo",
       real_qrisParsing: "QRIS EMVCo payload parsing",
       real_solIdrQuote: "SOL/IDR quote from Pyth Network",
@@ -638,7 +644,8 @@ export const translations = {
       archDesc_supabase: "Transaction history",
       arch_receiptUi: "Receipt UI",
       archDesc_receiptUi: "Proof + Explorer link",
-      archFlowHint: "Data flows left-to-right, top-to-bottom through the system.",
+      archFlowHint:
+        "Data flows left-to-right, top-to-bottom through the system.",
       securityTitle: "Security & Verification",
       security1:
         "The frontend is not trusted as the source of payment truth. All verification happens server-side.",
@@ -646,16 +653,18 @@ export const translations = {
         "The backend verifies the transaction signature, SOL amount, treasury destination, and quote validity.",
       security3:
         "Solana Devnet is used so the payment flow can be tested safely without real funds.",
-      security4:
-        "Mainnet payments are not enabled or intended for this demo.",
+      security4: "Mainnet payments are not enabled or intended for this demo.",
       prodTitle: "Production Requirements",
-      prodIntro:
-        "Moving KonekPay from a demo to production would require:",
-      prod_licensedPartner: "Licensed QRIS or payment partner for merchant settlement",
-      prod_settlementPartner: "Real settlement and off-ramp partner for SOL-to-IDR conversion",
-      prod_reconciliation: "Transaction reconciliation and accounting infrastructure",
+      prodIntro: "Moving KonekPay from a demo to production would require:",
+      prod_licensedPartner:
+        "Licensed QRIS or payment partner for merchant settlement",
+      prod_settlementPartner:
+        "Real settlement and off-ramp partner for SOL-to-IDR conversion",
+      prod_reconciliation:
+        "Transaction reconciliation and accounting infrastructure",
       prod_compliance: "KYC/AML compliance depending on jurisdiction",
-      prod_monitoring: "Production monitoring, audit logs, and incident response",
+      prod_monitoring:
+        "Production monitoring, audit logs, and incident response",
       prodNote:
         "This demo focuses on proving the QRIS-to-Solana payment flow. Production readiness is a separate milestone.",
     },
@@ -849,8 +858,7 @@ export const translations = {
       linkDisclaimer: "Disclaimer",
       linkPrivacy: "Kebijakan Privasi",
       linkTerms: "Ketentuan",
-      disclaimer:
-        "Hanya demo. Tidak ada settlement IDR sungguhan.",
+      disclaimer: "Hanya demo. Tidak ada settlement IDR sungguhan.",
       copyright: "© 2026 KonekPay",
     },
     language: {
@@ -902,8 +910,13 @@ export const translations = {
     },
     theme: {
       label: "Tema",
+      system: "Sistem",
       dark: "Gelap",
       light: "Terang",
+      currentSystem: "Tema sistem",
+      currentDark: "Tema gelap",
+      currentLight: "Tema terang",
+      openMenu: "Buka menu tema",
       switchToLight: "Ubah ke mode terang",
       switchToDark: "Ubah ke mode gelap",
     },
@@ -1269,12 +1282,16 @@ export const translations = {
       howIntro:
         "Setiap pembayaran KonekPay melewati langkah-langkah berikut dari scan hingga bukti bayar:",
       flow_scanQris: "Scan kode QRIS dengan kamera atau pakai QRIS demo.",
-      flow_parseData: "Baca nama merchant, ID, kota, dan nominal dari payload EMVCo.",
+      flow_parseData:
+        "Baca nama merchant, ID, kota, dan nominal dari payload EMVCo.",
       flow_getQuote: "Ambil kuotasi SOL/IDR langsung dari Pyth Network.",
       flow_payPhantom: "Setujui transfer SOL di Phantom pada Solana Devnet.",
-      flow_backendVerify: "Backend memverifikasi signature transaksi, nominal, dan tujuan treasury.",
-      flow_receiptHistory: "Bukti bayar terverifikasi dibuat dan disimpan ke riwayat per wallet.",
-      flow_settlementSim: "Settlement merchant disimulasikan, tidak ada IDR sungguhan yang dikirim.",
+      flow_backendVerify:
+        "Backend memverifikasi signature transaksi, nominal, dan tujuan treasury.",
+      flow_receiptHistory:
+        "Bukti bayar terverifikasi dibuat dan disimpan ke riwayat per wallet.",
+      flow_settlementSim:
+        "Settlement merchant disimulasikan, tidak ada IDR sungguhan yang dikirim.",
       qrisTitle: "QRIS Statis vs QRIS Dinamis",
       staticLabel: "QRIS Statis",
       staticBody:
@@ -1282,8 +1299,7 @@ export const translations = {
       dynamicLabel: "QRIS Dinamis",
       dynamicBody:
         "Sudah termasuk nominal terkunci dari payload QR. Nominal dibaca langsung dari kode dan tidak bisa diubah.",
-      qrisBothSupported:
-        "KonekPay mendukung QRIS statis maupun dinamis.",
+      qrisBothSupported: "KonekPay mendukung QRIS statis maupun dinamis.",
       realTitle: "Yang Nyata di Demo Ini",
       real_qrisParsing: "Parsing payload EMVCo QRIS",
       real_solIdrQuote: "Kuotasi SOL/IDR dari Pyth Network",
@@ -1318,7 +1334,8 @@ export const translations = {
       archDesc_supabase: "Riwayat transaksi",
       arch_receiptUi: "UI Bukti Bayar",
       archDesc_receiptUi: "Bukti + link Explorer",
-      archFlowHint: "Data mengalir dari kiri ke kanan, atas ke bawah melalui sistem.",
+      archFlowHint:
+        "Data mengalir dari kiri ke kanan, atas ke bawah melalui sistem.",
       securityTitle: "Keamanan & Verifikasi",
       security1:
         "Frontend tidak dipercaya sebagai sumber kebenaran pembayaran. Semua verifikasi terjadi di sisi server.",
@@ -1329,10 +1346,11 @@ export const translations = {
       security4:
         "Pembayaran mainnet tidak diaktifkan dan tidak ditujukan untuk demo ini.",
       prodTitle: "Persyaratan Produksi",
-      prodIntro:
-        "Membawa KonekPay dari demo ke produksi membutuhkan:",
-      prod_licensedPartner: "Partner QRIS atau pembayaran berizin untuk settlement merchant",
-      prod_settlementPartner: "Partner settlement dan off-ramp sungguhan untuk konversi SOL ke IDR",
+      prodIntro: "Membawa KonekPay dari demo ke produksi membutuhkan:",
+      prod_licensedPartner:
+        "Partner QRIS atau pembayaran berizin untuk settlement merchant",
+      prod_settlementPartner:
+        "Partner settlement dan off-ramp sungguhan untuk konversi SOL ke IDR",
       prod_reconciliation: "Infrastruktur rekonsiliasi transaksi dan akuntansi",
       prod_compliance: "Kepatuhan KYC/AML tergantung yurisdiksi",
       prod_monitoring: "Monitoring produksi, audit log, dan penanganan insiden",
