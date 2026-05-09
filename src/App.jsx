@@ -481,10 +481,10 @@ const KonekLogo = ({ className = "w-8 h-8" }) => (
 
 const faqItems = [
   "realQris",
+  "staticQris",
+  "afterPayment",
   "merchantRupiah",
   "simulatedPayout",
-  "afterPayment",
-  "staticQris",
   "whyDevnet",
 ];
 

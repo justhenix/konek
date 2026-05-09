@@ -109,27 +109,27 @@ export const translations = {
       step5Desc: "Show the payment status and Explorer link.",
     },
     faq: {
-      heading: "Demo Scope",
+      heading: "FAQ",
       intro:
-        "The current MVP is focused on testing the QRIS-to-Solana payment flow safely.",
+        "Quick answers about QRIS support, Solana payments, receipts, and merchant payout status.",
       realQrisQuestion: "Can KonekPay scan real QRIS?",
       realQrisAnswer:
-        "Yes. KonekPay can read QRIS merchant data when the code is clear and supported.",
+        "Yes. KonekPay can read supported QRIS merchant data when the code is clear and follows the expected EMVCo format.",
       merchantRupiahQuestion: "Does the merchant receive rupiah?",
       merchantRupiahAnswer:
-        "Not in this MVP. KonekPay verifies the Solana devnet payment and creates a demo merchant payout record.",
-      simulatedPayoutQuestion: "Why is payout simulated?",
+        "In this hackathon version, KonekPay verifies the Solana Devnet payment and creates a merchant payout record. Real rupiah payout requires a licensed payment or QRIS partner.",
+      simulatedPayoutQuestion: "Why is payout not live yet?",
       simulatedPayoutAnswer:
-        "Real rupiah payout needs a licensed payment or QRIS partner.",
+        "Production rupiah settlement needs licensed gateway, off-ramp, onboarding, and compliance support. This version focuses on proving the QRIS-to-Solana payment flow first.",
       afterPaymentQuestion: "What happens after payment?",
       afterPaymentAnswer:
-        "The Solana payment is checked, a receipt is shown, and a demo merchant payout record is created.",
+        "KonekPay checks the Solana transaction, shows a verified receipt, and links the payment to a merchant-side payout record.",
       staticQrisQuestion: "Can I use static QRIS?",
       staticQrisAnswer:
-        "Yes. Static QRIS may not include a payment amount. If no amount is found, enter the rupiah amount manually.",
-      whyDevnetQuestion: "Why Solana devnet?",
+        "Yes. Static QRIS often does not include a fixed amount, so KonekPay asks the user to enter the rupiah amount manually before creating the quote.",
+      whyDevnetQuestion: "Why Solana Devnet?",
       whyDevnetAnswer:
-        "This hackathon demo uses devnet so the payment flow can be tested safely without moving real funds.",
+        "Devnet lets reviewers test the full wallet, quote, payment, verification, and receipt flow without moving real funds.",
     },
     team: {
       heading: "KonekPay Team",
@@ -814,27 +814,27 @@ export const translations = {
       step5Desc: "Tampilkan status pembayaran dan link Explorer.",
     },
     faq: {
-      heading: "Cakupan Demo",
+      heading: "FAQ",
       intro:
-        "MVP saat ini fokus untuk menguji alur pembayaran dari QRIS ke Solana dengan aman.",
-      realQrisQuestion: "Apakah KonekPay bisa scan QRIS asli?",
+        "Jawaban singkat tentang dukungan QRIS, pembayaran Solana, struk, dan status payout merchant.",
+      realQrisQuestion: "Apakah KonekPay bisa membaca QRIS asli?",
       realQrisAnswer:
-        "Bisa. KonekPay bisa membaca data merchant dari QRIS yang jelas dan didukung.",
+        "Ya. KonekPay bisa membaca data merchant dari QRIS yang didukung ketika kode jelas dan mengikuti format EMVCo yang sesuai.",
       merchantRupiahQuestion: "Apakah merchant menerima rupiah?",
       merchantRupiahAnswer:
-        "Belum di MVP ini. KonekPay mengecek pembayaran Solana di devnet dan membuat catatan pencairan demo.",
-      simulatedPayoutQuestion: "Kenapa pencairan masih simulasi?",
+        "Pada versi hackathon ini, KonekPay memverifikasi pembayaran Solana Devnet dan membuat catatan payout merchant. Payout rupiah nyata membutuhkan partner pembayaran atau QRIS berlisensi.",
+      simulatedPayoutQuestion: "Mengapa payout belum live?",
       simulatedPayoutAnswer:
-        "Pencairan rupiah asli membutuhkan partner pembayaran atau QRIS berizin.",
+        "Settlement rupiah produksi membutuhkan gateway berlisensi, off-ramp, onboarding, dan dukungan compliance. Versi ini fokus membuktikan alur pembayaran QRIS-ke-Solana terlebih dahulu.",
       afterPaymentQuestion: "Apa yang terjadi setelah pembayaran?",
       afterPaymentAnswer:
-        "Pembayaran Solana dicek, bukti bayar ditampilkan, lalu catatan pencairan demo dibuat.",
-      staticQrisQuestion: "Bisa pakai QRIS statis?",
+        "KonekPay mengecek transaksi Solana, menampilkan struk terverifikasi, dan menghubungkan pembayaran ke catatan payout sisi merchant.",
+      staticQrisQuestion: "Apakah bisa memakai QRIS statis?",
       staticQrisAnswer:
-        "Bisa. QRIS statis mungkin tidak punya nominal. Kalau nominal belum ada, masukkan jumlah rupiah secara manual.",
-      whyDevnetQuestion: "Kenapa pakai Solana devnet?",
+        "Bisa. QRIS statis biasanya tidak memuat nominal tetap, jadi KonekPay meminta pengguna memasukkan nominal rupiah sebelum membuat quote.",
+      whyDevnetQuestion: "Mengapa memakai Solana Devnet?",
       whyDevnetAnswer:
-        "Demo hackathon ini memakai devnet supaya alur pembayaran bisa diuji tanpa memindahkan dana asli.",
+        "Devnet membuat reviewer bisa mencoba alur wallet, quote, pembayaran, verifikasi, dan struk tanpa memindahkan dana asli.",
     },
     team: {
       heading: "Tim KonekPay",
