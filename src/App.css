@@ -216,6 +216,7 @@ body {
 
 /* ===== Hero Section Spacing Fix ===== */
 .hero-section {
+  --kp-bottom-nav-h: 0px; /* Desktop: no bottom nav */
   width: 100%;
 }
 
@@ -230,15 +231,37 @@ body {
 
 /* Mobile overrides (below 768px) */
 @media (max-width: 767px) {
-  .hero-with-devnet-banner {
-    padding-top: 5.5rem; /* Ensure clear on mobile */
+  .hero-section {
+    --kp-bottom-nav-h: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 
-  .hero-without-devnet-banner {
-    padding-top: 8rem;
-    min-height: 100svh;
+  /* With banner: fill viewport minus bottom nav, tighter scroll cue */
+  .hero-with-devnet-banner {
+    padding-top: 5.5rem;
+    min-height: calc(100svh - var(--kp-bottom-nav-h));
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .hero-with-devnet-banner .hero-content {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .hero-with-devnet-banner .kp-scroll-cue {
+    padding-top: 8px;
+    padding-bottom: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Without banner: center content, generous breathing room */
+  .hero-without-devnet-banner {
+    padding-top: 8rem;
+    min-height: calc(100svh - var(--kp-bottom-nav-h));
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
   }
 
   .hero-without-devnet-banner .hero-content {
@@ -247,7 +270,8 @@ body {
   }
 
   .hero-without-devnet-banner .kp-scroll-cue {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 16px;
+    flex-shrink: 0;
   }
 }
 
@@ -913,6 +937,7 @@ body {
   color: var(--kp-brand);
   opacity: 0.45;
   animation: kp-scroll-float 2.4s ease-in-out infinite;
+  margin-top: auto; /* push to bottom in flex hero layout */
 }
 
 @media (min-width: 640px) {
@@ -1165,6 +1190,18 @@ body {
   .sf-arrow {
     justify-content: flex-start;
     padding-left: 32px;
+  }
+}
+
+/* ===== Flow section anchor offset ===== */
+#workflow-flow {
+  scroll-margin-top: 80px;
+}
+
+@media (max-width: 767px) {
+  #workflow-flow {
+    scroll-margin-top: 64px;
+    scroll-margin-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
 

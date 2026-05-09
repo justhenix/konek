@@ -23,9 +23,21 @@ const ProtocolFlow = ({ t }) => {
     const cards = cardRefs.current;
     if (!cards.length) return;
 
-    // IntersectionObserver: determine which card is closest to viewport center
+    // Determine the effective reading center, accounting for mobile bottom nav
+    const getReadingCenter = () => {
+      const vh = window.innerHeight;
+      // On mobile (<=767px), bottom nav covers ~64px + safe-area
+      const isMobile = window.innerWidth <= 767;
+      const bottomNavOffset = isMobile ? 64 : 0;
+      // Use ~40% of the usable viewport height as the reading zone anchor
+      // This biases slightly upward which matches natural reading position
+      const usableHeight = vh - bottomNavOffset;
+      return usableHeight * 0.4;
+    };
+
+    // Find which card center is closest to reading zone
     const findActiveStep = () => {
-      const viewportCenter = window.innerHeight / 2;
+      const readingCenter = getReadingCenter();
       let closest = -1;
       let closestDist = Infinity;
 
@@ -34,7 +46,7 @@ const ProtocolFlow = ({ t }) => {
         if (!card) continue;
         const rect = card.getBoundingClientRect();
         const cardCenter = rect.top + rect.height / 2;
-        const dist = Math.abs(cardCenter - viewportCenter);
+        const dist = Math.abs(cardCenter - readingCenter);
         if (dist < closestDist) {
           closestDist = dist;
           closest = i;
