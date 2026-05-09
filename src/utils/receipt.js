@@ -125,7 +125,41 @@ export const downloadTextFile = ({ fileName, text }) => {
   return true;
 };
 
+export const downloadBlobFile = ({ fileName, blob }) => {
+  if (
+    typeof document === 'undefined'
+    || typeof URL === 'undefined'
+    || !blob
+  ) {
+    return false;
+  }
+
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = downloadUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(downloadUrl);
+
+  return true;
+};
+
 export const createReceiptFileName = (signature) => {
   const suffix = cleanReceiptValue(signature).slice(0, 8) || new Date().toISOString().slice(0, 10);
   return `konekpay-receipt-${suffix}.txt`;
+};
+
+export const createReceiptImageFileName = (
+  signature,
+  baseName = 'konekpay-receipt',
+) => {
+  const cleanBaseName = cleanReceiptValue(baseName) || 'konekpay-receipt';
+  const suffix =
+    cleanReceiptValue(signature).slice(0, 8) ||
+    new Date().toISOString().slice(0, 10);
+
+  return `${cleanBaseName}-${suffix}.png`;
 };

@@ -183,6 +183,19 @@ export const translations = {
       label: "Language",
       switch: "Switch language",
     },
+    receipt: {
+      shareTitle: "KonekPay receipt",
+      shareText: "KonekPay payment receipt",
+      downloadFileName: "konekpay-receipt",
+      shareUnsupported:
+        "Image sharing is not supported here. Explorer link copied.",
+      imageFailed:
+        "Receipt image could not be created. Explorer link copied instead.",
+      downloadReceipt: "Download receipt",
+      shareReceipt: "Share receipt",
+      copyTransaction: "Copy transaction ID",
+      noRealIdr: "No real IDR was disbursed in this demo.",
+    },
     fab: {
       qrisPay: "Open App",
     },
@@ -872,6 +885,19 @@ export const translations = {
     language: {
       label: "Bahasa",
       switch: "Ubah bahasa",
+    },
+    receipt: {
+      shareTitle: "Bukti bayar KonekPay",
+      shareText: "Bukti pembayaran KonekPay",
+      downloadFileName: "konekpay-receipt",
+      shareUnsupported:
+        "Berbagi gambar belum didukung di browser ini. Link Explorer disalin.",
+      imageFailed:
+        "Gambar bukti bayar belum bisa dibuat. Link Explorer disalin sebagai gantinya.",
+      downloadReceipt: "Unduh bukti bayar",
+      shareReceipt: "Bagikan bukti bayar",
+      copyTransaction: "Salin ID transaksi",
+      noRealIdr: "Tidak ada rupiah asli yang dikirim di demo ini.",
     },
     fab: {
       qrisPay: "Buka App",

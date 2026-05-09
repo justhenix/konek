@@ -580,6 +580,216 @@ body {
 
 
 /* Receipt: compact secondary action buttons */
+.kp-receipt-export-shell {
+  position: fixed;
+  top: 0;
+  left: -12000px;
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  pointer-events: none;
+  background: #07120e;
+  color-scheme: dark;
+}
+
+.kp-receipt-export-stage {
+  box-sizing: border-box;
+  width: 1080px;
+  height: 1350px;
+  padding: 70px 80px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(20, 241, 149, 0.14), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(153, 69, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, #081713 0%, #07120e 100%);
+  color: #f7fff9;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+.kp-receipt-export-paper {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 1188px;
+  padding: 58px 58px 86px;
+  border: 1px solid rgba(20, 241, 149, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 18%),
+    #111c18;
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.36),
+    0 0 52px rgba(20, 241, 149, 0.08);
+}
+
+.kp-receipt-export-teeth {
+  position: absolute;
+  right: -1px;
+  bottom: -34px;
+  left: -1px;
+  display: flex;
+  height: 34px;
+  overflow: hidden;
+}
+
+.kp-receipt-export-tooth {
+  width: 0;
+  height: 0;
+  flex: 0 0 36px;
+  border-top: 34px solid #111c18;
+  border-right: 18px solid transparent;
+  border-left: 18px solid transparent;
+}
+
+.kp-receipt-export-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 38px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid rgba(247, 255, 249, 0.14);
+}
+
+.kp-receipt-export-title {
+  margin: 0;
+  color: #f7fff9;
+  font-size: 36px;
+  font-weight: 760;
+  line-height: 1.1;
+}
+
+.kp-receipt-export-meta {
+  margin: 10px 0 0;
+  color: rgba(247, 255, 249, 0.58);
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.kp-receipt-export-time {
+  margin: 6px 0 0;
+  color: #dfffee;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 19px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.kp-receipt-export-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 116px;
+  padding: 10px 18px;
+  border: 1px solid rgba(20, 241, 149, 0.34);
+  background: rgba(20, 241, 149, 0.12);
+  color: #14f195;
+  font-size: 18px;
+  font-weight: 720;
+  line-height: 1;
+}
+
+.kp-receipt-export-section {
+  padding: 40px 0;
+  border-bottom: 1px dashed rgba(247, 255, 249, 0.16);
+}
+
+.kp-receipt-export-section:last-of-type {
+  border-bottom: 0;
+}
+
+.kp-receipt-export-amount-label {
+  margin: 0 0 12px;
+  color: rgba(20, 241, 149, 0.74);
+  font-size: 19px;
+  font-weight: 720;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.kp-receipt-export-amount {
+  margin: 0;
+  color: #14f195;
+  font-size: 56px;
+  font-weight: 820;
+  line-height: 1.06;
+}
+
+.kp-receipt-export-sol {
+  margin: 10px 0 0;
+  color: rgba(247, 255, 249, 0.76);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 25px;
+  line-height: 1.3;
+}
+
+.kp-receipt-export-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 16px 0;
+}
+
+.kp-receipt-export-label {
+  flex: 0 0 250px;
+  color: rgba(247, 255, 249, 0.64);
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.kp-receipt-export-value {
+  min-width: 0;
+  color: #f7fff9;
+  font-size: 22px;
+  font-weight: 640;
+  line-height: 1.35;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.kp-receipt-export-value-mono {
+  color: #dfffee;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 19px;
+}
+
+.kp-receipt-export-value-accent {
+  color: #14f195;
+}
+
+.kp-receipt-export-url {
+  font-size: 17px;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.kp-receipt-export-footer {
+  position: absolute;
+  right: 58px;
+  bottom: 50px;
+  left: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(153, 69, 255, 0.32);
+}
+
+.kp-receipt-export-note {
+  margin: 0;
+  color: #f6d878;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.kp-receipt-export-brand {
+  color: rgba(20, 241, 149, 0.82);
+  font-size: 19px;
+  font-weight: 760;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .kp-receipt-action-compact {
   display: flex;
   flex-direction: column;

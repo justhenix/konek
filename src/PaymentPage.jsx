@@ -11,13 +11,13 @@ import DevnetSafetyNotice from "./components/DevnetSafetyNotice";
 import { formatDateTime } from "./utils/dateFormat";
 import { humanizePaymentLabel } from "./utils/translations";
 import {
-  buildReceiptSummary,
   cleanReceiptValue,
   copyTextToClipboard,
-  createReceiptFileName,
-  downloadTextFile,
+  createReceiptImageFileName,
+  downloadBlobFile,
   truncateMiddle,
 } from "./utils/receipt";
+import { createReceiptPngBlob } from "./utils/receiptImage";
 import {
   buildSolanaExplorerDevnetTxUrl,
   formatIdrAmount,
@@ -287,6 +287,10 @@ const safeBuildSolanaExplorerDevnetTxUrl = (signature) => {
   }
 };
 
+const RECEIPT_IMAGE_WIDTH = 1080;
+const RECEIPT_IMAGE_HEIGHT = 1350;
+const RECEIPT_EXPORT_TOOTH_COUNT = 28;
+
 const noticeStyles = {
   info: "border-(--kp-border) bg-(--kp-control-bg) text-(--kp-text-muted)",
   success: "border-brand/25 bg-brand/8 text-(--kp-text)",
@@ -505,6 +509,141 @@ const ReceiptField = ({
   );
 };
 
+const ReceiptImageField = ({
+  label,
+  value,
+  mono = false,
+  accent = false,
+  url = false,
+  badge = false,
+}) => {
+  const cleanValue = cleanReceiptValue(value);
+
+  if (!cleanValue) {
+    return null;
+  }
+
+  const valueClass = [
+    "kp-receipt-export-value",
+    mono ? "kp-receipt-export-value-mono" : "",
+    accent ? "kp-receipt-export-value-accent" : "",
+    url ? "kp-receipt-export-url" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className="kp-receipt-export-row">
+      <span className="kp-receipt-export-label">{label}</span>
+      {badge ? (
+        <span className="kp-receipt-export-badge">{cleanValue}</span>
+      ) : (
+        <span className={valueClass}>{cleanValue}</span>
+      )}
+    </div>
+  );
+};
+
+const ReceiptImageExport = ({
+  exportRef,
+  title,
+  timestamp,
+  store,
+  city,
+  qrisType,
+  totalIdr,
+  solPaid,
+  status,
+  network,
+  transactionId,
+  explorerUrl,
+  disclaimer,
+  labels,
+}) => {
+  const cleanTotalIdr = cleanReceiptValue(totalIdr) || labels.notProvided;
+  const cleanSolPaid = cleanReceiptValue(solPaid);
+
+  return (
+    <div
+      ref={exportRef}
+      className="kp-receipt-export-shell"
+      style={{
+        width: `${RECEIPT_IMAGE_WIDTH}px`,
+        height: `${RECEIPT_IMAGE_HEIGHT}px`,
+      }}
+      aria-hidden="true"
+    >
+      <div className="kp-receipt-export-stage">
+        <div className="kp-receipt-export-paper">
+          <div className="kp-receipt-export-header">
+            <div>
+              <h1 className="kp-receipt-export-title">{title}</h1>
+              <p className="kp-receipt-export-meta">{network}</p>
+            </div>
+            <p className="kp-receipt-export-time">{timestamp}</p>
+          </div>
+
+          <section className="kp-receipt-export-section">
+            <p className="kp-receipt-export-amount-label">
+              {labels.totalIdr}
+            </p>
+            <p className="kp-receipt-export-amount">{cleanTotalIdr}</p>
+            {cleanSolPaid && (
+              <p className="kp-receipt-export-sol">{cleanSolPaid}</p>
+            )}
+          </section>
+
+          <section className="kp-receipt-export-section">
+            <ReceiptImageField label={labels.store} value={store} />
+            <ReceiptImageField label={labels.city} value={city} />
+            <ReceiptImageField label={labels.qrisType} value={qrisType} />
+            <ReceiptImageField
+              label={labels.solPaid}
+              value={solPaid}
+              accent
+            />
+            <ReceiptImageField
+              label={labels.status}
+              value={status}
+              badge
+            />
+            <ReceiptImageField
+              label={labels.network}
+              value={network}
+              accent
+            />
+          </section>
+
+          <section className="kp-receipt-export-section">
+            <ReceiptImageField
+              label={labels.transactionId}
+              value={truncateMiddle(transactionId, 14, 14)}
+              mono
+            />
+            <ReceiptImageField
+              label={labels.explorerLink}
+              value={explorerUrl}
+              mono
+              url
+            />
+          </section>
+
+          <div className="kp-receipt-export-footer">
+            <p className="kp-receipt-export-note">{disclaimer}</p>
+            <span className="kp-receipt-export-brand">KonekPay</span>
+          </div>
+
+          <div className="kp-receipt-export-teeth" aria-hidden="true">
+            {Array.from({ length: RECEIPT_EXPORT_TOOTH_COUNT }, (_, index) => (
+              <span className="kp-receipt-export-tooth" key={index} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function PaymentPage({
   qrisData,
   initialParsedData,
@@ -542,6 +681,7 @@ export default function PaymentPage({
   const [receiptActionMessage, setReceiptActionMessage] = useState("");
   const savedReceiptHistoryKeyRef = useRef("");
   const quoteAbortRef = useRef(null);
+
 
   useEffect(() => {
     if (!quote) {
@@ -984,6 +1124,8 @@ export default function PaymentPage({
     (quote?.solAmount ? formatQuoteSolAmount(quote.solAmount) : "");
   const receiptStatusLabel =
     t("payment.receiptStatusVerified") || t("payment.statusPaid");
+  const receiptImageStatusLabel =
+    t("payment.receiptStatusPaidVerified") || receiptStatusLabel;
   const receiptWalletAddress =
     submittedPayment?.walletAddress || verifiedPayment?.walletAddress || "";
   const receiptQuoteId =
@@ -1048,11 +1190,6 @@ export default function PaymentPage({
     .filter(Boolean)
     .join(" ");
   const settlementWarning = t("payment.settlementSimulatorWarning");
-  const receiptSettlementDisplayLabel = settlementError
-    ? t("payment.settlementStatusFailed")
-    : isSettling
-      ? t("payment.settlementStatusSimulating")
-      : t("payment.receiptSettlementSimulated");
   const settlementPayoutTimestamp = settlementResult
     ? formatPanelDateTime(
         payoutSettlement.simulatedSettledAt || settlementResult.settledAt,
@@ -1063,44 +1200,6 @@ export default function PaymentPage({
   const receiptSettlementStatusLabel = settlementResult?.status
     ? humanizePaymentLabel(settlementResult.status)
     : "";
-  const receiptSummary = useMemo(
-    () =>
-      buildReceiptSummary({
-        title: t("payment.receiptSummaryTitle"),
-        fields: [
-          { label: t("payment.lblStore"), value: merchantName },
-          { label: t("payment.lblQrisType"), value: receiptQrisTypeLabel },
-          { label: t("payment.lblIdrAmount"), value: receiptIdrAmountLabel },
-          { label: t("payment.lblSolPaid"), value: receiptSolAmountLabel },
-          { label: t("payment.lblStatus"), value: receiptStatusLabel },
-          { label: t("payment.receiptTimestamp"), value: receiptTimestamp },
-          {
-            label: t("payment.lblNetwork"),
-            value: t("payment.receiptNetwork"),
-          },
-          { label: t("payment.lblTransactionId"), value: fullPaymentSignature },
-          { label: t("payment.lblExplorerLink"), value: primaryExplorerUrl },
-          {
-            label: t("payment.lblSettlementStatus"),
-            value: receiptSettlementDisplayLabel,
-          },
-        ],
-        disclaimer: settlementWarning,
-      }),
-    [
-      fullPaymentSignature,
-      merchantName,
-      primaryExplorerUrl,
-      receiptIdrAmountLabel,
-      receiptQrisTypeLabel,
-      receiptSolAmountLabel,
-      receiptSettlementDisplayLabel,
-      receiptStatusLabel,
-      receiptTimestamp,
-      settlementWarning,
-      t,
-    ],
-  );
   const verifiedReceiptHistoryRecord = useMemo(() => {
     if (!verifiedPayment) {
       return null;
@@ -1172,9 +1271,10 @@ export default function PaymentPage({
   }, [onVerifiedReceipt, verifiedReceiptHistoryRecord]);
   const canUseWebShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
-  const receiptShareButtonLabel = canUseWebShare
-    ? t("payment.btnShareReceipt")
-    : t("payment.btnCopyReceipt");
+  const receiptImageFileName = createReceiptImageFileName(
+    fullPaymentSignature,
+    t("receipt.downloadFileName"),
+  );
 
   const handleCopyReceiptValue = async (value, successMessage) => {
     const didCopy = await copyTextToClipboard(value);
@@ -1183,13 +1283,95 @@ export default function PaymentPage({
     );
   };
 
+  const copyExplorerFallback = async (successMessage) => {
+    const didCopy = await copyTextToClipboard(primaryExplorerUrl);
+    setReceiptActionMessage(
+      didCopy ? successMessage : t("payment.copyUnavailable"),
+    );
+  };
+
+  const createReceiptImageBlob = async () => {
+    const receiptData = {
+      title: t("receipt.shareTitle"),
+      timestamp: receiptTimestamp || t("payment.lblDateUnavailable"),
+      store: merchantName || t("payment.lblNotProvided"),
+      city: merchantCity,
+      qrisType: receiptQrisTypeLabel,
+      totalIdr: receiptIdrAmountLabel,
+      solPaid: receiptSolAmountLabel,
+      status: receiptImageStatusLabel,
+      network: t("payment.receiptNetwork"),
+      transactionId: fullPaymentSignature,
+      explorerUrl: primaryExplorerUrl,
+      disclaimer: t("receipt.noRealIdr"),
+      labels: {
+        city: t("payment.lblCity"),
+        explorerLink: t("payment.lblExplorerLink"),
+        network: t("payment.lblNetwork"),
+        qrisType: t("payment.lblQrisType"),
+        solPaid: t("payment.lblSolPaid"),
+        status: t("payment.lblStatus"),
+        store: t("payment.lblStore"),
+        totalIdr: t("payment.lblIdrAmount"),
+        transactionId: t("payment.lblTransactionId"),
+      },
+    };
+
+    // Debug guard: verify receipt data has meaningful content
+    if (!receiptData.title || !receiptData.totalIdr) {
+      throw new Error("Receipt data incomplete.");
+    }
+
+    const receiptBlob = await createReceiptPngBlob(receiptData);
+
+    // Guard against suspiciously small blobs (likely blank)
+    if (!receiptBlob || receiptBlob.size < 5000) {
+      throw new Error("Receipt image too small, likely blank.");
+    }
+
+    return receiptBlob;
+  };
+
   const handleShareReceipt = async () => {
-    if (canUseWebShare) {
+    const shareTitle = t("receipt.shareTitle");
+    const shareText = t("receipt.shareText");
+
+    if (!canUseWebShare) {
+      await copyExplorerFallback(t("receipt.shareUnsupported"));
+      return;
+    }
+
+    let receiptFile = null;
+
+    try {
+      const receiptBlob = await createReceiptImageBlob();
+
+      if (typeof File === "function") {
+        receiptFile = new File([receiptBlob], receiptImageFileName, {
+          type: "image/png",
+        });
+      }
+    } catch {
+      await copyExplorerFallback(t("receipt.imageFailed"));
+      return;
+    }
+
+    let canShareReceiptFile = false;
+
+    if (receiptFile && typeof navigator.canShare === "function") {
+      try {
+        canShareReceiptFile = navigator.canShare({ files: [receiptFile] });
+      } catch {
+        canShareReceiptFile = false;
+      }
+    }
+
+    if (canShareReceiptFile) {
       try {
         await navigator.share({
-          title: t("payment.receiptSummaryTitle"),
-          text: receiptSummary,
-          url: primaryExplorerUrl || undefined,
+          title: shareTitle,
+          text: shareText,
+          files: [receiptFile],
         });
         setReceiptActionMessage(t("payment.receiptShared"));
         return;
@@ -1200,20 +1382,38 @@ export default function PaymentPage({
       }
     }
 
-    await handleCopyReceiptValue(receiptSummary, t("payment.receiptCopied"));
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: shareText,
+        ...(primaryExplorerUrl ? { url: primaryExplorerUrl } : {}),
+      });
+      setReceiptActionMessage(t("payment.receiptShared"));
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        return;
+      }
+
+      await copyExplorerFallback(t("receipt.shareUnsupported"));
+    }
   };
 
-  const handleDownloadReceipt = () => {
-    const didDownload = downloadTextFile({
-      fileName: createReceiptFileName(fullPaymentSignature),
-      text: receiptSummary,
-    });
+  const handleDownloadReceipt = async () => {
+    try {
+      const receiptBlob = await createReceiptImageBlob();
+      const didDownload = downloadBlobFile({
+        fileName: receiptImageFileName,
+        blob: receiptBlob,
+      });
 
-    setReceiptActionMessage(
-      didDownload
-        ? t("payment.receiptDownloaded")
-        : t("payment.receiptDownloadFailed"),
-    );
+      setReceiptActionMessage(
+        didDownload
+          ? t("payment.receiptDownloaded")
+          : t("payment.receiptDownloadFailed"),
+      );
+    } catch {
+      await copyExplorerFallback(t("receipt.imageFailed"));
+    }
   };
 
   return (
@@ -1727,7 +1927,7 @@ export default function PaymentPage({
                                     t("payment.txIdCopied"),
                                   )
                                 }
-                                aria-label={t("payment.btnCopyTxId")}
+                                aria-label={t("receipt.copyTransaction")}
                               >
                                 {t("payment.btnCopy")}
                               </InlineActionButton>
@@ -1831,7 +2031,7 @@ export default function PaymentPage({
                               strokeWidth="2"
                             />
                           </svg>
-                          <span>{t("payment.btnCopyTxId")}</span>
+                          <span>{t("receipt.copyTransaction")}</span>
                         </button>
                         <button
                           type="button"
@@ -1852,7 +2052,7 @@ export default function PaymentPage({
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                             />
                           </svg>
-                          <span>{receiptShareButtonLabel}</span>
+                          <span>{t("receipt.shareReceipt")}</span>
                         </button>
                         <button
                           type="button"
@@ -1873,7 +2073,7 @@ export default function PaymentPage({
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                           </svg>
-                          <span>{t("payment.btnDownloadReceipt")}</span>
+                          <span>{t("receipt.downloadReceipt")}</span>
                         </button>
                         <button
                           type="button"
@@ -2472,6 +2672,7 @@ export default function PaymentPage({
           )}
         </div>
       </div>
+
     </Fragment>
   );
 }

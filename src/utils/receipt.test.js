@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildReceiptSummary, cleanReceiptValue, truncateMiddle } from './receipt.js';
+import {
+  buildReceiptSummary,
+  cleanReceiptValue,
+  createReceiptImageFileName,
+  truncateMiddle,
+} from './receipt.js';
 import { humanizePaymentLabel, translations } from './translations.js';
 
 describe('receipt utilities', () => {
@@ -36,6 +41,13 @@ describe('receipt utilities', () => {
         '',
         'Devnet demo only.',
       ].join('\n')
+    );
+  });
+
+  it('creates PNG receipt file names without changing text receipt exports', () => {
+    assert.equal(
+      createReceiptImageFileName('abcdef1234567890', 'konekpay-receipt'),
+      'konekpay-receipt-abcdef12.png'
     );
   });
 
@@ -83,6 +95,25 @@ describe('receipt utilities', () => {
       assert.equal(typeof translations.id.payment[key], 'string');
       assert.ok(translations.en.payment[key]);
       assert.ok(translations.id.payment[key]);
+    });
+
+    const requiredReceiptKeys = [
+      'shareTitle',
+      'shareText',
+      'downloadFileName',
+      'shareUnsupported',
+      'imageFailed',
+      'downloadReceipt',
+      'shareReceipt',
+      'copyTransaction',
+      'noRealIdr',
+    ];
+
+    requiredReceiptKeys.forEach((key) => {
+      assert.equal(typeof translations.en.receipt[key], 'string');
+      assert.equal(typeof translations.id.receipt[key], 'string');
+      assert.ok(translations.en.receipt[key]);
+      assert.ok(translations.id.receipt[key]);
     });
   });
 });

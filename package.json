@@ -25,6 +25,7 @@
     "animejs": "^4.3.6",
     "bs58": "^6.0.0",
     "decimal.js": "^10.6.0",
+    "html-to-image": "^1.11.13",
     "html5-qrcode": "^2.3.8",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
