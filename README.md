@@ -30,8 +30,8 @@ The goal is simple: make a Solana payment feel as familiar as scanning QRIS at a
 | --- | --- |
 | Live demo | [konekpay.online](https://konekpay.online) |
 | Repository | [github.com/justhenix/konek](https://github.com/justhenix/konek) |
-| Hackathon | Colosseum Frontier Hackathon |
-| Side Track | Superteam Indonesia National Campus Hackathon |
+| Hackathon | [Colosseum Frontier Hackathon](https://colosseum.com/frontier) |
+| Side Track | [Superteam Indonesia National Campus Hackathon](https://superteam.fun/earn/listing/indonesia-national-campus-hackathon) |
 
 <!-- Add the final demo video URL here after recording. -->
 <!-- Add the final pitch deck URL here after publishing. -->
