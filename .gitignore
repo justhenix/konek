@@ -30,4 +30,3 @@ dist-ssr
 *.sw?
 .vercel
 .playwright-cli
-.agents
