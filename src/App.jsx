@@ -3296,6 +3296,9 @@ function App() {
                         </span>
                       </div>
                     </div>
+                    <p className="hero-text mt-4 text-xs text-zinc-500" style={{ color: "var(--kp-text-faint)" }}>
+                      {t("footer.disclaimer")}
+                    </p>
                   </section>
 
                   {/* Scroll cue between hero and flow */}
