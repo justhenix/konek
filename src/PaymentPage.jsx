@@ -1382,10 +1382,15 @@ export default function PaymentPage({
       }
     }
 
+    // URL-only fallback: include explorer URL in the text body
+    const urlShareText = primaryExplorerUrl
+      ? t("receipt.shareTextWithUrl").replace("{{url}}", primaryExplorerUrl)
+      : shareText;
+
     try {
       await navigator.share({
         title: shareTitle,
-        text: shareText,
+        text: urlShareText,
         ...(primaryExplorerUrl ? { url: primaryExplorerUrl } : {}),
       });
       setReceiptActionMessage(t("payment.receiptShared"));

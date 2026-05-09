@@ -28,6 +28,8 @@ const COLORS = {
   badgeBorder: 'rgba(20, 241, 149, 0.34)',
   divider: 'rgba(247, 255, 249, 0.14)',
   dividerDashed: 'rgba(247, 255, 249, 0.16)',
+  accentGreen: 'rgba(20, 241, 149, 0.38)',
+  accentPurple: 'rgba(153, 69, 255, 0.28)',
 };
 
 const FONT_SANS = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -92,41 +94,33 @@ function drawBackground(ctx) {
 }
 
 /**
- * Draw the paper card background with border.
+ * Draw the paper card background with border and clean bottom edge.
  */
 function drawPaper(ctx, paperHeight) {
-  ctx.strokeStyle = COLORS.paperBorder;
-  ctx.lineWidth = 1;
+  // Card fill
   ctx.fillStyle = COLORS.paperBg;
   ctx.fillRect(PAPER_X, PAPER_Y, PAPER_W, paperHeight);
+
+  // Card border (all four sides)
+  ctx.strokeStyle = COLORS.paperBorder;
+  ctx.lineWidth = 1;
   ctx.strokeRect(PAPER_X, PAPER_Y, PAPER_W, paperHeight);
 
-  // Subtle gradient overlay at top
+  // Subtle gradient overlay at top of card
   const overlay = ctx.createLinearGradient(PAPER_X, PAPER_Y, PAPER_X, PAPER_Y + paperHeight * 0.18);
   overlay.addColorStop(0, 'rgba(255, 255, 255, 0.018)');
   overlay.addColorStop(1, 'transparent');
   ctx.fillStyle = overlay;
-  ctx.fillRect(PAPER_X, PAPER_Y, PAPER_W, paperHeight * 0.18);
-}
+  ctx.fillRect(PAPER_X + 1, PAPER_Y + 1, PAPER_W - 2, paperHeight * 0.18);
 
-/**
- * Draw the saw-tooth bottom edge.
- */
-function drawTeeth(ctx, paperBottom) {
-  const toothW = 36;
-  const toothH = 34;
-  const count = Math.ceil(PAPER_W / toothW);
-  ctx.fillStyle = COLORS.paperBg;
-
-  for (let i = 0; i < count; i++) {
-    const x = PAPER_X + i * toothW;
-    ctx.beginPath();
-    ctx.moveTo(x, paperBottom);
-    ctx.lineTo(x + toothW / 2, paperBottom + toothH);
-    ctx.lineTo(x + toothW, paperBottom);
-    ctx.closePath();
-    ctx.fill();
-  }
+  // Bottom accent: thin green-to-purple gradient line at card bottom edge
+  const bottomAccentY = PAPER_Y + paperHeight - 3;
+  const accentGrad = ctx.createLinearGradient(PAPER_X, 0, PAPER_X + PAPER_W, 0);
+  accentGrad.addColorStop(0, COLORS.accentGreen);
+  accentGrad.addColorStop(0.5, COLORS.accentPurple);
+  accentGrad.addColorStop(1, COLORS.accentGreen);
+  ctx.fillStyle = accentGrad;
+  ctx.fillRect(PAPER_X + 1, bottomAccentY, PAPER_W - 2, 2);
 }
 
 /**
@@ -208,6 +202,22 @@ function drawRow(ctx, y, label, value, opts = {}) {
 }
 
 /**
+ * Draw a dashed cut line with subtle scissors hint.
+ * Placed above the footer as a clean receipt-style separator.
+ */
+function drawCutLine(ctx, y) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(247, 255, 249, 0.12)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(CONTENT_X, y);
+  ctx.lineTo(CONTENT_X + CONTENT_W, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Create a receipt PNG blob using Canvas 2D rendering.
  *
  * @param {object} receiptData - The receipt data to render.
@@ -252,7 +262,7 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   drawBackground(ctx);
 
   // -- Paper card --
-  const paperHeight = RECEIPT_HEIGHT - PAPER_Y * 2 - 22;
+  const paperHeight = RECEIPT_HEIGHT - PAPER_Y * 2 - 10;
   drawPaper(ctx, paperHeight);
 
   let cursorY = PAPER_Y + PAPER_INNER_PAD;
@@ -339,36 +349,32 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
     cursorY += drawRow(ctx, cursorY, labels.explorerLink || 'Explorer Link', shortUrl, { mono: true });
   }
 
-  // -- Footer area: disclaimer + brand --
-  const footerY = PAPER_Y + paperHeight - PAPER_INNER_PAD - 30;
+  // -- Footer area --
+  // Compute footer Y with proper spacing from content and card bottom
+  const footerBottomPad = 48;
+  const footerContentH = 56;
+  const footerY = PAPER_Y + paperHeight - footerBottomPad - footerContentH;
 
-  // Purple divider above footer
-  ctx.strokeStyle = COLORS.purpleBorder;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(CONTENT_X, footerY);
-  ctx.lineTo(CONTENT_X + CONTENT_W, footerY);
-  ctx.stroke();
+  // Dashed cut line above footer (clean receipt-style separator)
+  drawCutLine(ctx, footerY);
 
+  // Disclaimer text
   if (disclaimer) {
-    ctx.font = `400 20px ${FONT_SANS}`;
+    ctx.font = `400 19px ${FONT_SANS}`;
     ctx.fillStyle = COLORS.warning;
     ctx.textAlign = 'left';
-    const disclaimerLines = wrapText(ctx, disclaimer, CONTENT_W * 0.7);
+    const disclaimerLines = wrapText(ctx, disclaimer, CONTENT_W * 0.72);
     for (let i = 0; i < disclaimerLines.length; i++) {
-      ctx.fillText(disclaimerLines[i], CONTENT_X, footerY + 18 + i * 28);
+      ctx.fillText(disclaimerLines[i], CONTENT_X, footerY + 22 + i * 28);
     }
   }
 
+  // Brand name
   ctx.font = `760 19px ${FONT_SANS}`;
   ctx.fillStyle = 'rgba(20, 241, 149, 0.82)';
   ctx.textAlign = 'right';
-  ctx.fillText('KonekPay', CONTENT_X + CONTENT_W, footerY + 18);
+  ctx.fillText('KonekPay', CONTENT_X + CONTENT_W, footerY + 22);
   ctx.textAlign = 'left';
-
-  // -- Teeth --
-  const paperBottom = PAPER_Y + paperHeight;
-  drawTeeth(ctx, paperBottom);
 
   // -- Generate PNG blob --
   return canvasToBlob(canvas);

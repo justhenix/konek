@@ -100,6 +100,7 @@ describe('receipt utilities', () => {
     const requiredReceiptKeys = [
       'shareTitle',
       'shareText',
+      'shareTextWithUrl',
       'downloadFileName',
       'shareUnsupported',
       'imageFailed',
