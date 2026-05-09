@@ -883,24 +883,27 @@ export default function TransactionHistory({
                       className="grid min-w-0 gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                     >
                       <div className="min-w-0">
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <div className="grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
                           <h3 className="kp-text min-w-0 wrap-break-word text-base ">
                             {record.merchantName || t("payment.lblNotProvided")}
                           </h3>
-                          <span className="inline-flex shrink-0 border border-brand/25 bg-brand/8 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-brand">
-                            {getQrisTypeLabel(record.qrisType, t)}
-                          </span>
-                          <span className="inline-flex shrink-0 border border-purple-400/25 bg-purple-500/10 px-2 py-1 text-[11px]  uppercase tracking-[0.12em] text-purple-700 dark:text-purple-200">
-                            {record.networkLabel || t("payment.receiptNetwork")}
-                          </span>
+                          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="inline-flex max-w-full shrink-0 border border-brand/25 bg-brand/8 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-brand sm:text-[11px] sm:tracking-[0.12em]">
+                              {getQrisTypeLabel(record.qrisType, t)}
+                            </span>
+                            <span className="inline-flex max-w-full shrink-0 border border-purple-400/25 bg-purple-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-purple-700 dark:text-purple-200 sm:text-[11px] sm:tracking-[0.12em]">
+                              {record.networkLabel ||
+                                t("payment.receiptNetwork")}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                           <div className="min-w-0">
                             <p className="kp-soft text-xs ">
                               {t("payment.lblIdrAmount")}
                             </p>
-                            <p className="kp-text mt-1 ">
+                            <p className="kp-text mt-1 wrap-break-word">
                               {getIdrAmountLabel(record) ||
                                 t("payment.lblNotProvided")}
                             </p>
@@ -909,7 +912,7 @@ export default function TransactionHistory({
                             <p className="kp-soft text-xs ">
                               {t("payment.lblSolPaid")}
                             </p>
-                            <p className="kp-text mt-1 ">
+                            <p className="kp-text mt-1 wrap-break-word">
                               {getSolAmountLabel(record) ||
                                 t("payment.lblNotProvided")}
                             </p>
@@ -926,7 +929,9 @@ export default function TransactionHistory({
                             <p className="kp-soft text-xs ">
                               {t("payment.receiptTimestamp")}
                             </p>
-                            <p className="kp-text mt-1 ">{timestampLabel}</p>
+                            <p className="kp-text mt-1 wrap-break-word">
+                              {timestampLabel}
+                            </p>
                           </div>
                         </div>
 

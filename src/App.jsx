@@ -497,8 +497,13 @@ const getCurrentPage = () => {
   return "home";
 };
 
+const getCurrentAppTab = () =>
+  window.location.pathname.replace(/\/+$/, "") === "/history"
+    ? "history"
+    : "pay";
+
 const getInitialScrollTarget = () =>
-  getCurrentPage() === "home"
+  getCurrentPage() === "home" && getCurrentAppTab() === "pay"
     ? window.location.hash.replace(/^#/, "") || null
     : null;
 
@@ -1262,7 +1267,7 @@ function App() {
     return stored === "en" || stored === "id" ? stored : "id";
   });
   const t = useMemo(() => createT(lang), [lang]);
-  const [activeTab, setActiveTab] = useState("pay");
+  const [activeTab, setActiveTab] = useState(getCurrentAppTab);
   const [mobileNavActive, setMobileNavActive] = useState("home");
   const [page, setPage] = useState(getCurrentPage);
   const [pendingScrollTarget, setPendingScrollTarget] = useState(
@@ -2597,9 +2602,12 @@ function App() {
   useEffect(() => {
     const handlePopState = () => {
       const nextPage = getCurrentPage();
+      const nextTab = getCurrentAppTab();
       setPage(nextPage);
+      setActiveTab(nextPage === "home" ? nextTab : "pay");
+      if (nextTab === "pay") setMobileNavActive("home");
       setPendingScrollTarget(
-        nextPage === "home"
+        nextPage === "home" && nextTab === "pay"
           ? window.location.hash.replace(/^#/, "") || "top"
           : null,
       );
@@ -2804,15 +2812,17 @@ function App() {
 
   const handleAppTabChange = useCallback(
     (nextTab) => {
+      const nextUrl = nextTab === "history" ? "/history" : "/";
       setActiveTab(nextTab);
       setIsMobileMenuOpen(false);
       setIsMobileWalletOpen(false);
       if (nextTab === "pay") setMobileNavActive("home");
 
+      if (`${window.location.pathname}${window.location.hash}` !== nextUrl) {
+        window.history.pushState({}, "", nextUrl);
+      }
+
       if (page !== "home") {
-        if (`${window.location.pathname}${window.location.hash}` !== "/") {
-          window.history.pushState({}, "", "/");
-        }
         setPage("home");
       }
 

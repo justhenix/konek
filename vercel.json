@@ -16,6 +16,10 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
+    },
+    {
+      "src": "/((?!api/|src/|@vite/|node_modules/|favicon|apple-touch-icon|site\\.webmanifest|assets/).*)",
+      "dest": "/index.html"
     }
   ]
 }
