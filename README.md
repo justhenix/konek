@@ -11,10 +11,10 @@
 </p>
 
 <p align="center">
-  <a href="https://konekpay.online"><img alt="Live Demo" src="https://img.shields.io/badge/Live_Demo-konekpay.online-14F195?style=flat-square"></a>
-  <img alt="Colosseum Frontier Hackathon" src="https://img.shields.io/badge/Hackathon-Colosseum_Frontier-14F195?style=flat-square">
+  <a href="https://konekpay.online"><img alt="Live Demo" src="https://img.shields.io/badge/Live_Demo-konekpay.online-00D166?style=flat-square"></a>
+  <img alt="Colosseum Frontier Hackathon" src="https://img.shields.io/badge/Hackathon-Colosseum_Frontier-00D166?style=flat-square">
   <img alt="Superteam Indonesia" src="https://img.shields.io/badge/Track-Superteam_Indonesia-9945FF?style=flat-square">
-  <img alt="Solana Devnet" src="https://img.shields.io/badge/Network-Solana_Devnet-14F195?style=flat-square">
+  <img alt="Solana Devnet" src="https://img.shields.io/badge/Network-Solana_Devnet-00D166?style=flat-square">
   <img alt="Vite React" src="https://img.shields.io/badge/Frontend-Vite_React-646CFF?style=flat-square">
 </p>
 
@@ -26,11 +26,11 @@ The goal is simple: make a Solana payment feel as familiar as scanning QRIS at a
 
 ## Links
 
-| Item | Link |
-| --- | --- |
-| Live demo | [konekpay.online](https://konekpay.online) |
-| Repository | [github.com/justhenix/konek](https://github.com/justhenix/konek) |
-| Hackathon | [Colosseum Frontier Hackathon](https://colosseum.com/frontier) |
+| Item       | Link                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Live demo  | [konekpay.online](https://konekpay.online)                                                                              |
+| Repository | [github.com/justhenix/konek](https://github.com/justhenix/konek)                                                        |
+| Hackathon  | [Colosseum Frontier Hackathon](https://colosseum.com/frontier)                                                          |
 | Side Track | [Superteam Indonesia National Campus Hackathon](https://superteam.fun/earn/listing/indonesia-national-campus-hackathon) |
 
 <!-- Add the final demo video URL here after recording. -->
@@ -62,17 +62,17 @@ This is not a claim that QRIS settlement is live on Solana today. It is a hackat
 
 ## Real vs Simulated Scope
 
-| Area | Current prototype behavior |
-| --- | --- |
-| QRIS payload | Parsed from camera, paste input, or synthetic Demo QRIS |
-| SOL payment | Real Solana devnet transaction through Phantom |
-| Price quote | Live SOL/IDR quote through backend pricing logic |
-| Verification | Real backend verification against Solana devnet |
-| Receipt | Real app-generated proof with transaction metadata |
-| Merchant payout | Simulated demo record only |
-| IDR disbursement | Not executed |
-| Mainnet payment | Not executed |
-| Licensed gateway integration | Planned production path |
+| Area                         | Current prototype behavior                              |
+| ---------------------------- | ------------------------------------------------------- |
+| QRIS payload                 | Parsed from camera, paste input, or synthetic Demo QRIS |
+| SOL payment                  | Real Solana devnet transaction through Phantom          |
+| Price quote                  | Live SOL/IDR quote through backend pricing logic        |
+| Verification                 | Real backend verification against Solana devnet         |
+| Receipt                      | Real app-generated proof with transaction metadata      |
+| Merchant payout              | Simulated demo record only                              |
+| IDR disbursement             | Not executed                                            |
+| Mainnet payment              | Not executed                                            |
+| Licensed gateway integration | Planned production path                                 |
 
 Important boundaries:
 
@@ -130,17 +130,17 @@ flowchart LR
 
 ## Tech Stack
 
-| Layer | Tools |
-| --- | --- |
-| Frontend | Vite, React, Tailwind CSS |
-| Wallet | Phantom, Solana Wallet Adapter |
-| Blockchain | Solana devnet, `@solana/web3.js` |
-| QR scanning | `html5-qrcode` |
+| Layer                 | Tools                                     |
+| --------------------- | ----------------------------------------- |
+| Frontend              | Vite, React, Tailwind CSS                 |
+| Wallet                | Phantom, Solana Wallet Adapter            |
+| Blockchain            | Solana devnet, `@solana/web3.js`          |
+| QR scanning           | `html5-qrcode`                            |
 | QR/receipt generation | `qrcode`, `qrcode.react`, `html-to-image` |
-| Pricing | Pyth Hermes plus fallback FX source |
-| Backend | Vercel Serverless Functions |
-| Database helpers | Supabase Postgres server-only modules |
-| Tests | Node test runner |
+| Pricing               | Pyth Hermes plus fallback FX source       |
+| Backend               | Vercel Serverless Functions               |
+| Database helpers      | Supabase Postgres server-only modules     |
+| Tests                 | Node test runner                          |
 
 <details>
 <summary><strong>Core API</strong></summary>
@@ -311,12 +311,12 @@ npm test               # Run backend and utility tests
 
 The project is configured for Vercel.
 
-| Setting | Value |
-| --- | --- |
-| Framework | Vite |
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| API routes | `api/**` |
+| Setting          | Value           |
+| ---------------- | --------------- |
+| Framework        | Vite            |
+| Build command    | `npm run build` |
+| Output directory | `dist`          |
+| API routes       | `api/**`        |
 
 After changing any `VITE_*` variable in Vercel, redeploy the project. Vite bakes public environment variables into the frontend bundle during build.
 
@@ -359,11 +359,11 @@ KonekPay was built for the Colosseum Frontier Hackathon and the Superteam Indone
 
 ## Team
 
-| Member | Role | Contribution |
-| --- | --- | --- |
-| [Henix](https://github.com/justhenix) | Lead developer, product lead | Led product direction and full-stack implementation across QRIS parsing, Solana payment flow, backend verification, receipt/history flow, and demo readiness. |
-| [Akil](https://github.com/MuhAqielAdhiRajendra) | Frontend and UI contributor | Supported landing page polish, responsive interface work, demo experience, and frontend presentation details. |
-| [Freshifa](https://github.com/seary05) | Business, pitch, and market research | Supported business framing, pitch deck preparation, market research, presentation materials, and review/QA. |
+| Member                                          | Role                                 | Contribution                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Henix](https://github.com/justhenix)           | Lead developer, product lead         | Led product direction and full-stack implementation across QRIS parsing, Solana payment flow, backend verification, receipt/history flow, and demo readiness. |
+| [Akil](https://github.com/MuhAqielAdhiRajendra) | Frontend and UI contributor          | Supported landing page polish, responsive interface work, demo experience, and frontend presentation details.                                                 |
+| [Freshifa](https://github.com/seary05)          | Business, pitch, and market research | Supported business framing, pitch deck preparation, market research, presentation materials, and review/QA.                                                   |
 
 KonekPay was built as a focused hackathon prototype with Henix leading engineering and product execution, supported by Akil on frontend/UI and Freshifa on pitch/business work.
 
