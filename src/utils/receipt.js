@@ -1,38 +1,38 @@
 const INTERNAL_PLACEHOLDER_VALUES = new Set([
-  'undefined',
-  'null',
-  '[object Object]',
+  "undefined",
+  "null",
+  "[object Object]",
 ]);
 
 export const cleanReceiptValue = (value) => {
   if (value === null || value === undefined) {
-    return '';
+    return "";
   }
 
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? String(value) : '';
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? String(value) : "";
   }
 
-  if (typeof value === 'bigint') {
+  if (typeof value === "bigint") {
     return value.toString();
   }
 
-  if (typeof value !== 'string') {
-    return '';
+  if (typeof value !== "string") {
+    return "";
   }
 
   const normalizedValue = value.trim();
 
   return normalizedValue && !INTERNAL_PLACEHOLDER_VALUES.has(normalizedValue)
     ? normalizedValue
-    : '';
+    : "";
 };
 
 export const truncateMiddle = (value, startLength = 8, endLength = 8) => {
   const normalizedValue = cleanReceiptValue(value);
 
   if (!normalizedValue) {
-    return '';
+    return "";
   }
 
   if (normalizedValue.length <= startLength + endLength + 3) {
@@ -43,7 +43,7 @@ export const truncateMiddle = (value, startLength = 8, endLength = 8) => {
 };
 
 export const buildReceiptSummary = ({ title, fields = [], disclaimer }) => {
-  const lines = [cleanReceiptValue(title) || 'KonekPay receipt'];
+  const lines = [cleanReceiptValue(title) || "KonekPay receipt"];
 
   fields.forEach(({ label, value }) => {
     const cleanLabel = cleanReceiptValue(label);
@@ -57,10 +57,34 @@ export const buildReceiptSummary = ({ title, fields = [], disclaimer }) => {
   const cleanDisclaimer = cleanReceiptValue(disclaimer);
 
   if (cleanDisclaimer) {
-    lines.push('', cleanDisclaimer);
+    lines.push("", cleanDisclaimer);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
+};
+
+export const formatReceiptShareTextWithUrl = (
+  template,
+  explorerUrl,
+  fallbackText = "",
+) => {
+  const cleanTemplate = cleanReceiptValue(template);
+  const cleanExplorerUrl = cleanReceiptValue(explorerUrl);
+  const cleanFallbackText = cleanReceiptValue(fallbackText);
+
+  if (!cleanExplorerUrl) {
+    return (
+      cleanFallbackText ||
+      cleanTemplate.replace(/\s*:?\s*\{\{url\}\}/g, "").trim()
+    );
+  }
+
+  if (cleanTemplate.includes("{{url}}")) {
+    return cleanTemplate.replaceAll("{{url}}", cleanExplorerUrl);
+  }
+
+  const baseText = cleanTemplate || cleanFallbackText;
+  return baseText ? `${baseText}: ${cleanExplorerUrl}` : cleanExplorerUrl;
 };
 
 export const copyTextToClipboard = async (text) => {
@@ -70,7 +94,7 @@ export const copyTextToClipboard = async (text) => {
     return false;
   }
 
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(cleanText);
       return true;
@@ -79,22 +103,22 @@ export const copyTextToClipboard = async (text) => {
     }
   }
 
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return false;
   }
 
-  const textArea = document.createElement('textarea');
+  const textArea = document.createElement("textarea");
   textArea.value = cleanText;
-  textArea.setAttribute('readonly', '');
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-9999px';
-  textArea.style.top = '0';
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  textArea.style.top = "0";
 
   document.body.appendChild(textArea);
   textArea.select();
 
   try {
-    return document.execCommand('copy');
+    return document.execCommand("copy");
   } catch {
     return false;
   } finally {
@@ -104,16 +128,16 @@ export const copyTextToClipboard = async (text) => {
 
 export const downloadTextFile = ({ fileName, text }) => {
   if (
-    typeof document === 'undefined'
-    || typeof Blob === 'undefined'
-    || typeof URL === 'undefined'
+    typeof document === "undefined" ||
+    typeof Blob === "undefined" ||
+    typeof URL === "undefined"
   ) {
     return false;
   }
 
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const downloadUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
 
   link.href = downloadUrl;
   link.download = fileName;
@@ -126,16 +150,12 @@ export const downloadTextFile = ({ fileName, text }) => {
 };
 
 export const downloadBlobFile = ({ fileName, blob }) => {
-  if (
-    typeof document === 'undefined'
-    || typeof URL === 'undefined'
-    || !blob
-  ) {
+  if (typeof document === "undefined" || typeof URL === "undefined" || !blob) {
     return false;
   }
 
   const downloadUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
 
   link.href = downloadUrl;
   link.download = fileName;
@@ -148,15 +168,17 @@ export const downloadBlobFile = ({ fileName, blob }) => {
 };
 
 export const createReceiptFileName = (signature) => {
-  const suffix = cleanReceiptValue(signature).slice(0, 8) || new Date().toISOString().slice(0, 10);
+  const suffix =
+    cleanReceiptValue(signature).slice(0, 8) ||
+    new Date().toISOString().slice(0, 10);
   return `konekpay-receipt-${suffix}.txt`;
 };
 
 export const createReceiptImageFileName = (
   signature,
-  baseName = 'konekpay-receipt',
+  baseName = "konekpay-receipt",
 ) => {
-  const cleanBaseName = cleanReceiptValue(baseName) || 'konekpay-receipt';
+  const cleanBaseName = cleanReceiptValue(baseName) || "konekpay-receipt";
   const suffix =
     cleanReceiptValue(signature).slice(0, 8) ||
     new Date().toISOString().slice(0, 10);

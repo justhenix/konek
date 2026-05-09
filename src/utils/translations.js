@@ -186,7 +186,9 @@ export const translations = {
     receipt: {
       shareTitle: "KonekPay receipt",
       shareText: "Paid with KonekPay. Verified on Solana Devnet.",
-      shareTextWithUrl: "Paid with KonekPay. Verified on Solana Devnet: {{url}}",
+      shareTextWithUrl:
+        "Paid with KonekPay. Verified on Solana Devnet: {{url}}",
+      scanToVerify: "Scan to verify",
       downloadFileName: "konekpay-receipt",
       shareUnsupported:
         "Image sharing is not supported here. Explorer link copied.",
@@ -890,7 +892,9 @@ export const translations = {
     receipt: {
       shareTitle: "Bukti bayar KonekPay",
       shareText: "Dibayar lewat KonekPay. Terverifikasi di Solana Devnet.",
-      shareTextWithUrl: "Dibayar lewat KonekPay. Terverifikasi di Solana Devnet: {{url}}",
+      shareTextWithUrl:
+        "Dibayar lewat KonekPay. Terverifikasi di Solana Devnet: {{url}}",
+      scanToVerify: "Scan untuk verifikasi",
       downloadFileName: "konekpay-receipt",
       shareUnsupported:
         "Berbagi gambar belum didukung di browser ini. Link Explorer disalin.",

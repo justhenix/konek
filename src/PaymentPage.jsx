@@ -15,6 +15,7 @@ import {
   copyTextToClipboard,
   createReceiptImageFileName,
   downloadBlobFile,
+  formatReceiptShareTextWithUrl,
   truncateMiddle,
 } from "./utils/receipt";
 import { createReceiptPngBlob } from "./utils/receiptImage";
@@ -584,9 +585,7 @@ const ReceiptImageExport = ({
           </div>
 
           <section className="kp-receipt-export-section">
-            <p className="kp-receipt-export-amount-label">
-              {labels.totalIdr}
-            </p>
+            <p className="kp-receipt-export-amount-label">{labels.totalIdr}</p>
             <p className="kp-receipt-export-amount">{cleanTotalIdr}</p>
             {cleanSolPaid && (
               <p className="kp-receipt-export-sol">{cleanSolPaid}</p>
@@ -597,21 +596,9 @@ const ReceiptImageExport = ({
             <ReceiptImageField label={labels.store} value={store} />
             <ReceiptImageField label={labels.city} value={city} />
             <ReceiptImageField label={labels.qrisType} value={qrisType} />
-            <ReceiptImageField
-              label={labels.solPaid}
-              value={solPaid}
-              accent
-            />
-            <ReceiptImageField
-              label={labels.status}
-              value={status}
-              badge
-            />
-            <ReceiptImageField
-              label={labels.network}
-              value={network}
-              accent
-            />
+            <ReceiptImageField label={labels.solPaid} value={solPaid} accent />
+            <ReceiptImageField label={labels.status} value={status} badge />
+            <ReceiptImageField label={labels.network} value={network} accent />
           </section>
 
           <section className="kp-receipt-export-section">
@@ -681,7 +668,6 @@ export default function PaymentPage({
   const [receiptActionMessage, setReceiptActionMessage] = useState("");
   const savedReceiptHistoryKeyRef = useRef("");
   const quoteAbortRef = useRef(null);
-
 
   useEffect(() => {
     if (!quote) {
@@ -1309,6 +1295,7 @@ export default function PaymentPage({
         explorerLink: t("payment.lblExplorerLink"),
         network: t("payment.lblNetwork"),
         qrisType: t("payment.lblQrisType"),
+        scanToVerify: t("receipt.scanToVerify"),
         solPaid: t("payment.lblSolPaid"),
         status: t("payment.lblStatus"),
         store: t("payment.lblStore"),
@@ -1382,10 +1369,12 @@ export default function PaymentPage({
       }
     }
 
-    // URL-only fallback: include explorer URL in the text body
-    const urlShareText = primaryExplorerUrl
-      ? t("receipt.shareTextWithUrl").replace("{{url}}", primaryExplorerUrl)
-      : shareText;
+    // URL-only fallback: include explorer URL in the text body.
+    const urlShareText = formatReceiptShareTextWithUrl(
+      t("receipt.shareTextWithUrl"),
+      primaryExplorerUrl,
+      shareText,
+    );
 
     try {
       await navigator.share({
@@ -2677,7 +2666,6 @@ export default function PaymentPage({
           )}
         </div>
       </div>
-
     </Fragment>
   );
 }

@@ -8,32 +8,36 @@
  * foreignObject serialization bugs.
  */
 
+import QRCode from "qrcode";
+
 const RECEIPT_WIDTH = 1080;
 const RECEIPT_HEIGHT = 1350;
 
 const COLORS = {
-  bg: '#07120e',
-  paperBg: '#111c18',
-  paperBorder: 'rgba(20, 241, 149, 0.18)',
-  text: '#f7fff9',
-  textMuted: 'rgba(247, 255, 249, 0.64)',
-  textSoft: 'rgba(247, 255, 249, 0.58)',
-  brand: '#14f195',
-  brandSoft: 'rgba(20, 241, 149, 0.74)',
-  purple: '#9945ff',
-  purpleBorder: 'rgba(153, 69, 255, 0.32)',
-  mono: '#dfffee',
-  warning: '#f6d878',
-  badgeBg: 'rgba(20, 241, 149, 0.12)',
-  badgeBorder: 'rgba(20, 241, 149, 0.34)',
-  divider: 'rgba(247, 255, 249, 0.14)',
-  dividerDashed: 'rgba(247, 255, 249, 0.16)',
-  accentGreen: 'rgba(20, 241, 149, 0.38)',
-  accentPurple: 'rgba(153, 69, 255, 0.28)',
+  bg: "#07120e",
+  paperBg: "#111c18",
+  paperBorder: "rgba(20, 241, 149, 0.18)",
+  text: "#f7fff9",
+  textMuted: "rgba(247, 255, 249, 0.64)",
+  textSoft: "rgba(247, 255, 249, 0.58)",
+  brand: "#14f195",
+  brandSoft: "rgba(20, 241, 149, 0.74)",
+  purple: "#9945ff",
+  purpleBorder: "rgba(153, 69, 255, 0.32)",
+  mono: "#dfffee",
+  warning: "#f6d878",
+  badgeBg: "rgba(20, 241, 149, 0.12)",
+  badgeBorder: "rgba(20, 241, 149, 0.34)",
+  divider: "rgba(247, 255, 249, 0.14)",
+  dividerDashed: "rgba(247, 255, 249, 0.16)",
+  accentGreen: "rgba(20, 241, 149, 0.38)",
+  accentPurple: "rgba(153, 69, 255, 0.28)",
 };
 
-const FONT_SANS = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-const FONT_MONO = 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace';
+const FONT_SANS =
+  'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const FONT_MONO =
+  'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace';
 
 const PAPER_X = 80;
 const PAPER_Y = 70;
@@ -41,6 +45,11 @@ const PAPER_W = RECEIPT_WIDTH - PAPER_X * 2;
 const PAPER_INNER_PAD = 58;
 const CONTENT_X = PAPER_X + PAPER_INNER_PAD;
 const CONTENT_W = PAPER_W - PAPER_INNER_PAD * 2;
+const VERIFY_QR_SIZE = 160;
+const VERIFY_QR_PANEL_PAD = 8;
+const VERIFY_QR_PANEL_SIZE = VERIFY_QR_SIZE + VERIFY_QR_PANEL_PAD * 2;
+const VERIFY_QR_CAPTION_GAP = 14;
+const VERIFY_QR_CAPTION_HEIGHT = 24;
 
 /**
  * Wrap text to fit within maxWidth, returning an array of lines.
@@ -49,7 +58,7 @@ function wrapText(ctx, text, maxWidth) {
   if (!text) return [];
   const words = text.split(/\s+/);
   const lines = [];
-  let currentLine = '';
+  let currentLine = "";
 
   for (const word of words) {
     const testLine = currentLine ? `${currentLine} ${word}` : word;
@@ -74,21 +83,29 @@ function drawBackground(ctx) {
 
   // Green glow top-left
   const gGreen = ctx.createRadialGradient(
-    RECEIPT_WIDTH * 0.18, RECEIPT_HEIGHT * 0.12, 0,
-    RECEIPT_WIDTH * 0.18, RECEIPT_HEIGHT * 0.12, RECEIPT_WIDTH * 0.38,
+    RECEIPT_WIDTH * 0.18,
+    RECEIPT_HEIGHT * 0.12,
+    0,
+    RECEIPT_WIDTH * 0.18,
+    RECEIPT_HEIGHT * 0.12,
+    RECEIPT_WIDTH * 0.38,
   );
-  gGreen.addColorStop(0, 'rgba(20, 241, 149, 0.14)');
-  gGreen.addColorStop(1, 'transparent');
+  gGreen.addColorStop(0, "rgba(20, 241, 149, 0.14)");
+  gGreen.addColorStop(1, "transparent");
   ctx.fillStyle = gGreen;
   ctx.fillRect(0, 0, RECEIPT_WIDTH, RECEIPT_HEIGHT);
 
   // Purple glow top-right
   const gPurple = ctx.createRadialGradient(
-    RECEIPT_WIDTH * 0.84, RECEIPT_HEIGHT * 0.18, 0,
-    RECEIPT_WIDTH * 0.84, RECEIPT_HEIGHT * 0.18, RECEIPT_WIDTH * 0.38,
+    RECEIPT_WIDTH * 0.84,
+    RECEIPT_HEIGHT * 0.18,
+    0,
+    RECEIPT_WIDTH * 0.84,
+    RECEIPT_HEIGHT * 0.18,
+    RECEIPT_WIDTH * 0.38,
   );
-  gPurple.addColorStop(0, 'rgba(153, 69, 255, 0.12)');
-  gPurple.addColorStop(1, 'transparent');
+  gPurple.addColorStop(0, "rgba(153, 69, 255, 0.12)");
+  gPurple.addColorStop(1, "transparent");
   ctx.fillStyle = gPurple;
   ctx.fillRect(0, 0, RECEIPT_WIDTH, RECEIPT_HEIGHT);
 }
@@ -107,9 +124,14 @@ function drawPaper(ctx, paperHeight) {
   ctx.strokeRect(PAPER_X, PAPER_Y, PAPER_W, paperHeight);
 
   // Subtle gradient overlay at top of card
-  const overlay = ctx.createLinearGradient(PAPER_X, PAPER_Y, PAPER_X, PAPER_Y + paperHeight * 0.18);
-  overlay.addColorStop(0, 'rgba(255, 255, 255, 0.018)');
-  overlay.addColorStop(1, 'transparent');
+  const overlay = ctx.createLinearGradient(
+    PAPER_X,
+    PAPER_Y,
+    PAPER_X,
+    PAPER_Y + paperHeight * 0.18,
+  );
+  overlay.addColorStop(0, "rgba(255, 255, 255, 0.018)");
+  overlay.addColorStop(1, "transparent");
   ctx.fillStyle = overlay;
   ctx.fillRect(PAPER_X + 1, PAPER_Y + 1, PAPER_W - 2, paperHeight * 0.18);
 
@@ -155,8 +177,8 @@ function drawRow(ctx, y, label, value, opts = {}) {
   // Label
   ctx.font = `400 22px ${FONT_SANS}`;
   ctx.fillStyle = COLORS.textMuted;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
   ctx.fillText(label, CONTENT_X, y + rowPad);
 
   if (badge) {
@@ -178,9 +200,9 @@ function drawRow(ctx, y, label, value, opts = {}) {
     ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
 
     ctx.fillStyle = COLORS.brand;
-    ctx.textAlign = 'center';
+    ctx.textAlign = "center";
     ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgePadY);
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
 
     return rowPad * 2 + Math.max(30, badgeH);
   }
@@ -188,15 +210,15 @@ function drawRow(ctx, y, label, value, opts = {}) {
   // Value
   const fontFamily = mono ? FONT_MONO : FONT_SANS;
   ctx.font = `${mono ? 400 : 640} ${fontSize}px ${fontFamily}`;
-  ctx.fillStyle = accent ? COLORS.brand : (mono ? COLORS.mono : COLORS.text);
-  ctx.textAlign = 'right';
+  ctx.fillStyle = accent ? COLORS.brand : mono ? COLORS.mono : COLORS.text;
+  ctx.textAlign = "right";
 
   const lines = wrapText(ctx, value, valueMaxWidth);
   const lineHeight = fontSize * 1.35;
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i], CONTENT_X + CONTENT_W, y + rowPad + i * lineHeight);
   }
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
 
   return rowPad * 2 + Math.max(30, lines.length * lineHeight);
 }
@@ -207,13 +229,74 @@ function drawRow(ctx, y, label, value, opts = {}) {
  */
 function drawCutLine(ctx, y) {
   ctx.save();
-  ctx.strokeStyle = 'rgba(247, 255, 249, 0.12)';
+  ctx.strokeStyle = "rgba(247, 255, 249, 0.12)";
   ctx.lineWidth = 1;
   ctx.setLineDash([6, 4]);
   ctx.beginPath();
   ctx.moveTo(CONTENT_X, y);
   ctx.lineTo(CONTENT_X + CONTENT_W, y);
   ctx.stroke();
+  ctx.restore();
+}
+
+async function createExplorerQrCanvas(explorerUrl) {
+  const cleanExplorerUrl =
+    typeof explorerUrl === "string" ? explorerUrl.trim() : "";
+
+  if (!cleanExplorerUrl) {
+    return null;
+  }
+
+  const qrCanvas = document.createElement("canvas");
+  qrCanvas.width = VERIFY_QR_SIZE;
+  qrCanvas.height = VERIFY_QR_SIZE;
+
+  try {
+    await QRCode.toCanvas(qrCanvas, cleanExplorerUrl, {
+      width: VERIFY_QR_SIZE,
+      errorCorrectionLevel: "M",
+      margin: 1,
+      color: {
+        dark: COLORS.bg,
+        light: COLORS.text,
+      },
+    });
+  } catch {
+    return null;
+  }
+
+  return qrCanvas;
+}
+
+function drawExplorerQr(ctx, qrCanvas, caption, x, y) {
+  if (!qrCanvas) return;
+
+  ctx.save();
+  ctx.fillStyle = COLORS.text;
+  ctx.fillRect(x, y, VERIFY_QR_PANEL_SIZE, VERIFY_QR_PANEL_SIZE);
+  ctx.strokeStyle = COLORS.purpleBorder;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, VERIFY_QR_PANEL_SIZE, VERIFY_QR_PANEL_SIZE);
+  ctx.drawImage(
+    qrCanvas,
+    x + VERIFY_QR_PANEL_PAD,
+    y + VERIFY_QR_PANEL_PAD,
+    VERIFY_QR_SIZE,
+    VERIFY_QR_SIZE,
+  );
+
+  if (caption) {
+    ctx.font = `680 19px ${FONT_SANS}`;
+    ctx.fillStyle = COLORS.brand;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(
+      caption,
+      x + VERIFY_QR_PANEL_SIZE / 2,
+      y + VERIFY_QR_PANEL_SIZE + VERIFY_QR_CAPTION_GAP,
+    );
+  }
+
   ctx.restore();
 }
 
@@ -225,7 +308,7 @@ function drawCutLine(ctx, y) {
  * @returns {Promise<Blob>} PNG blob of the rendered receipt.
  */
 export async function createReceiptPngBlob(receiptData, options = {}) {
-  if (typeof document !== 'undefined' && document.fonts?.ready) {
+  if (typeof document !== "undefined" && document.fonts?.ready) {
     try {
       await document.fonts.ready;
     } catch {
@@ -233,30 +316,31 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
     }
   }
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = options.width || RECEIPT_WIDTH;
   canvas.height = options.height || RECEIPT_HEIGHT;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   if (!ctx) {
-    throw new Error('Canvas 2D context could not be created.');
+    throw new Error("Canvas 2D context could not be created.");
   }
 
   const {
-    title = 'KonekPay receipt',
-    timestamp = '',
-    store = '',
-    city = '',
-    qrisType = '',
-    totalIdr = '',
-    solPaid = '',
-    status = '',
-    network = 'Solana Devnet',
-    transactionId = '',
-    explorerUrl = '',
-    disclaimer = '',
+    title = "KonekPay receipt",
+    timestamp = "",
+    store = "",
+    city = "",
+    qrisType = "",
+    totalIdr = "",
+    solPaid = "",
+    status = "",
+    network = "Solana Devnet",
+    transactionId = "",
+    explorerUrl = "",
+    disclaimer = "",
     labels = {},
   } = receiptData;
+  const qrCanvas = await createExplorerQrCanvas(explorerUrl);
 
   // -- Background --
   drawBackground(ctx);
@@ -270,8 +354,8 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   // -- Header: title + network on left, timestamp on right --
   ctx.font = `760 36px ${FONT_SANS}`;
   ctx.fillStyle = COLORS.text;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
   ctx.fillText(title, CONTENT_X, cursorY);
 
   ctx.font = `400 20px ${FONT_SANS}`;
@@ -281,12 +365,12 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   if (timestamp) {
     ctx.font = `400 19px ${FONT_MONO}`;
     ctx.fillStyle = COLORS.mono;
-    ctx.textAlign = 'right';
+    ctx.textAlign = "right";
     const tsLines = wrapText(ctx, timestamp, CONTENT_W * 0.45);
     for (let i = 0; i < tsLines.length; i++) {
       ctx.fillText(tsLines[i], CONTENT_X + CONTENT_W, cursorY + 6 + i * 26);
     }
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
   }
 
   cursorY += 96;
@@ -299,7 +383,7 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   if (labels.totalIdr) {
     ctx.font = `720 19px ${FONT_SANS}`;
     ctx.fillStyle = COLORS.brandSoft;
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
     ctx.fillText(labels.totalIdr.toUpperCase(), CONTENT_X, cursorY);
     cursorY += 32;
   }
@@ -307,15 +391,15 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   if (totalIdr) {
     ctx.font = `820 56px ${FONT_SANS}`;
     ctx.fillStyle = COLORS.brand;
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
     ctx.fillText(totalIdr, CONTENT_X, cursorY);
     cursorY += 66;
   }
 
   if (solPaid) {
     ctx.font = `400 25px ${FONT_MONO}`;
-    ctx.fillStyle = 'rgba(247, 255, 249, 0.76)';
-    ctx.textAlign = 'left';
+    ctx.fillStyle = "rgba(247, 255, 249, 0.76)";
+    ctx.textAlign = "left";
     ctx.fillText(solPaid, CONTENT_X, cursorY);
     cursorY += 40;
   }
@@ -327,12 +411,18 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
   cursorY += 12;
 
   // -- Detail rows --
-  cursorY += drawRow(ctx, cursorY, labels.store || 'Store', store);
-  cursorY += drawRow(ctx, cursorY, labels.city || 'City', city);
-  cursorY += drawRow(ctx, cursorY, labels.qrisType || 'QRIS Type', qrisType);
-  cursorY += drawRow(ctx, cursorY, labels.solPaid || 'SOL Paid', solPaid, { accent: true });
-  cursorY += drawRow(ctx, cursorY, labels.status || 'Status', status, { badge: true });
-  cursorY += drawRow(ctx, cursorY, labels.network || 'Network', network, { accent: true });
+  cursorY += drawRow(ctx, cursorY, labels.store || "Store", store);
+  cursorY += drawRow(ctx, cursorY, labels.city || "City", city);
+  cursorY += drawRow(ctx, cursorY, labels.qrisType || "QRIS Type", qrisType);
+  cursorY += drawRow(ctx, cursorY, labels.solPaid || "SOL Paid", solPaid, {
+    accent: true,
+  });
+  cursorY += drawRow(ctx, cursorY, labels.status || "Status", status, {
+    badge: true,
+  });
+  cursorY += drawRow(ctx, cursorY, labels.network || "Network", network, {
+    accent: true,
+  });
 
   // -- Section divider --
   drawDivider(ctx, cursorY, true);
@@ -340,41 +430,72 @@ export async function createReceiptPngBlob(receiptData, options = {}) {
 
   // -- Transaction section --
   const shortTx = truncateForCanvas(transactionId, 14, 14);
-  cursorY += drawRow(ctx, cursorY, labels.transactionId || 'Transaction ID', shortTx, { mono: true });
+  cursorY += drawRow(
+    ctx,
+    cursorY,
+    labels.transactionId || "Transaction ID",
+    shortTx,
+    { mono: true },
+  );
 
   if (explorerUrl) {
-    const shortUrl = explorerUrl.length > 60
-      ? explorerUrl.slice(0, 57) + '...'
-      : explorerUrl;
-    cursorY += drawRow(ctx, cursorY, labels.explorerLink || 'Explorer Link', shortUrl, { mono: true });
+    const shortUrl = truncateForCanvas(explorerUrl, 24, 18);
+    cursorY += drawRow(
+      ctx,
+      cursorY,
+      labels.explorerLink || "Explorer Link",
+      shortUrl,
+      { mono: true },
+    );
   }
 
   // -- Footer area --
-  // Compute footer Y with proper spacing from content and card bottom
+  // Compute footer Y with enough room for the verification QR.
   const footerBottomPad = 48;
-  const footerContentH = 56;
+  const footerContentH = qrCanvas
+    ? VERIFY_QR_PANEL_SIZE +
+      VERIFY_QR_CAPTION_GAP +
+      VERIFY_QR_CAPTION_HEIGHT +
+      22
+    : 56;
   const footerY = PAPER_Y + paperHeight - footerBottomPad - footerContentH;
 
   // Dashed cut line above footer (clean receipt-style separator)
   drawCutLine(ctx, footerY);
 
+  const qrX = CONTENT_X + CONTENT_W - VERIFY_QR_PANEL_SIZE;
+  const qrY = footerY + 22;
+  const disclaimerMaxWidth = qrCanvas ? qrX - CONTENT_X - 34 : CONTENT_W * 0.72;
+  let footerTextY = footerY + 22;
+
   // Disclaimer text
   if (disclaimer) {
     ctx.font = `400 19px ${FONT_SANS}`;
     ctx.fillStyle = COLORS.warning;
-    ctx.textAlign = 'left';
-    const disclaimerLines = wrapText(ctx, disclaimer, CONTENT_W * 0.72);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    const disclaimerLines = wrapText(ctx, disclaimer, disclaimerMaxWidth);
     for (let i = 0; i < disclaimerLines.length; i++) {
-      ctx.fillText(disclaimerLines[i], CONTENT_X, footerY + 22 + i * 28);
+      ctx.fillText(disclaimerLines[i], CONTENT_X, footerTextY + i * 28);
     }
+    footerTextY += disclaimerLines.length * 28 + 22;
   }
 
   // Brand name
   ctx.font = `760 19px ${FONT_SANS}`;
-  ctx.fillStyle = 'rgba(20, 241, 149, 0.82)';
-  ctx.textAlign = 'right';
-  ctx.fillText('KonekPay', CONTENT_X + CONTENT_W, footerY + 22);
-  ctx.textAlign = 'left';
+  ctx.fillStyle = "rgba(20, 241, 149, 0.82)";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("KonekPay", CONTENT_X, footerTextY);
+
+  drawExplorerQr(
+    ctx,
+    qrCanvas,
+    "",
+    qrX,
+    qrY,
+  );
+  ctx.textAlign = "left";
 
   // -- Generate PNG blob --
   return canvasToBlob(canvas);
@@ -390,9 +511,9 @@ function canvasToBlob(canvas) {
       if (blob) {
         resolve(blob);
       } else {
-        reject(new Error('Receipt image could not be created.'));
+        reject(new Error("Receipt image could not be created."));
       }
-    }, 'image/png');
+    }, "image/png");
   });
 }
 
@@ -400,7 +521,7 @@ function canvasToBlob(canvas) {
  * Truncate a string in the middle for display.
  */
 function truncateForCanvas(value, startLen = 14, endLen = 14) {
-  if (!value || typeof value !== 'string') return '';
+  if (!value || typeof value !== "string") return "";
   if (value.length <= startLen + endLen + 3) return value;
   return `${value.slice(0, startLen)}...${value.slice(-endLen)}`;
 }
