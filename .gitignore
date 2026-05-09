@@ -7,9 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Build outputs
 node_modules
 dist
 dist-ssr
+build
+.vite
+
+# Test coverage
+coverage
+*.lcov
 
 # local env files
 .env
@@ -23,10 +30,26 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+ehthumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+
+# IDE cache
+.history
+.nuxt
+
+# Deployment & CLI
 .vercel
+.wrangler
 .playwright-cli
+
+# TypeScript
+*.tsbuildinfo
+
+# Supabase local
+.supabase
