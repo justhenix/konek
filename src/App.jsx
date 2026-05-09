@@ -3253,9 +3253,9 @@ function App() {
                       />
                     </div>
                   )}
-                  <section className="hero-content min-w-0 max-w-3xl">
+                  <section className="hero-content min-w-0 max-w-5xl">
                       <h1
-                        className="hero-text text-4xl  leading-[1.04] text-white sm:text-5xl lg:text-6xl xl:text-7xl"
+                        className="hero-headline"
                         data-hero-word
                       >
                         {t("hero.headlinePre")}

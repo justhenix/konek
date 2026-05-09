@@ -251,6 +251,41 @@ body {
   }
 }
 
+/* ===== Hero Headline Fixes ===== */
+.hero-headline {
+  font-size: 2.25rem; /* text-4xl */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  word-spacing: normal;
+  color: var(--kp-text);
+  margin-bottom: 1.25rem;
+  text-wrap: balance;
+}
+
+@media (min-width: 640px) {
+  .hero-headline {
+    font-size: 3rem; /* text-5xl */
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-headline {
+    font-size: 3.75rem; /* text-6xl */
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-headline {
+    font-size: 4.5rem; /* text-7xl */
+  }
+}
+
+.text-solana {
+  color: var(--kp-purple);
+}
+
 .kp-text {
   color: var(--kp-text);
 }
