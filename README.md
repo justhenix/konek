@@ -18,7 +18,7 @@
   <img alt="Vite React" src="https://img.shields.io/badge/Frontend-Vite_React-646CFF?style=flat-square">
 </p>
 
-KonekPay lets people pay a QRIS merchant using a Solana wallet.
+KonekPay lets Indonesian users pay QRIS-style merchant invoices using a Solana wallet.
 
 The prototype scans a standard Indonesian QRIS payload, extracts merchant and rupiah payment data, quotes the equivalent SOL amount, opens Phantom for a Solana devnet transfer, verifies the transaction on the backend, and presents a payment proof plus a simulated merchant payout record.
 
@@ -26,15 +26,14 @@ The goal is simple: make a Solana payment feel as familiar as scanning QRIS at a
 
 ## Links
 
-| Item       | Link                                                                                                                    |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Live demo  | [konekpay.online](https://konekpay.online)                                                                              |
-| Repository | [github.com/justhenix/konek](https://github.com/justhenix/konek)                                                        |
-| Hackathon  | [Colosseum Frontier Hackathon](https://colosseum.com/frontier)                                                          |
+| Item | Link |
+| ---- | ---- |
+| Live demo | [konekpay.online](https://konekpay.online) |
+| Repository | [github.com/justhenix/konek](https://github.com/justhenix/konek) |
+| Demo video | [Product demo](https://youtu.be/Nfi8-k6Zh3g) |
+| Pitch video | [Pitch video](https://youtu.be/6fGLXrPrmuQ) |
+| Hackathon | [Colosseum Frontier Hackathon](https://colosseum.com/frontier) |
 | Side Track | [Superteam Indonesia National Campus Hackathon](https://superteam.fun/earn/listing/indonesia-national-campus-hackathon) |
-
-<!-- Add the final demo video URL here after recording. -->
-<!-- Add the final pitch deck URL here after publishing. -->
 
 ## Why KonekPay
 
@@ -334,7 +333,7 @@ After changing any `VITE_*` variable in Vercel, redeploy the project. Vite bakes
 - [x] Transaction history flow
 - [x] Unit tests for quote, verify, settlement, history, transactions, QRIS parser, and receipt utilities
 - [x] Publish final demo video
-- [x] Publish final pitch deck
+- [x] Publish final pitch video
 
 ### Next milestones
 
