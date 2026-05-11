@@ -10,10 +10,13 @@ import {
 import {
   buildReceiptSummary,
   copyTextToClipboard,
-  createReceiptFileName,
+  createReceiptImageFileName,
+  downloadBlobFile,
   downloadTextFile,
+  formatReceiptShareTextWithUrl,
   truncateMiddle,
 } from "./utils/receipt";
+import { createReceiptPngBlob } from "./utils/receiptImage";
 import { formatIdrAmount } from "./utils/payment";
 
 const getStatusLabel = (status, t) => {
@@ -123,6 +126,51 @@ function HistoryReceiptDetail({ record, language, t, onClose }) {
       timestampLabel,
     ],
   );
+  const receiptImageFileName = createReceiptImageFileName(
+    record.signature,
+    t("receipt.downloadFileName"),
+  );
+
+  const createHistoryReceiptImageBlob = async () => {
+    const receiptData = {
+      title: t("receipt.shareTitle"),
+      timestamp: timestampLabel || t("payment.lblDateUnavailable"),
+      store: record.merchantName || t("payment.lblNotProvided"),
+      city: record.merchantCity,
+      qrisType: qrisTypeLabel,
+      totalIdr: idrAmountLabel,
+      solPaid: solAmountLabel,
+      status: statusLabel,
+      network: networkLabel,
+      transactionId: record.signature,
+      explorerUrl: record.explorerUrl,
+      disclaimer: t("receipt.noRealIdr"),
+      labels: {
+        city: t("payment.lblCity"),
+        explorerLink: t("payment.lblExplorerLink"),
+        network: t("payment.lblNetwork"),
+        qrisType: t("payment.lblQrisType"),
+        scanToVerify: t("receipt.scanToVerify"),
+        solPaid: t("payment.lblSolPaid"),
+        status: t("payment.lblStatus"),
+        store: t("payment.lblStore"),
+        totalIdr: t("payment.lblIdrAmount"),
+        transactionId: t("payment.lblTransactionId"),
+      },
+    };
+
+    if (!receiptData.title || !receiptData.totalIdr) {
+      throw new Error("Receipt data incomplete.");
+    }
+
+    const receiptBlob = await createReceiptPngBlob(receiptData);
+
+    if (!receiptBlob || receiptBlob.size < 5000) {
+      throw new Error("Receipt image too small, likely blank.");
+    }
+
+    return receiptBlob;
+  };
 
   useEffect(() => {
     if (!actionMessage) return undefined;
@@ -136,16 +184,58 @@ function HistoryReceiptDetail({ record, language, t, onClose }) {
     setActionMessage(didCopy ? successMessage : t("payment.copyUnavailable"));
   };
 
+  const copyShareFallback = async (successMessage) => {
+    const fallbackText = record.explorerUrl || receiptSummary;
+    const didCopy = await copyTextToClipboard(fallbackText);
+    setActionMessage(
+      didCopy
+        ? record.explorerUrl
+          ? successMessage
+          : t("payment.receiptCopied")
+        : t("payment.copyUnavailable"),
+    );
+  };
+
   const handleShareReceipt = async () => {
-    if (
-      typeof navigator !== "undefined" &&
-      typeof navigator.share === "function"
-    ) {
+    const shareTitle = t("receipt.shareTitle");
+    const shareText = t("receipt.shareText");
+
+    if (!canUseWebShare) {
+      await copyShareFallback(t("receipt.shareUnsupported"));
+      return;
+    }
+
+    let receiptFile = null;
+
+    try {
+      const receiptBlob = await createHistoryReceiptImageBlob();
+
+      if (typeof File === "function") {
+        receiptFile = new File([receiptBlob], receiptImageFileName, {
+          type: "image/png",
+        });
+      }
+    } catch {
+      await copyShareFallback(t("receipt.imageFailed"));
+      return;
+    }
+
+    let canShareReceiptFile = false;
+
+    if (receiptFile && typeof navigator.canShare === "function") {
+      try {
+        canShareReceiptFile = navigator.canShare({ files: [receiptFile] });
+      } catch {
+        canShareReceiptFile = false;
+      }
+    }
+
+    if (canShareReceiptFile) {
       try {
         await navigator.share({
-          title: t("payment.receiptSummaryTitle"),
-          text: receiptSummary,
-          url: record.explorerUrl || undefined,
+          title: shareTitle,
+          text: shareText,
+          files: [receiptFile],
         });
         setActionMessage(t("payment.receiptShared"));
         return;
@@ -154,20 +244,42 @@ function HistoryReceiptDetail({ record, language, t, onClose }) {
       }
     }
 
-    await handleCopy(receiptSummary, t("payment.receiptCopied"));
+    const urlShareText = formatReceiptShareTextWithUrl(
+      t("receipt.shareTextWithUrl"),
+      record.explorerUrl,
+      shareText,
+    );
+
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: urlShareText,
+        ...(record.explorerUrl ? { url: record.explorerUrl } : {}),
+      });
+      setActionMessage(t("payment.receiptShared"));
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+
+      await copyShareFallback(t("receipt.shareUnsupported"));
+    }
   };
 
-  const handleDownload = () => {
-    const didDownload = downloadTextFile({
-      fileName: createReceiptFileName(record.signature),
-      text: receiptSummary,
-    });
+  const handleDownload = async () => {
+    try {
+      const receiptBlob = await createHistoryReceiptImageBlob();
+      const didDownload = downloadBlobFile({
+        fileName: receiptImageFileName,
+        blob: receiptBlob,
+      });
 
-    setActionMessage(
-      didDownload
-        ? t("payment.receiptDownloaded")
-        : t("payment.receiptDownloadFailed"),
-    );
+      setActionMessage(
+        didDownload
+          ? t("payment.receiptDownloaded")
+          : t("payment.receiptDownloadFailed"),
+      );
+    } catch {
+      setActionMessage(t("payment.receiptDownloadFailed"));
+    }
   };
 
   const canUseWebShare =
