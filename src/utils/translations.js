@@ -228,6 +228,13 @@ export const translations = {
       phantomNotReadyBody:
         "Install Phantom or open this page in a browser that supports Phantom.",
     },
+    wallet: {
+      openInPhantomTitle: "Open KonekPay in Phantom",
+      openInPhantomBody: "On mobile, use Phantom's in-app browser so wallet approval opens in the same flow.",
+      openInPhantomButton: "Open in Phantom",
+      returnToKonekPay: "Return to KonekPay after approval.",
+      mobileProviderUnavailable: "Phantom is not available in this browser.",
+    },
     missingWalletModal: {
       eyebrow: "Wallet required",
       title: "Phantom Wallet not found",
@@ -933,6 +940,13 @@ export const translations = {
       phantomNotReadyTitle: "Phantom belum siap",
       phantomNotReadyBody:
         "Install Phantom atau buka halaman ini di browser yang mendukung Phantom.",
+    },
+    wallet: {
+      openInPhantomTitle: "Buka KonekPay di Phantom",
+      openInPhantomBody: "Di mobile, gunakan browser bawaan Phantom agar persetujuan dompet tetap dalam satu alur.",
+      openInPhantomButton: "Buka di Phantom",
+      returnToKonekPay: "Kembali ke KonekPay setelah menyetujui.",
+      mobileProviderUnavailable: "Phantom belum tersedia di browser ini.",
     },
     missingWalletModal: {
       eyebrow: "Dompet diperlukan",

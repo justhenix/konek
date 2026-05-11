@@ -72,6 +72,26 @@ const THEME_STORAGE_KEY = "konek_theme";
 const PHANTOM_PAYMENT_ACTION_PARAM = "konek_action";
 const PHANTOM_PAYMENT_ID_PARAM = "konek_payment_id";
 const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
+
+const isMobileBrowser = () => {
+  return typeof navigator !== "undefined" && MOBILE_DEVICE_REGEX.test(navigator.userAgent);
+};
+
+const isPhantomInjected = () => {
+  if (typeof window === "undefined") return false;
+  return Boolean(window.phantom?.solana?.isPhantom || window.solana?.isPhantom);
+};
+
+const isPhantomInAppBrowser = () => {
+  return isMobileBrowser() && isPhantomInjected();
+};
+
+const buildPhantomBrowseUrl = (currentUrl) => {
+  const ref = encodeURIComponent(window.location.origin);
+  const target = encodeURIComponent(currentUrl);
+  return `https://phantom.app/ul/browse/${target}?ref=${ref}`;
+};
+
 const VERIFY_RETRYABLE_ERRORS = new Set(["TX_NOT_FOUND", "TX_NOT_FINALIZED"]);
 const TERMINAL_PAYMENT_ERROR_CODES = new Set([
   "QUOTE_EXPIRED",
@@ -628,80 +648,123 @@ const ToastViewport = ({ toasts, onDismiss }) => (
   </div>
 );
 
-const MissingWalletModal = ({ onDismiss, t }) => (
-  <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
-    <div
-      className="kp-panel relative w-full max-w-120 border border-purple-400/25 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="missing-wallet-title"
-    >
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-purple-400/40 hover:text-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-        aria-label={t("missingWalletModal.closeLabel")}
+const MissingWalletModal = ({ onDismiss, t }) => {
+  const isMobileNormalBrowser = isMobileBrowser() && !isPhantomInjected();
+
+  const handleOpenInPhantom = () => {
+    window.location.assign(buildPhantomBrowseUrl(window.location.href));
+  };
+
+  return (
+    <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
+      <div
+        className="kp-panel relative w-full max-w-120 border border-purple-400/25 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="missing-wallet-title"
       >
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M6 18L18 6M6 6l12 12"
-          ></path>
-        </svg>
-      </button>
-
-      <div className="mb-5 flex h-14 w-14 items-center justify-center border border-purple-400/30 bg-purple-500/10">
-        <img
-          src={logoPhantom}
-          alt="Phantom"
-          className="h-8 w-8 object-contain"
-        />
-      </div>
-
-      <p className="mb-2 text-[11px]  text-purple-300">
-        {t("missingWalletModal.eyebrow")}
-      </p>
-      <h3
-        id="missing-wallet-title"
-        className="pr-10 text-2xl  text-(--kp-text)"
-      >
-        {t("missingWalletModal.title")}
-      </h3>
-      <p className="kp-muted mt-3 text-sm leading-7">
-        {t("missingWalletModal.body")}
-      </p>
-      <p className="kp-soft mt-3 text-xs leading-5">
-        {t("missingWalletModal.helper")}
-      </p>
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <a
-          href={PHANTOM_DOWNLOAD_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-        >
-          {t("missingWalletModal.install")}
-        </a>
         <button
           type="button"
           onClick={onDismiss}
-          className="kp-button-secondary min-h-12 border px-4 py-3 text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+          className="absolute right-4 top-4 grid h-9 w-9 place-items-center border border-white/10 bg-white/4 text-zinc-400 transition-colors hover:border-purple-400/40 hover:text-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+          aria-label={t("missingWalletModal.closeLabel")}
         >
-          {t("missingWalletModal.dismiss")}
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
         </button>
+
+        <div className="mb-5 flex h-14 w-14 items-center justify-center border border-purple-400/30 bg-purple-500/10">
+          <img
+            src={logoPhantom}
+            alt="Phantom"
+            className="h-8 w-8 object-contain"
+          />
+        </div>
+
+        {isMobileNormalBrowser ? (
+          <>
+            <p className="mb-2 text-[11px]  text-purple-300">
+              {t("wallet.mobileProviderUnavailable")}
+            </p>
+            <h3
+              id="missing-wallet-title"
+              className="pr-10 text-2xl  text-(--kp-text)"
+            >
+              {t("wallet.openInPhantomTitle")}
+            </h3>
+            <p className="kp-muted mt-3 text-sm leading-7">
+              {t("wallet.openInPhantomBody")}
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+              <button
+                type="button"
+                onClick={handleOpenInPhantom}
+                className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              >
+                {t("wallet.openInPhantomButton")}
+              </button>
+              <button
+                type="button"
+                onClick={onDismiss}
+                className="kp-button-secondary min-h-12 border px-4 py-3 text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+              >
+                {t("missingWalletModal.dismiss")}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-2 text-[11px]  text-purple-300">
+              {t("missingWalletModal.eyebrow")}
+            </p>
+            <h3
+              id="missing-wallet-title"
+              className="pr-10 text-2xl  text-(--kp-text)"
+            >
+              {t("missingWalletModal.title")}
+            </h3>
+            <p className="kp-muted mt-3 text-sm leading-7">
+              {t("missingWalletModal.body")}
+            </p>
+            <p className="kp-soft mt-3 text-xs leading-5">
+              {t("missingWalletModal.helper")}
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+              <a
+                href={PHANTOM_DOWNLOAD_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              >
+                {t("missingWalletModal.install")}
+              </a>
+              <button
+                type="button"
+                onClick={onDismiss}
+                className="kp-button-secondary min-h-12 border px-4 py-3 text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+              >
+                {t("missingWalletModal.dismiss")}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const DEVNET_MODAL_STEPS = [
   "modalStep1",
@@ -1623,48 +1686,13 @@ function App() {
     [addToast, t],
   );
 
+  const connectInProgressRef = useRef(false);
+
   const handleConnectWallet = async () => {
-    if (isConnecting) return;
+    if (isConnecting || connectInProgressRef.current) return;
     try {
       setIsConnecting(true);
-      const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
-
-      if (isMobile) {
-        const dappKeypair = Keypair.generate();
-        const dappEncryptionKeypair = nacl.box.keyPair.fromSecretKey(
-          dappKeypair.secretKey.slice(0, nacl.box.secretKeyLength),
-        );
-        const dappEncryptionPublicKey = bs58.encode(
-          dappEncryptionKeypair.publicKey,
-        );
-        const redirectUrl = new URL(window.location.href);
-
-        redirectUrl.search = "";
-        redirectUrl.hash = "";
-        localStorage.setItem(
-          PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY,
-          JSON.stringify(Array.from(dappKeypair.secretKey)),
-        );
-        localStorage.setItem(
-          PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
-          dappEncryptionPublicKey,
-        );
-
-        const phantomConnectUrl = new URL(PHANTOM_CONNECT_URL);
-        phantomConnectUrl.searchParams.set(
-          "dapp_encryption_public_key",
-          dappEncryptionPublicKey,
-        );
-        phantomConnectUrl.searchParams.set("app_url", window.location.origin);
-        phantomConnectUrl.searchParams.set(
-          "redirect_link",
-          redirectUrl.toString(),
-        );
-        phantomConnectUrl.searchParams.set("cluster", "devnet");
-
-        window.location.href = phantomConnectUrl.toString();
-        return;
-      }
+      connectInProgressRef.current = true;
 
       const provider = getPhantomProvider();
       if (provider) {
@@ -1715,6 +1743,7 @@ function App() {
       }
     } finally {
       setIsConnecting(false);
+      connectInProgressRef.current = false;
     }
   };
 
@@ -2249,81 +2278,13 @@ function App() {
     [userProfile.address],
   );
 
-  const startPhantomMobilePayment = useCallback(
-    ({ transaction, parsedPayment, quote }) => {
-      const dappEncryptionPublicKey = localStorage.getItem(
-        PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
-      );
-      const phantomEncryptionPublicKey = localStorage.getItem(
-        PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
-      );
-      const session = localStorage.getItem(PHANTOM_SESSION_STORAGE_KEY);
-
-      if (!dappEncryptionPublicKey || !phantomEncryptionPublicKey || !session) {
-        throw new Error("Reconnect Phantom mobile before paying.");
-      }
-
-      const walletAddress = transaction.feePayer?.toBase58?.() || null;
-
-      logPhantomMobilePayment("[PHANTOM_MOBILE_PAYMENT_START]", {
-        quoteId: getQuoteIdLogPrefix(quote?.quoteId),
-        wallet: walletAddress,
-        status: "starting",
-      });
-
-      const nonce = createPhantomNonce();
-      const sharedSecret = getStoredPhantomSharedSecret(
-        phantomEncryptionPublicKey,
-      );
-      const payload = encryptPhantomPayload(
-        {
-          transaction: serializeTransactionForPhantom(transaction),
-          session,
-        },
-        nonce,
-        sharedSecret,
-      );
-      const redirectUrl = new URL(window.location.href);
-      const pendingPayment = createPendingPhantomPayment({
-        parsedPayment,
-        quote,
-        walletAddress,
-      });
-
-      redirectUrl.search = "";
-      redirectUrl.hash = "";
-      redirectUrl.searchParams.set(
-        PHANTOM_PAYMENT_ACTION_PARAM,
-        PHANTOM_PAYMENT_ACTION,
-      );
-      redirectUrl.searchParams.set(
-        PHANTOM_PAYMENT_ID_PARAM,
-        pendingPayment.paymentResumeId,
-      );
-
-      writePendingPhantomPayment(pendingPayment);
-      logPhantomMobilePayment("[PHANTOM_MOBILE_PAYMENT_PENDING_SAVED]", {
-        quoteId: getQuoteIdLogPrefix(quote?.quoteId),
-        paymentResumeId: pendingPayment.paymentResumeId,
-        status: pendingPayment.status,
-        expiresAt: pendingPayment.expiresAt,
-        redirectPath: pendingPayment.redirectPath,
-      });
-
-      window.location.href = buildPhantomSignTransactionUrl({
-        dappEncryptionPublicKey,
-        nonce,
-        payload,
-        redirectLink: redirectUrl.toString(),
-      });
-
-      return { status: "redirecting" };
-    },
-    [getStoredPhantomSharedSecret, writePendingPhantomPayment],
-  );
+  const paymentApprovalInProgressRef = useRef(false);
 
   const handlePaymentConfirm = useCallback(
     async ({ parsedPayment, quote }) => {
+      if (paymentApprovalInProgressRef.current) return;
+      paymentApprovalInProgressRef.current = true;
+      
       setParsedPaymentData(parsedPayment);
       setRestoredPaymentQuote(quote);
       setPaymentSubmission(null);
@@ -2342,10 +2303,9 @@ function App() {
         const payerPublicKey = publicKey || mobileWalletPublicKey;
         const payerWalletAddress =
           payerPublicKey?.toBase58?.() || String(payerPublicKey || "");
-        const isMobile = MOBILE_DEVICE_REGEX.test(navigator.userAgent);
 
         if (!payerPublicKey) {
-          if (!isMobile && !getPhantomProvider()) {
+          if (!getPhantomProvider()) {
             showMissingWalletModal({ showToast: false });
             throw createPaymentFlowError(
               "PHANTOM_MISSING",
@@ -2362,25 +2322,10 @@ function App() {
           fromPublicKey: payerPublicKey,
           solAmount: quote.solAmount,
         });
-        const hasPhantomMobileSession = Boolean(
-          mobileWalletPublicKey &&
-          localStorage.getItem(PHANTOM_SESSION_STORAGE_KEY) &&
-          localStorage.getItem(
-            PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
-          ),
-        );
-
-        if (isMobile && hasPhantomMobileSession) {
-          return startPhantomMobilePayment({
-            transaction,
-            parsedPayment,
-            quote,
-          });
-        }
 
         if (!publicKey) {
           throw new Error(
-            "Connect the Phantom browser wallet before paying on desktop.",
+            "Connect the Phantom wallet before paying.",
           );
         }
 
@@ -2413,6 +2358,8 @@ function App() {
         }
 
         throw error;
+      } finally {
+        paymentApprovalInProgressRef.current = false;
       }
     },
     [
@@ -2424,7 +2371,6 @@ function App() {
       readPendingPhantomPayment,
       sendTransaction,
       showMissingWalletModal,
-      startPhantomMobilePayment,
       t,
       verifySubmittedPayment,
     ],
