@@ -333,11 +333,11 @@ After changing any `VITE_*` variable in Vercel, redeploy the project. Vite bakes
 - [x] Strict QRIS/manual amount validation
 - [x] Transaction history flow
 - [x] Unit tests for quote, verify, settlement, history, transactions, QRIS parser, and receipt utilities
+- [x] Publish final demo video
+- [x] Publish final pitch deck
 
 ### Next milestones
 
-- [ ] Publish final demo video
-- [ ] Publish final pitch deck
 - [ ] Persist the full payment lifecycle from quote to verification to settlement record
 - [ ] Add settlement reconciliation states
 - [ ] Add E2E test for Demo QRIS to verified payment flow
