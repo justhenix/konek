@@ -444,8 +444,8 @@ const fetchSolIdrRateFromPyth = async () => {
 
 const navItems = [
   { key: "navbar.home", target: "top" },
-  { key: "navbar.usp", target: "usp-section" },
   { key: "navbar.howItWorks", target: "workflow-flow" },
+  { key: "navbar.usp", target: "usp-section" },
   { key: "navbar.faq", target: "proof-section" },
   { key: "navbar.team", target: "team-page" },
 ];
