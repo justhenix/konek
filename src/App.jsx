@@ -58,6 +58,7 @@ const PYTH_USD_IDR_FEED_ID =
   "0x6693afcd49878bbd622e46bd805e7177932cf6ab0b1c91b135d71151b9207433";
 const USD_IDR_FALLBACK_URL = "https://open.er-api.com/v6/latest/USD";
 const PHANTOM_CONNECT_URL = "https://phantom.app/ul/v1/connect";
+const PHANTOM_BROWSE_URL = "https://phantom.app/ul/browse/";
 const PHANTOM_DOWNLOAD_URL = "https://phantom.com/download";
 const SOLANA_FAUCET_URL = "https://faucet.solana.com/";
 const KONEK_GITHUB_URL = "https://github.com/justhenix/konek";
@@ -72,26 +73,6 @@ const THEME_STORAGE_KEY = "konek_theme";
 const PHANTOM_PAYMENT_ACTION_PARAM = "konek_action";
 const PHANTOM_PAYMENT_ID_PARAM = "konek_payment_id";
 const MOBILE_DEVICE_REGEX = /iPhone|iPad|iPod|Android/i;
-
-const isMobileBrowser = () => {
-  return typeof navigator !== "undefined" && MOBILE_DEVICE_REGEX.test(navigator.userAgent);
-};
-
-const isPhantomInjected = () => {
-  if (typeof window === "undefined") return false;
-  return Boolean(window.phantom?.solana?.isPhantom || window.solana?.isPhantom);
-};
-
-const isPhantomInAppBrowser = () => {
-  return isMobileBrowser() && isPhantomInjected();
-};
-
-const buildPhantomBrowseUrl = (currentUrl) => {
-  const ref = encodeURIComponent(window.location.origin);
-  const target = encodeURIComponent(currentUrl);
-  return `https://phantom.app/ul/browse/${target}?ref=${ref}`;
-};
-
 const VERIFY_RETRYABLE_ERRORS = new Set(["TX_NOT_FOUND", "TX_NOT_FINALIZED"]);
 const TERMINAL_PAYMENT_ERROR_CODES = new Set([
   "QUOTE_EXPIRED",
@@ -106,6 +87,25 @@ const TERMINAL_PAYMENT_ERROR_CODES = new Set([
 ]);
 const VERIFY_RETRY_DELAY_MS = 2000;
 const VERIFY_MAX_ATTEMPTS = 10;
+const MOBILE_CONNECT_DEBOUNCE_MS = 1500;
+
+// ── Mobile / Phantom detection helpers ──
+const isMobileBrowser = () => MOBILE_DEVICE_REGEX.test(navigator.userAgent);
+
+const isPhantomInjected = () => {
+  if (typeof window === "undefined") return false;
+  return Boolean(
+    window.phantom?.solana?.isPhantom || window.solana?.isPhantom,
+  );
+};
+
+const isPhantomInAppBrowser = () =>
+  isMobileBrowser() && isPhantomInjected();
+
+const buildPhantomBrowseUrl = (targetUrl) => {
+  const encoded = encodeURIComponent(targetUrl || window.location.href);
+  return `${PHANTOM_BROWSE_URL}${encoded}`;
+};
 
 const logPhantomMobilePayment = (event, details = {}) => {
   if (import.meta.env.DEV) {
@@ -649,10 +649,12 @@ const ToastViewport = ({ toasts, onDismiss }) => (
 );
 
 const MissingWalletModal = ({ onDismiss, t }) => {
-  const isMobileNormalBrowser = isMobileBrowser() && !isPhantomInjected();
+  const isMobile = isMobileBrowser();
 
   const handleOpenInPhantom = () => {
-    window.location.assign(buildPhantomBrowseUrl(window.location.href));
+    const phantomBrowseUrl = buildPhantomBrowseUrl(window.location.href);
+    // Same-window navigation: do not use window.open or target="_blank"
+    window.location.assign(phantomBrowseUrl);
   };
 
   return (
@@ -693,10 +695,10 @@ const MissingWalletModal = ({ onDismiss, t }) => {
           />
         </div>
 
-        {isMobileNormalBrowser ? (
+        {isMobile ? (
           <>
             <p className="mb-2 text-[11px]  text-purple-300">
-              {t("wallet.mobileProviderUnavailable")}
+              {t("missingWalletModal.eyebrow")}
             </p>
             <h3
               id="missing-wallet-title"
@@ -741,7 +743,6 @@ const MissingWalletModal = ({ onDismiss, t }) => {
             <p className="kp-soft mt-3 text-xs leading-5">
               {t("missingWalletModal.helper")}
             </p>
-
             <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
               <a
                 href={PHANTOM_DOWNLOAD_URL}
@@ -1318,6 +1319,9 @@ function App() {
   const [isMobileWalletOpen, setIsMobileWalletOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const toastIdRef = useRef(0);
+  const isOpeningPhantomRef = useRef(false);
+  const connectInProgressRef = useRef(false);
+  const lastMobileConnectTimeRef = useRef(0);
   const [solPrice, setSolPrice] = useState(null);
   const [themePreference, setThemePreference] = useState(
     getInitialThemePreference,
@@ -1686,14 +1690,106 @@ function App() {
     [addToast, t],
   );
 
-  const connectInProgressRef = useRef(false);
-
   const handleConnectWallet = async () => {
-    if (isConnecting || connectInProgressRef.current) return;
+    if (isConnecting) return;
+
+    // Double-tap guard for mobile deep link navigation
+    const now = Date.now();
+    if (now - lastMobileConnectTimeRef.current < MOBILE_CONNECT_DEBOUNCE_MS) {
+      return;
+    }
+    if (connectInProgressRef.current) return;
+
     try {
       setIsConnecting(true);
       connectInProgressRef.current = true;
+      const isMobile = isMobileBrowser();
 
+      if (isMobile) {
+        // If inside Phantom in-app browser, use injected provider directly
+        if (isPhantomInAppBrowser()) {
+          const provider = getPhantomProvider();
+          if (provider) {
+            const phantomWallet = wallets.find(
+              (w) => w.adapter.name === "Phantom",
+            );
+            if (phantomWallet) {
+              select(phantomWallet.adapter.name);
+            }
+
+            try {
+              await provider.connect({ onlyIfTrusted: false });
+              try {
+                await connect();
+              } catch (e) {
+                console.warn(
+                  "Adapter connect threw, but provider is connected",
+                  e,
+                );
+              }
+
+              setIsLoginModalOpen(false);
+              addToast({
+                variant: "success",
+                title: t("walletToast.connectedTitle"),
+                body: t("walletToast.connectedBody"),
+              });
+            } catch (connectionError) {
+              if (
+                connectionError?.code === 4001 ||
+                connectionError?.message?.toLowerCase().includes("reject")
+              ) {
+                console.log("User rejected connection");
+                return;
+              }
+              throw connectionError;
+            }
+            return;
+          }
+        }
+
+        // Mobile browser without injected provider: use Phantom deep link
+        lastMobileConnectTimeRef.current = now;
+        isOpeningPhantomRef.current = true;
+
+        const dappKeypair = Keypair.generate();
+        const dappEncryptionKeypair = nacl.box.keyPair.fromSecretKey(
+          dappKeypair.secretKey.slice(0, nacl.box.secretKeyLength),
+        );
+        const dappEncryptionPublicKey = bs58.encode(
+          dappEncryptionKeypair.publicKey,
+        );
+        const redirectUrl = new URL(window.location.href);
+
+        redirectUrl.search = "";
+        redirectUrl.hash = "";
+        localStorage.setItem(
+          PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY,
+          JSON.stringify(Array.from(dappKeypair.secretKey)),
+        );
+        localStorage.setItem(
+          PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
+          dappEncryptionPublicKey,
+        );
+
+        const phantomConnectUrl = new URL(PHANTOM_CONNECT_URL);
+        phantomConnectUrl.searchParams.set(
+          "dapp_encryption_public_key",
+          dappEncryptionPublicKey,
+        );
+        phantomConnectUrl.searchParams.set("app_url", window.location.origin);
+        phantomConnectUrl.searchParams.set(
+          "redirect_link",
+          redirectUrl.toString(),
+        );
+        phantomConnectUrl.searchParams.set("cluster", "devnet");
+
+        // Same-window navigation to avoid creating a new tab
+        window.location.assign(phantomConnectUrl.toString());
+        return;
+      }
+
+      // Desktop: use injected provider
       const provider = getPhantomProvider();
       if (provider) {
         const phantomWallet = wallets.find((w) => w.adapter.name === "Phantom");
@@ -1803,6 +1899,34 @@ function App() {
       // Non-critical cleanup — swallow errors silently.
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Reset guard state when returning from Phantom on mobile ──
+  // Prevents auto-reopening loops and ensures clean UI resume.
+  useEffect(() => {
+    const handleVisibilityReturn = () => {
+      if (document.visibilityState !== "visible") return;
+
+      // Reset guard refs so the user can interact again
+      isOpeningPhantomRef.current = false;
+      connectInProgressRef.current = false;
+
+      // If the Phantom connect callback stored a public key while we were
+      // backgrounded, sync it into React state so the UI updates.
+      const storedPublicKey = localStorage.getItem(
+        PHANTOM_PUBLIC_KEY_STORAGE_KEY,
+      );
+      if (storedPublicKey && storedPublicKey !== mobileWalletPublicKey) {
+        setMobileWalletPublicKey(storedPublicKey);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityReturn);
+    window.addEventListener("focus", handleVisibilityReturn);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityReturn);
+      window.removeEventListener("focus", handleVisibilityReturn);
+    };
+  }, [mobileWalletPublicKey]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2278,13 +2402,82 @@ function App() {
     [userProfile.address],
   );
 
-  const paymentApprovalInProgressRef = useRef(false);
+  const startPhantomMobilePayment = useCallback(
+    ({ transaction, parsedPayment, quote }) => {
+      const dappEncryptionPublicKey = localStorage.getItem(
+        PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
+      );
+      const phantomEncryptionPublicKey = localStorage.getItem(
+        PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
+      );
+      const session = localStorage.getItem(PHANTOM_SESSION_STORAGE_KEY);
+
+      if (!dappEncryptionPublicKey || !phantomEncryptionPublicKey || !session) {
+        throw new Error("Reconnect Phantom mobile before paying.");
+      }
+
+      const walletAddress = transaction.feePayer?.toBase58?.() || null;
+
+      logPhantomMobilePayment("[PHANTOM_MOBILE_PAYMENT_START]", {
+        quoteId: getQuoteIdLogPrefix(quote?.quoteId),
+        wallet: walletAddress,
+        status: "starting",
+      });
+
+      const nonce = createPhantomNonce();
+      const sharedSecret = getStoredPhantomSharedSecret(
+        phantomEncryptionPublicKey,
+      );
+      const payload = encryptPhantomPayload(
+        {
+          transaction: serializeTransactionForPhantom(transaction),
+          session,
+        },
+        nonce,
+        sharedSecret,
+      );
+      const redirectUrl = new URL(window.location.href);
+      const pendingPayment = createPendingPhantomPayment({
+        parsedPayment,
+        quote,
+        walletAddress,
+      });
+
+      redirectUrl.search = "";
+      redirectUrl.hash = "";
+      redirectUrl.searchParams.set(
+        PHANTOM_PAYMENT_ACTION_PARAM,
+        PHANTOM_PAYMENT_ACTION,
+      );
+      redirectUrl.searchParams.set(
+        PHANTOM_PAYMENT_ID_PARAM,
+        pendingPayment.paymentResumeId,
+      );
+
+      writePendingPhantomPayment(pendingPayment);
+      logPhantomMobilePayment("[PHANTOM_MOBILE_PAYMENT_PENDING_SAVED]", {
+        quoteId: getQuoteIdLogPrefix(quote?.quoteId),
+        paymentResumeId: pendingPayment.paymentResumeId,
+        status: pendingPayment.status,
+        expiresAt: pendingPayment.expiresAt,
+        redirectPath: pendingPayment.redirectPath,
+      });
+
+      // Same-window navigation to avoid creating a new tab
+      window.location.assign(buildPhantomSignTransactionUrl({
+        dappEncryptionPublicKey,
+        nonce,
+        payload,
+        redirectLink: redirectUrl.toString(),
+      }));
+
+      return { status: "redirecting" };
+    },
+    [getStoredPhantomSharedSecret, writePendingPhantomPayment],
+  );
 
   const handlePaymentConfirm = useCallback(
     async ({ parsedPayment, quote }) => {
-      if (paymentApprovalInProgressRef.current) return;
-      paymentApprovalInProgressRef.current = true;
-      
       setParsedPaymentData(parsedPayment);
       setRestoredPaymentQuote(quote);
       setPaymentSubmission(null);
@@ -2303,9 +2496,10 @@ function App() {
         const payerPublicKey = publicKey || mobileWalletPublicKey;
         const payerWalletAddress =
           payerPublicKey?.toBase58?.() || String(payerPublicKey || "");
+        const isMobile = isMobileBrowser();
 
         if (!payerPublicKey) {
-          if (!getPhantomProvider()) {
+          if (!isMobile && !getPhantomProvider()) {
             showMissingWalletModal({ showToast: false });
             throw createPaymentFlowError(
               "PHANTOM_MISSING",
@@ -2322,10 +2516,25 @@ function App() {
           fromPublicKey: payerPublicKey,
           solAmount: quote.solAmount,
         });
+        const hasPhantomMobileSession = Boolean(
+          mobileWalletPublicKey &&
+          localStorage.getItem(PHANTOM_SESSION_STORAGE_KEY) &&
+          localStorage.getItem(
+            PHANTOM_WALLET_ENCRYPTION_PUBLIC_KEY_STORAGE_KEY,
+          ),
+        );
+
+        if (isMobile && hasPhantomMobileSession) {
+          return startPhantomMobilePayment({
+            transaction,
+            parsedPayment,
+            quote,
+          });
+        }
 
         if (!publicKey) {
           throw new Error(
-            "Connect the Phantom wallet before paying.",
+            "Connect the Phantom browser wallet before paying on desktop.",
           );
         }
 
@@ -2358,8 +2567,6 @@ function App() {
         }
 
         throw error;
-      } finally {
-        paymentApprovalInProgressRef.current = false;
       }
     },
     [
@@ -2371,6 +2578,7 @@ function App() {
       readPendingPhantomPayment,
       sendTransaction,
       showMissingWalletModal,
+      startPhantomMobilePayment,
       t,
       verifySubmittedPayment,
     ],

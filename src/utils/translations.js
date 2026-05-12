@@ -228,13 +228,6 @@ export const translations = {
       phantomNotReadyBody:
         "Install Phantom or open this page in a browser that supports Phantom.",
     },
-    wallet: {
-      openInPhantomTitle: "Open KonekPay in Phantom",
-      openInPhantomBody: "On mobile, use Phantom's in-app browser so wallet approval opens in the same flow.",
-      openInPhantomButton: "Open in Phantom",
-      returnToKonekPay: "Return to KonekPay after approval.",
-      mobileProviderUnavailable: "Phantom is not available in this browser.",
-    },
     missingWalletModal: {
       eyebrow: "Wallet required",
       title: "Phantom Wallet not found",
@@ -243,6 +236,14 @@ export const translations = {
       dismiss: "Dismiss",
       helper: "After installing Phantom, refresh this page and connect again.",
       closeLabel: "Close wallet setup",
+    },
+    wallet: {
+      openInPhantomTitle: "Open KonekPay in Phantom",
+      openInPhantomBody:
+        "On mobile, use Phantom's in-app browser so wallet approval opens in the same flow.",
+      openInPhantomButton: "Open in Phantom",
+      returnToKonekPay: "Return to KonekPay after approval.",
+      mobileProviderUnavailable: "Phantom is not available in this browser.",
     },
     walletDropdown: {
       label: "Wallet",
@@ -941,13 +942,6 @@ export const translations = {
       phantomNotReadyBody:
         "Install Phantom atau buka halaman ini di browser yang mendukung Phantom.",
     },
-    wallet: {
-      openInPhantomTitle: "Buka KonekPay di Phantom",
-      openInPhantomBody: "Di mobile, gunakan browser bawaan Phantom agar persetujuan dompet tetap dalam satu alur.",
-      openInPhantomButton: "Buka di Phantom",
-      returnToKonekPay: "Kembali ke KonekPay setelah menyetujui.",
-      mobileProviderUnavailable: "Phantom belum tersedia di browser ini.",
-    },
     missingWalletModal: {
       eyebrow: "Dompet diperlukan",
       title: "Phantom Wallet belum terpasang",
@@ -956,6 +950,14 @@ export const translations = {
       dismiss: "Tutup",
       helper: "Setelah Phantom terpasang, refresh halaman ini lalu konek lagi.",
       closeLabel: "Tutup pengaturan dompet",
+    },
+    wallet: {
+      openInPhantomTitle: "Buka KonekPay di Phantom",
+      openInPhantomBody:
+        "Di mobile, gunakan browser bawaan Phantom agar persetujuan dompet tetap dalam satu alur.",
+      openInPhantomButton: "Buka di Phantom",
+      returnToKonekPay: "Kembali ke KonekPay setelah menyetujui.",
+      mobileProviderUnavailable: "Phantom belum tersedia di browser ini.",
     },
     walletDropdown: {
       label: "Dompet",
