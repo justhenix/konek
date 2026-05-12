@@ -411,8 +411,8 @@ const fetchSolIdrRateFromPyth = async () => {
 
 const navItems = [
   { key: "navbar.home", target: "top" },
-  { key: "navbar.usp", target: "usp-section" },
   { key: "navbar.howItWorks", target: "workflow-flow" },
+  { key: "navbar.usp", target: "usp-section" },
   { key: "navbar.faq", target: "proof-section" },
   { key: "navbar.team", target: "team-page" },
 ];
@@ -1084,6 +1084,7 @@ const TeamPage = ({ t, onBackToHome, language }) => (
 const footerProductLinks = [
   { key: "linkHome", target: "top" },
   { key: "linkFlow", target: "workflow-flow" },
+  { key: "linkUsp", target: "usp-section" },
   { key: "linkFaq", target: "proof-section" },
   { key: "linkTeam", target: "team-page" },
 ];
