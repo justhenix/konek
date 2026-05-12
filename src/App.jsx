@@ -88,6 +88,8 @@ const TERMINAL_PAYMENT_ERROR_CODES = new Set([
 const VERIFY_RETRY_DELAY_MS = 2000;
 const VERIFY_MAX_ATTEMPTS = 10;
 const MOBILE_CONNECT_DEBOUNCE_MS = 1500;
+const KONEK_TAB_CHANNEL = "konekpay-session";
+const KONEK_TAB_ID_KEY = "konek_active_tab_id";
 
 // ── Mobile / Phantom detection helpers ──
 const isMobileBrowser = () => MOBILE_DEVICE_REGEX.test(navigator.userAgent);
@@ -99,13 +101,24 @@ const isPhantomInjected = () => {
   );
 };
 
-const isPhantomInAppBrowser = () =>
-  isMobileBrowser() && isPhantomInjected();
+// True when user is on a mobile browser where Phantom provider is not available.
+// In this case, wallet deep-link connect/pay must NOT be used because it causes
+// Phantom to redirect back into a new browser tab.
+const shouldUsePhantomBrowse = () =>
+  isMobileBrowser() && !isPhantomInjected();
 
 const buildPhantomBrowseUrl = (targetUrl) => {
-  const encoded = encodeURIComponent(targetUrl || window.location.href);
-  return `${PHANTOM_BROWSE_URL}${encoded}`;
+  const url = targetUrl || window.location.href;
+  const ref = encodeURIComponent(window.location.origin);
+  return `${PHANTOM_BROWSE_URL}${encodeURIComponent(url)}?ref=${ref}`;
 };
+
+const openInPhantomBrowser = () => {
+  window.location.assign(buildPhantomBrowseUrl(window.location.href));
+};
+
+const createTabId = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const logPhantomMobilePayment = (event, details = {}) => {
   if (import.meta.env.DEV) {
@@ -649,13 +662,7 @@ const ToastViewport = ({ toasts, onDismiss }) => (
 );
 
 const MissingWalletModal = ({ onDismiss, t }) => {
-  const isMobile = isMobileBrowser();
-
-  const handleOpenInPhantom = () => {
-    const phantomBrowseUrl = buildPhantomBrowseUrl(window.location.href);
-    // Same-window navigation: do not use window.open or target="_blank"
-    window.location.assign(phantomBrowseUrl);
-  };
+  const showPhantomBrowse = shouldUsePhantomBrowse();
 
   return (
     <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
@@ -695,7 +702,7 @@ const MissingWalletModal = ({ onDismiss, t }) => {
           />
         </div>
 
-        {isMobile ? (
+        {showPhantomBrowse ? (
           <>
             <p className="mb-2 text-[11px]  text-purple-300">
               {t("missingWalletModal.eyebrow")}
@@ -712,7 +719,7 @@ const MissingWalletModal = ({ onDismiss, t }) => {
             <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
               <button
                 type="button"
-                onClick={handleOpenInPhantom}
+                onClick={openInPhantomBrowser}
                 className="kp-button-wallet flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
               >
                 {t("wallet.openInPhantomButton")}
@@ -1380,6 +1387,8 @@ function App() {
     createIdlePaymentVerification,
   );
   const [mobilePaymentState, setMobilePaymentState] = useState(null);
+  const [duplicateTabDetected, setDuplicateTabDetected] = useState(false);
+  const tabIdRef = useRef(createTabId());
 
   const readPendingPhantomPayment = useCallback((paymentResumeId = null) => {
     const readStoredPendingPayment = (storage, storageKey) => {
@@ -1693,7 +1702,7 @@ function App() {
   const handleConnectWallet = async () => {
     if (isConnecting) return;
 
-    // Double-tap guard for mobile deep link navigation
+    // Double-tap guard
     const now = Date.now();
     if (now - lastMobileConnectTimeRef.current < MOBILE_CONNECT_DEBOUNCE_MS) {
       return;
@@ -1703,93 +1712,17 @@ function App() {
     try {
       setIsConnecting(true);
       connectInProgressRef.current = true;
-      const isMobile = isMobileBrowser();
 
-      if (isMobile) {
-        // If inside Phantom in-app browser, use injected provider directly
-        if (isPhantomInAppBrowser()) {
-          const provider = getPhantomProvider();
-          if (provider) {
-            const phantomWallet = wallets.find(
-              (w) => w.adapter.name === "Phantom",
-            );
-            if (phantomWallet) {
-              select(phantomWallet.adapter.name);
-            }
-
-            try {
-              await provider.connect({ onlyIfTrusted: false });
-              try {
-                await connect();
-              } catch (e) {
-                console.warn(
-                  "Adapter connect threw, but provider is connected",
-                  e,
-                );
-              }
-
-              setIsLoginModalOpen(false);
-              addToast({
-                variant: "success",
-                title: t("walletToast.connectedTitle"),
-                body: t("walletToast.connectedBody"),
-              });
-            } catch (connectionError) {
-              if (
-                connectionError?.code === 4001 ||
-                connectionError?.message?.toLowerCase().includes("reject")
-              ) {
-                console.log("User rejected connection");
-                return;
-              }
-              throw connectionError;
-            }
-            return;
-          }
-        }
-
-        // Mobile browser without injected provider: use Phantom deep link
+      // Mobile: only allow connect if inside Phantom in-app browser.
+      // For normal mobile browsers (Chrome/Safari), show "Open in Phantom"
+      // modal instead of deep-link connect which causes duplicate tabs.
+      if (shouldUsePhantomBrowse()) {
         lastMobileConnectTimeRef.current = now;
-        isOpeningPhantomRef.current = true;
-
-        const dappKeypair = Keypair.generate();
-        const dappEncryptionKeypair = nacl.box.keyPair.fromSecretKey(
-          dappKeypair.secretKey.slice(0, nacl.box.secretKeyLength),
-        );
-        const dappEncryptionPublicKey = bs58.encode(
-          dappEncryptionKeypair.publicKey,
-        );
-        const redirectUrl = new URL(window.location.href);
-
-        redirectUrl.search = "";
-        redirectUrl.hash = "";
-        localStorage.setItem(
-          PHANTOM_DAPP_SECRET_KEY_STORAGE_KEY,
-          JSON.stringify(Array.from(dappKeypair.secretKey)),
-        );
-        localStorage.setItem(
-          PHANTOM_DAPP_PUBLIC_KEY_STORAGE_KEY,
-          dappEncryptionPublicKey,
-        );
-
-        const phantomConnectUrl = new URL(PHANTOM_CONNECT_URL);
-        phantomConnectUrl.searchParams.set(
-          "dapp_encryption_public_key",
-          dappEncryptionPublicKey,
-        );
-        phantomConnectUrl.searchParams.set("app_url", window.location.origin);
-        phantomConnectUrl.searchParams.set(
-          "redirect_link",
-          redirectUrl.toString(),
-        );
-        phantomConnectUrl.searchParams.set("cluster", "devnet");
-
-        // Same-window navigation to avoid creating a new tab
-        window.location.assign(phantomConnectUrl.toString());
+        showMissingWalletModal({ showToast: false });
         return;
       }
 
-      // Desktop: use injected provider
+      // Phantom in-app browser or desktop: use injected provider
       const provider = getPhantomProvider();
       if (provider) {
         const phantomWallet = wallets.find((w) => w.adapter.name === "Phantom");
@@ -1927,6 +1860,79 @@ function App() {
       window.removeEventListener("focus", handleVisibilityReturn);
     };
   }, [mobileWalletPublicKey]);
+
+  // ── Duplicate-tab defensive handling ──
+  // Detects if another KonekPay tab is already active. If so, prevents
+  // auto-submitting transactions from a duplicate callback tab.
+  useEffect(() => {
+    const myTabId = tabIdRef.current;
+    let channel = null;
+
+    try {
+      // Store this tab as active
+      localStorage.setItem(KONEK_TAB_ID_KEY, myTabId);
+
+      // BroadcastChannel for cross-tab messaging
+      if (typeof BroadcastChannel !== "undefined") {
+        channel = new BroadcastChannel(KONEK_TAB_CHANNEL);
+
+        channel.onmessage = (event) => {
+          if (event.data?.type === "tab-active" && event.data.tabId !== myTabId) {
+            // Another tab just announced itself as active.
+            // Check if this tab was loaded via a Phantom callback URL.
+            const params = new URLSearchParams(window.location.search);
+            const hasCallbackParams = Boolean(
+              params.get(PHANTOM_PAYMENT_ACTION_PARAM) ||
+              params.get("phantom_encryption_public_key") ||
+              params.get("nonce") ||
+              params.get("data"),
+            );
+
+            if (hasCallbackParams) {
+              queueMicrotask(() => setDuplicateTabDetected(true));
+            }
+          }
+        };
+
+        // Announce this tab is active
+        channel.postMessage({ type: "tab-active", tabId: myTabId });
+      }
+
+      // Also check localStorage for an existing active tab
+      const existingTabId = localStorage.getItem(KONEK_TAB_ID_KEY);
+      if (existingTabId && existingTabId !== myTabId) {
+        const params = new URLSearchParams(window.location.search);
+        const hasCallbackParams = Boolean(
+          params.get(PHANTOM_PAYMENT_ACTION_PARAM) ||
+          params.get("phantom_encryption_public_key") ||
+          params.get("nonce") ||
+          params.get("data"),
+        );
+
+        if (hasCallbackParams) {
+          queueMicrotask(() => setDuplicateTabDetected(true));
+        }
+      }
+
+      // Update active tab on each focus
+      const handleFocusForTab = () => {
+        localStorage.setItem(KONEK_TAB_ID_KEY, myTabId);
+        if (channel) {
+          channel.postMessage({ type: "tab-active", tabId: myTabId });
+        }
+      };
+      window.addEventListener("focus", handleFocusForTab);
+
+      return () => {
+        window.removeEventListener("focus", handleFocusForTab);
+        if (channel) {
+          channel.close();
+        }
+      };
+    } catch {
+      // BroadcastChannel or localStorage not available -- skip
+    }
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2486,6 +2492,16 @@ function App() {
       setPaymentVerification(createIdlePaymentVerification());
 
       try {
+        // On mobile normal browser without Phantom provider, do not attempt
+        // deep-link sign transaction. Show "Open in Phantom" modal instead.
+        if (shouldUsePhantomBrowse()) {
+          showMissingWalletModal({ showToast: false });
+          throw createPaymentFlowError(
+            "PHANTOM_MOBILE_BROWSE_REQUIRED",
+            t("wallet.mobileBrowserNotice"),
+          );
+        }
+
         if (isQuoteExpired(quote?.expiresAt)) {
           throw createPaymentFlowError(
             "QUOTE_EXPIRED",
@@ -3798,6 +3814,46 @@ function App() {
           onDismiss={() => setMissingWalletModalOpen(false)}
           t={t}
         />
+      )}
+
+      {duplicateTabDetected && (
+        <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in transition-all">
+          <div
+            className="kp-panel relative w-full max-w-104 border border-purple-400/25 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.42)] transition-colors sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="duplicate-tab-title"
+          >
+            <div className="mb-5 flex h-14 w-14 items-center justify-center border border-purple-400/30 bg-purple-500/10">
+              <img
+                src={logoPhantom}
+                alt="Phantom"
+                className="h-8 w-8 object-contain"
+              />
+            </div>
+            <p className="mb-2 text-[11px]  text-purple-300">
+              {t("missingWalletModal.eyebrow")}
+            </p>
+            <h3
+              id="duplicate-tab-title"
+              className="pr-10 text-2xl  text-(--kp-text)"
+            >
+              {t("wallet.alreadyOpenTitle")}
+            </h3>
+            <p className="kp-muted mt-3 text-sm leading-7">
+              {t("wallet.alreadyOpenBody")}
+            </p>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setDuplicateTabDetected(false)}
+                className="kp-button-wallet flex min-h-12 w-full items-center justify-center px-4 py-3 text-center text-sm  transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              >
+                {t("wallet.continueHere")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {isDevnetModalOpen && (

@@ -240,10 +240,14 @@ export const translations = {
     wallet: {
       openInPhantomTitle: "Open KonekPay in Phantom",
       openInPhantomBody:
-        "On mobile, use Phantom's in-app browser so wallet approval opens in the same flow.",
+        "On mobile, open KonekPay in Phantom's browser so wallet approval stays in one tab.",
       openInPhantomButton: "Open in Phantom",
-      returnToKonekPay: "Return to KonekPay after approval.",
-      mobileProviderUnavailable: "Phantom is not available in this browser.",
+      mobileBrowserNotice:
+        "Mobile wallet approval works best inside Phantom.",
+      alreadyOpenTitle: "KonekPay is already open",
+      alreadyOpenBody:
+        "Continue in the existing tab, or continue here.",
+      continueHere: "Continue here",
     },
     walletDropdown: {
       label: "Wallet",
@@ -954,10 +958,14 @@ export const translations = {
     wallet: {
       openInPhantomTitle: "Buka KonekPay di Phantom",
       openInPhantomBody:
-        "Di mobile, gunakan browser bawaan Phantom agar persetujuan dompet tetap dalam satu alur.",
+        "Di mobile, buka KonekPay lewat browser Phantom agar persetujuan dompet tetap dalam satu tab.",
       openInPhantomButton: "Buka di Phantom",
-      returnToKonekPay: "Kembali ke KonekPay setelah menyetujui.",
-      mobileProviderUnavailable: "Phantom belum tersedia di browser ini.",
+      mobileBrowserNotice:
+        "Persetujuan dompet di mobile paling stabil lewat Phantom.",
+      alreadyOpenTitle: "KonekPay sudah terbuka",
+      alreadyOpenBody:
+        "Lanjutkan di tab yang sudah ada, atau lanjutkan di sini.",
+      continueHere: "Lanjutkan di sini",
     },
     walletDropdown: {
       label: "Dompet",
