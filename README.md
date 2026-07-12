@@ -11,6 +11,10 @@
 </p>
 
 <p align="center">
+  Built by <a href="https://henix.my.id">Henix, full-stack web developer</a>
+</p>
+
+<p align="center">
   <a href="https://konekpay.online"><img alt="Live Demo" src="https://img.shields.io/badge/Live_Demo-konekpay.online-00D166?style=flat-square"></a>
   <img alt="Colosseum Frontier Hackathon" src="https://img.shields.io/badge/Hackathon-Colosseum_Frontier-00D166?style=flat-square">
   <img alt="Superteam Indonesia" src="https://img.shields.io/badge/Track-Superteam_Indonesia-9945FF?style=flat-square">
